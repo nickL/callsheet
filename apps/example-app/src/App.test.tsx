@@ -9,6 +9,6 @@ describe('App', () => {
 
     expect(screen.getByRole('heading', { name: 'Callsheet' })).toBeTruthy();
     expect(screen.getByTestId('call-kind').textContent).toBe('query');
-    expect(screen.getByTestId('call-state').textContent).toBe('ready');
+    expect(screen.getByTestId('call-data-key').textContent).toBe('status');
   });
 });

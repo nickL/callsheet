@@ -5,7 +5,7 @@ const queryClient = new QueryClient();
 
 const calls = defineCalls({
   status: query({
-    state: 'ready',
+    dataKey: ['status'],
   }),
 } as const);
 
@@ -16,7 +16,11 @@ export function App() {
         <h1>Callsheet</h1>
         <p>Example app shell is ready.</p>
         <p data-testid="call-kind">{calls.status.kind}</p>
-        <p data-testid="call-state">{calls.status.state}</p>
+        <p data-testid="call-data-key">
+          {Array.isArray(calls.status.dataKey)
+            ? calls.status.dataKey.join('.')
+            : 'dynamic'}
+        </p>
       </main>
     </QueryClientProvider>
   );
