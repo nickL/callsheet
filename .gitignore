@@ -1,0 +1,39 @@
+# deps
+node_modules
+package-lock.json
+yarn.lock
+
+# build
+dist/
+coverage/
+.vite/
+*.tsbuildinfo
+
+# env / secrets
+.env
+.env.*
+!.env.example
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# editors / IDE
+.vscode/settings.json
+.vscode/mcp.json
+.cursor/
+.idea
+.history
+
+# misc
+.DS_Store
+.internal/
+.cache
+.nx/cache
+.nx/workspace-data
+.pnpm-store
+.svelte-kit
+.vinxi
