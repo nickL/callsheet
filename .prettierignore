@@ -1,0 +1,6 @@
+.internal
+coverage
+dist
+node_modules
+pnpm-lock.yaml
+*.bundled_*.mjs

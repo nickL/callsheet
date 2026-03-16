@@ -1,0 +1,38 @@
+{
+  "name": "callsheet-workspace",
+  "private": true,
+  "version": "0.0.0",
+  "packageManager": "pnpm@10.22.0",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "scripts": {
+    "build": "pnpm -r --if-present build",
+    "dev:example": "pnpm --filter @callsheet/example-app dev",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint . --max-warnings=0 && prettier --check .",
+    "test": "pnpm -r --if-present test && pnpm --filter callsheet build && pnpm --filter callsheet test:types",
+    "test:types": "pnpm --filter callsheet test:types",
+    "typecheck": "pnpm -r --if-present typecheck"
+  },
+  "devDependencies": {
+    "@vitest/eslint-plugin": "^1.6.12",
+    "@eslint/js": "^9.39.4",
+    "@types/node": "^25.5.0",
+    "eslint": "^9.39.4",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "eslint-plugin-testing-library": "^7.16.0",
+    "globals": "^17.4.0",
+    "prettier": "^3.8.1",
+    "tsd": "^0.33.0",
+    "tsup": "^8.5.1",
+    "typescript-eslint": "^8.57.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.0"
+  }
+}
