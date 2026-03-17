@@ -10,6 +10,12 @@ export default defineConfig({
       callsheet: fileURLToPath(
         new URL('../../packages/callsheet/src/index.ts', import.meta.url),
       ),
+      'callsheet/react-query': fileURLToPath(
+        new URL(
+          '../../packages/callsheet/src/react-query/index.ts',
+          import.meta.url,
+        ),
+      ),
     },
   },
   test: {

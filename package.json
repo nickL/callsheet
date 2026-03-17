@@ -13,11 +13,13 @@
     "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings=0 && prettier --check .",
     "test": "pnpm -r --if-present test && pnpm --filter callsheet build && pnpm --filter callsheet test:types",
+    "test:coverage": "pnpm --filter callsheet test:coverage",
     "test:types": "pnpm --filter callsheet test:types",
     "typecheck": "pnpm -r --if-present typecheck"
   },
   "devDependencies": {
     "@vitest/eslint-plugin": "^1.6.12",
+    "@vitest/coverage-v8": "^4.0.7",
     "@eslint/js": "^9.39.4",
     "@types/node": "^25.5.0",
     "eslint": "^9.39.4",

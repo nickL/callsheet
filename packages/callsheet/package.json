@@ -1,6 +1,5 @@
 {
   "name": "callsheet",
-  "private": true,
   "version": "0.0.0",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -11,6 +10,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./react-query": {
+      "types": "./dist/react-query/index.d.ts",
+      "import": "./dist/react-query/index.js",
+      "require": "./dist/react-query/index.cjs"
     }
   },
   "files": [
@@ -19,6 +23,7 @@
   "scripts": {
     "build": "tsup",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:types": "tsd --typings dist/index.d.ts --files test-d/**/*.test-d.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
@@ -30,5 +35,17 @@
     "jsdom": "^29.0.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.0.0",
+    "react": "^18 || ^19"
+  },
+  "peerDependenciesMeta": {
+    "@tanstack/react-query": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
   }
 }

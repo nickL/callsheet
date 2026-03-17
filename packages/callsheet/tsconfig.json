@@ -3,12 +3,6 @@
   "compilerOptions": {
     "types": ["node", "react", "react-dom", "vitest/globals"]
   },
-  "include": [
-    "src/**/*",
-    "tests/**/*",
-    "test-d/**/*",
-    "tsup.config.ts",
-    "vitest.config.ts"
-  ],
+  "include": ["src/**/*", "tests/**/*", "tsup.config.ts", "vitest.config.ts"],
   "exclude": ["dist"]
 }

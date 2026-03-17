@@ -32,6 +32,7 @@ export default tseslint.config(
       '**/dist/**',
       '**/node_modules/**',
       '**/.vite/**',
+      '**/test-d/**',
       '**/*.bundled_*.mjs',
     ],
   },
@@ -49,7 +50,10 @@ export default tseslint.config(
     languageOptions: {
       ecmaVersion: 'latest',
       parserOptions: {
-        projectService: true,
+        projectService: {
+          allowDefaultProject: ['packages/callsheet/test-d/*.test-d.ts'],
+          defaultProject: 'tsconfig.base.json',
+        },
         tsconfigRootDir: rootDir,
       },
       sourceType: 'module',

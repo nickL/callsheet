@@ -9,6 +9,7 @@ import {
   mutation,
   query,
 } from '../../src';
+import { getSourceKind, hasSourceShape } from '../../src/call-sources';
 
 import type { RestSourceLike } from '../../src';
 
@@ -65,6 +66,7 @@ describe('defineCalls', () => {
         list: query({
           dataKey: ['films'],
         }),
+        ignoredLeaf: 'not-a-call',
       },
     });
 
@@ -74,6 +76,8 @@ describe('defineCalls', () => {
     expect(getCallMetadata(calls.films.list)).toEqual({
       path: ['films', 'list'],
     });
+    expect(getCallMetadata(calls.films.ignoredLeaf)).toBeUndefined();
+    expect(getCallMetadata('not-a-call')).toBeUndefined();
   });
 
   it('infers call kind from GraphQL documents and REST-like contracts at runtime', () => {
@@ -94,6 +98,13 @@ describe('defineCalls', () => {
       'films',
       'update',
     ]);
+
+    const explicitQuery = query(filmsListDocument, {
+      dataKey: ['films', 'explicit-list'],
+    });
+    expect(explicitQuery.kind).toBe(CALL_KINDS.query);
+    expect(explicitQuery.source).toEqual(filmsListDocument);
+    expect(explicitQuery.dataKey).toEqual(['films', 'explicit-list']);
   });
 
   it('requires explicit query or mutation calls when kind cannot be inferred', () => {
@@ -115,11 +126,22 @@ describe('defineCalls', () => {
     expect(optionsQuery.kind).toBe(CALL_KINDS.query);
     expect(optionsQuery.source).toEqual(optionsRoute);
 
+    const optionsQueryWithConfig = query(optionsRoute, {
+      dataKey: ['films', 'options'],
+    });
+    expect(optionsQueryWithConfig.kind).toBe(CALL_KINDS.query);
+    expect(optionsQueryWithConfig.source).toEqual(optionsRoute);
+    expect(optionsQueryWithConfig.dataKey).toEqual(['films', 'options']);
+
     const optionsMutation = mutation(optionsRoute, {
       invalidates: [['films']],
     });
     expect(optionsMutation.kind).toBe(CALL_KINDS.mutation);
     expect(optionsMutation.source).toEqual(optionsRoute);
+
+    const optionsMutationWithoutConfig = mutation(optionsRoute);
+    expect(optionsMutationWithoutConfig.kind).toBe(CALL_KINDS.mutation);
+    expect(optionsMutationWithoutConfig.source).toEqual(optionsRoute);
   });
 
   it('preserves custom sources in explicit query calls', () => {
@@ -127,6 +149,13 @@ describe('defineCalls', () => {
 
     expect(sdkCall.kind).toBe(CALL_KINDS.query);
     expect(sdkCall.source).toEqual(sdkQuerySource);
+  });
+
+  it('preserves source-backed mutation calls', () => {
+    const updateCall = mutation(updateFilmRoute);
+
+    expect(updateCall.kind).toBe(CALL_KINDS.mutation);
+    expect(updateCall.source).toEqual(updateFilmRoute);
   });
 
   it('treats callsheetKind as authoritative for custom sources', () => {
@@ -195,6 +224,19 @@ describe('defineCalls', () => {
     }).toThrow(
       'Subscriptions are not supported by the core callsheet model yet.',
     );
+
+    expect(() => {
+      getSourceKind({
+        definitions: [
+          {
+            kind: OPERATION_DEFINITION_KIND,
+            operation: GRAPHQL_OPERATION_KINDS.subscription,
+          },
+        ],
+      });
+    }).toThrow(
+      'Subscriptions are not supported by the core callsheet model yet.',
+    );
   });
 
   it('rejects fragment-only GraphQL documents in explicit query or mutation calls', () => {
@@ -209,5 +251,49 @@ describe('defineCalls', () => {
     }).toThrow(
       'GraphQL documents used with callsheet must contain a query or mutation operation definition.',
     );
+
+    expect(getSourceKind(filmFieldsFragmentDocument)).toBeUndefined();
+  });
+
+  it('rejects unsupported source shapes in explicit calls', () => {
+    expect(() => {
+      query({
+        method: 'GET',
+      } as unknown as RestSourceLike<'GET'>);
+    }).toThrow('The provided source shape is not supported by callsheet.');
+
+    expect(() => {
+      mutation({
+        path: '/films',
+      } as unknown as RestSourceLike<'POST'>);
+    }).toThrow('The provided source shape is not supported by callsheet.');
+
+    expect(() => {
+      query(
+        {
+          method: 'GET',
+        } as unknown as RestSourceLike<'GET'>,
+        {
+          dataKey: ['films'],
+        },
+      );
+    }).toThrow('The provided source shape is not supported by callsheet.');
+
+    expect(() => {
+      mutation(
+        {
+          path: '/films',
+        } as unknown as RestSourceLike<'POST'>,
+        {
+          invalidates: [['films']],
+        },
+      );
+    }).toThrow('The provided source shape is not supported by callsheet.');
+  });
+
+  it('only treats objects as source-like shapes', () => {
+    expect(hasSourceShape('films')).toBe(false);
+    expect(hasSourceShape(123)).toBe(false);
+    expect(hasSourceShape({ path: '/films' })).toBe(true);
   });
 });

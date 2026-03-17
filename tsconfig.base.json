@@ -6,7 +6,8 @@
     "moduleResolution": "Bundler",
     "baseUrl": ".",
     "paths": {
-      "callsheet": ["packages/callsheet/src/index.ts"]
+      "callsheet": ["packages/callsheet/src/index.ts"],
+      "callsheet/react-query": ["packages/callsheet/src/react-query/index.ts"]
     },
     "jsx": "react-jsx",
     "strict": true,
