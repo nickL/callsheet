@@ -121,6 +121,15 @@ importers:
         specifier: ^19.2.4
         version: 19.2.4(react@19.2.4)
 
+  packages/callsheet-codegen:
+    devDependencies:
+      callsheet:
+        specifier: workspace:*
+        version: link:../callsheet
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
 packages:
 
   '@asamuzakjp/css-color@5.0.1':

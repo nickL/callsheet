@@ -31,9 +31,12 @@ export default tseslint.config(
       '**/coverage/**',
       '**/dist/**',
       '**/node_modules/**',
+      '**/tests/fixtures/**',
+      '**/tests/.tmp/**',
       '**/.vite/**',
       '**/test-d/**',
       '**/*.bundled_*.mjs',
+      'tmp-*/**',
     ],
   },
   js.configs.recommended,
@@ -64,7 +67,9 @@ export default tseslint.config(
     settings: {
       'import/resolver': {
         node: true,
-        typescript: true,
+        typescript: {
+          project: ['tsconfig.base.json'],
+        },
       },
     },
     rules: {
@@ -75,8 +80,15 @@ export default tseslint.config(
           prefer: 'type-imports',
         },
       ],
+      '@typescript-eslint/consistent-type-assertions': [
+        'error',
+        {
+          assertionStyle: 'as',
+        },
+      ],
       '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/no-misused-promises': 'error',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'error',
       '@typescript-eslint/no-unused-vars': [
         'error',
         {

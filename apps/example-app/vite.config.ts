@@ -7,14 +7,14 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      callsheet: fileURLToPath(
-        new URL('../../packages/callsheet/src/index.ts', import.meta.url),
-      ),
       'callsheet/react-query': fileURLToPath(
         new URL(
           '../../packages/callsheet/src/react-query/index.ts',
           import.meta.url,
         ),
+      ),
+      callsheet: fileURLToPath(
+        new URL('../../packages/callsheet/src/index.ts', import.meta.url),
       ),
     },
   },

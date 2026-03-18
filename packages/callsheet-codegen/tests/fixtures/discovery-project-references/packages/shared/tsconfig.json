@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "skipLibCheck": true,
+    "target": "ES2023"
+  },
+  "include": ["index.ts"]
+}

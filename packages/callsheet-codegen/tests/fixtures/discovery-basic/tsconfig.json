@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./src",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "paths": {
+      "@/graphql/*": ["graphql/*"]
+    },
+    "skipLibCheck": true,
+    "target": "ES2023"
+  },
+  "include": ["src/**/*.ts"]
+}
