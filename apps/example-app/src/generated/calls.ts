@@ -15,6 +15,11 @@ export const calls = defineCalls({
     featured: query(FeaturedFilmsDocument, {
       dataKey: ['films', 'featured'] as const,
     }),
-    refresh: mutation(RefreshFilmsDocument),
+    refresh: mutation(RefreshFilmsDocument, {
+      invalidates: [
+        ['films', 'featured'],
+        ['sdk', 'featuredCount'],
+      ] as const,
+    }),
   },
 } as const);

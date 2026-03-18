@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { App } from './App';
@@ -20,6 +20,18 @@ describe('App', () => {
     expect(screen.getByTestId('film-call-data-key').textContent).toBe(
       'dynamic',
     );
+    expect(screen.getByTestId('featured-count').textContent).toBe('2');
+    expect(screen.getByTestId('user-name').textContent).toBe('Nick');
     expect(screen.getByTestId('selected-film').textContent).toBe('Wall-E');
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Refresh featured films' }),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('featured-count').textContent).toBe('3');
+    });
+
+    expect(screen.getByText('Soul')).toBeTruthy();
   });
 });

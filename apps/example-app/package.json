@@ -11,8 +11,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "callsheet": "workspace:*",
     "@tanstack/react-query": "^5.90.21",
+    "@ts-rest/core": "^3.52.1",
+    "callsheet": "workspace:*",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
   },

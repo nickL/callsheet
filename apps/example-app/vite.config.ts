@@ -13,6 +13,12 @@ export default defineConfig({
           import.meta.url,
         ),
       ),
+      'callsheet/ts-rest': fileURLToPath(
+        new URL(
+          '../../packages/callsheet/src/ts-rest/index.ts',
+          import.meta.url,
+        ),
+      ),
       callsheet: fileURLToPath(
         new URL('../../packages/callsheet/src/index.ts', import.meta.url),
       ),

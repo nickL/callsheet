@@ -3,17 +3,20 @@ import {
   CallsheetProvider,
   createReactQueryAdapter,
   queryOptions,
+  useMutation,
   useQuery,
 } from 'callsheet/react-query';
 
-import { calls } from './generated/calls';
+import { calls } from './calls';
 
+import type { FeaturedCountResult } from './calls';
 import type {
   FeaturedFilmsResult,
   FilmByIdInput,
   FilmByIdResult,
   RefreshFilmsResult,
 } from './graphql/documents';
+import type { UserByIdInput, UserByIdResult } from './rest/contract';
 import type { ExecuteCall } from 'callsheet/react-query';
 
 const queryClient = new QueryClient({
@@ -36,18 +39,43 @@ type ExampleRequest =
   | {
       call: typeof calls.films.refresh;
       input: void;
+    }
+  | {
+      call: typeof calls.sdk.featuredCount;
+      input: void;
+    }
+  | {
+      call: typeof calls.users.byId;
+      input: UserByIdInput;
     };
 
+function matchesCall<TCall extends ExampleRequest['call']>(
+  request: ExampleRequest,
+  call: TCall,
+): request is Extract<ExampleRequest, { call: TCall }> {
+  return request.call === call;
+}
+
+const exampleState = {
+  featuredFilms: ['Wall-E', 'Inside Out'],
+  users: {
+    user_1: {
+      id: 'user_1',
+      name: 'Nick',
+    },
+  },
+};
+
 const execute = ((request: ExampleRequest) => {
-  if (request.call === calls.films.featured) {
+  if (matchesCall(request, calls.films.featured)) {
     const featuredFilms: FeaturedFilmsResult = {
-      films: ['Wall-E', 'Inside Out'],
+      films: [...exampleState.featuredFilms],
     };
 
     return Promise.resolve(featuredFilms);
   }
 
-  if (request.call === calls.films.byId && request.input !== undefined) {
+  if (matchesCall(request, calls.films.byId)) {
     const filmId = request.input.id;
     const film: FilmByIdResult = {
       film: {
@@ -59,12 +87,36 @@ const execute = ((request: ExampleRequest) => {
     return Promise.resolve(film);
   }
 
-  if (request.call === calls.films.refresh) {
+  if (matchesCall(request, calls.films.refresh)) {
     const result: RefreshFilmsResult = {
       refreshed: true,
     };
 
+    if (!exampleState.featuredFilms.includes('Soul')) {
+      exampleState.featuredFilms = [...exampleState.featuredFilms, 'Soul'];
+    }
+
     return Promise.resolve(result);
+  }
+
+  if (matchesCall(request, calls.sdk.featuredCount)) {
+    const result: FeaturedCountResult = {
+      count: exampleState.featuredFilms.length,
+    };
+
+    return Promise.resolve(result);
+  }
+
+  if (matchesCall(request, calls.users.byId)) {
+    const userId = request.input.params.id;
+    const user: UserByIdResult = {
+      user: exampleState.users[userId as keyof typeof exampleState.users] ?? {
+        id: userId,
+        name: 'Unknown',
+      },
+    };
+
+    return Promise.resolve(user);
   }
 
   throw new Error('Unknown call');
@@ -87,12 +139,38 @@ function FeaturedFilmsSection() {
       select: (data) => data.film,
     }),
   );
+  const featuredCount = useQuery(
+    queryOptions(calls.sdk.featuredCount, {
+      select: (data) => data.count,
+    }),
+  );
+  const user = useQuery(
+    queryOptions(calls.users.byId, {
+      input: {
+        params: {
+          id: 'user_1',
+        },
+      },
+      select: (data) => data.user,
+    }),
+  );
+  const refresh = useMutation(calls.films.refresh);
 
-  if (featuredFilms.isPending || wallE.isPending) {
+  if (
+    featuredFilms.isPending ||
+    wallE.isPending ||
+    featuredCount.isPending ||
+    user.isPending
+  ) {
     return <p>Loading example data...</p>;
   }
 
-  if (featuredFilms.isError || wallE.isError) {
+  if (
+    featuredFilms.isError ||
+    wallE.isError ||
+    featuredCount.isError ||
+    user.isError
+  ) {
     return <p>Example data failed to load.</p>;
   }
 
@@ -107,7 +185,17 @@ function FeaturedFilmsSection() {
       <p data-testid="film-call-data-key">
         {typeof calls.films.byId.dataKey === 'function' ? 'dynamic' : 'static'}
       </p>
+      <p data-testid="featured-count">{featuredCount.data}</p>
+      <p data-testid="user-name">{user.data.name}</p>
       <p data-testid="selected-film">{wallE.data.title}</p>
+      <button
+        onClick={() => {
+          refresh.mutate(undefined);
+        }}
+        type="button"
+      >
+        Refresh featured films
+      </button>
       <ul>
         {featuredFilms.data.map((filmTitle) => (
           <li key={filmTitle}>{filmTitle}</li>
