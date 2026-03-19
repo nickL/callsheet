@@ -12,10 +12,11 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings=0 && prettier --check .",
-    "test": "pnpm -r --if-present test && pnpm --filter callsheet build && pnpm --filter callsheet-codegen build && pnpm --filter callsheet test:types && pnpm --filter callsheet-codegen test:types",
+    "test": "pnpm -r --if-present test && pnpm run check:example-generated && pnpm --filter callsheet build && pnpm --filter callsheet-codegen build && pnpm --filter callsheet test:types && pnpm --filter callsheet-codegen test:types",
     "test:coverage": "pnpm --filter callsheet test:coverage && pnpm --filter callsheet-codegen test:coverage",
     "test:types": "pnpm --filter callsheet test:types && pnpm --filter callsheet-codegen test:types",
-    "typecheck": "pnpm -r --if-present typecheck"
+    "typecheck": "pnpm -r --if-present typecheck",
+    "check:example-generated": "pnpm --filter @callsheet/example-app generate && git diff --exit-code -- apps/example-app/src/graphql/generated.ts apps/example-app/src/generated/calls.ts"
   },
   "devDependencies": {
     "@vitest/eslint-plugin": "^1.6.12",

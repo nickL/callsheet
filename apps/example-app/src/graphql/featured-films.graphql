@@ -1,0 +1,3 @@
+query FeaturedFilms {
+  films: featuredFilms
+}

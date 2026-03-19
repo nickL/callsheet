@@ -5,6 +5,9 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "bin": {
+    "callsheet-codegen": "./bin/callsheet-codegen.mjs"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -13,6 +16,7 @@
     }
   },
   "files": [
+    "bin",
     "dist"
   ],
   "scripts": {
@@ -21,6 +25,9 @@
     "test:coverage": "vitest run --coverage",
     "test:types": "tsd --typings dist/index.d.ts --files test-d/**/*.test-d.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "jiti": "^2.6.1"
   },
   "devDependencies": {
     "callsheet": "workspace:*",

@@ -9,11 +9,12 @@ afterEach(() => {
 
 describe('discovery unit', () => {
   it('throws when typescript cannot be loaded', async () => {
+    vi.resetModules();
     vi.doMock('typescript', () => {
       throw new Error('missing');
     });
 
-    const { discoverGraphQLDocuments } = await import('../../src');
+    const { discoverGraphQLDocuments } = await import('../../src/discovery');
 
     await expect(
       discoverGraphQLDocuments({
@@ -25,16 +26,22 @@ describe('discovery unit', () => {
   });
 
   it('throws when typescript returns no parsed tsconfig', async () => {
-    vi.doMock('typescript', () => ({
-      default: {
+    vi.resetModules();
+    vi.doMock('typescript', () => {
+      const mockedTypeScript = {
         getParsedCommandLineOfConfigFile() {
           return undefined;
         },
         sys: {},
-      },
-    }));
+      };
 
-    const { discoverGraphQLDocuments } = await import('../../src');
+      return {
+        default: mockedTypeScript,
+        ...mockedTypeScript,
+      };
+    });
+
+    const { discoverGraphQLDocuments } = await import('../../src/discovery');
 
     await expect(
       discoverGraphQLDocuments({

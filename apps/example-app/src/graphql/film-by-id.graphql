@@ -1,0 +1,6 @@
+query FilmById($id: ID!) {
+  film: filmById(id: $id) {
+    id
+    title
+  }
+}

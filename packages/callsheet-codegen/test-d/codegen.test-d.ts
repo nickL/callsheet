@@ -1,6 +1,7 @@
 import { expectType } from 'tsd';
 
 import {
+  defineConfig,
   discoverGraphQLDocuments,
   generateCallsheetModule,
   writeCallsheetModule,
@@ -8,6 +9,7 @@ import {
 
 import type {
   CallBuilderKind,
+  CallsheetCodegenConfig,
   DiscoveredGraphQLDocument,
   GenerateCallsheetModuleConfig,
   GenerateCallsheetModuleResult,
@@ -37,10 +39,19 @@ const config: GenerateCallsheetModuleConfig = {
   overrides: [override],
 };
 
+const callsheetConfig: CallsheetCodegenConfig = defineConfig({
+  discovery: config.discovery,
+  output: {
+    file: config.outputFile,
+  },
+  overrides: [override],
+});
+
 expectType<Promise<DiscoveredGraphQLDocument[]>>(
   discoverGraphQLDocuments(config.discovery),
 );
 expectType<CallBuilderKind>(override.kind!);
+expectType<CallsheetCodegenConfig>(callsheetConfig);
 expectType<Promise<GenerateCallsheetModuleResult>>(
   generateCallsheetModule(config),
 );

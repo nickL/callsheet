@@ -1,25 +1,19 @@
 import { defineCalls, mutation, query } from 'callsheet';
-
 import {
   FeaturedFilmsDocument,
   FilmByIdDocument,
   RefreshFilmsDocument,
-} from '../graphql/documents';
+} from '../graphql/generated';
+import {
+  featuredFilmsOptions,
+  filmByIdOptions,
+  refreshFilmsOptions,
+} from '../callsheet-options/films';
 
 export const calls = defineCalls({
   films: {
-    byId: query(FilmByIdDocument, {
-      dataKey: ({ input }: { input: { id: string } }) =>
-        ['film', input.id] as const,
-    }),
-    featured: query(FeaturedFilmsDocument, {
-      dataKey: ['films', 'featured'] as const,
-    }),
-    refresh: mutation(RefreshFilmsDocument, {
-      invalidates: [
-        ['films', 'featured'],
-        ['sdk', 'featuredCount'],
-      ] as const,
-    }),
+    byId: query(FilmByIdDocument, filmByIdOptions),
+    featured: query(FeaturedFilmsDocument, featuredFilmsOptions),
+    refresh: mutation(RefreshFilmsDocument, refreshFilmsOptions),
   },
 } as const);

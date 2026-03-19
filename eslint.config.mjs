@@ -21,6 +21,7 @@ const testFiles = [
 ];
 const nodeFiles = [
   '**/*.config.{ts,mts,cts,mjs,cjs,js}',
+  'apps/*/scripts/**/*.{ts,mts,cts,mjs,cjs,js}',
   'packages/*/scripts/**/*.{ts,mts,cts,mjs,cjs,js}',
 ];
 
@@ -31,6 +32,8 @@ export default tseslint.config(
       '**/coverage/**',
       '**/dist/**',
       '**/node_modules/**',
+      'apps/example-app/src/generated/**',
+      'apps/example-app/src/graphql/generated.ts',
       '**/tests/fixtures/**',
       '**/tests/.tmp/**',
       '**/.vite/**',

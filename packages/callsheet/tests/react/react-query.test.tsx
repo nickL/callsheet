@@ -10,7 +10,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createTestQueryClient } from './tanstack-test-utils';
-import { CALL_KINDS, call, defineCalls } from '../../src';
+import { CALL_KINDS, call, defineCalls, mutation, query } from '../../src';
 import {
   CallsheetProvider,
   createReactQueryAdapter,
@@ -19,7 +19,11 @@ import {
   useQuery,
 } from '../../src/react-query';
 
-import type { CallOutputOf, CallsheetCustomSource } from '../../src';
+import type {
+  CallOutputOf,
+  CallsheetCustomSource,
+  TypedDocumentLike,
+} from '../../src';
 import type { ExecuteCall, ExecuteCallContext } from '../../src/react-query';
 import type { PropsWithChildren } from 'react';
 
@@ -75,6 +79,30 @@ const updateFilmSource: UpdateFilmSource = {
   sourceId: 'films.update',
 };
 
+const generatedFeaturedDocument: TypedDocumentLike<
+  { films: readonly string[] },
+  Record<string, never>
+> = {
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+    },
+  ],
+};
+
+const generatedRefreshDocument: TypedDocumentLike<
+  { refreshed: boolean },
+  Record<string, never>
+> = {
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+    },
+  ],
+};
+
 const calls = defineCalls({
   films: {
     byId: call(filmByIdSource, {
@@ -88,6 +116,17 @@ const calls = defineCalls({
     }),
     update: call(updateFilmSource, {
       invalidates: ({ input }) => [['film', input.id]] as const,
+    }),
+  },
+});
+
+const generatedGraphqlCalls = defineCalls({
+  films: {
+    featured: query(generatedFeaturedDocument, {
+      dataKey: ['films', 'generatedFeatured'],
+    }),
+    refresh: mutation(generatedRefreshDocument, {
+      invalidates: [['films', 'generatedFeatured']] as const,
     }),
   },
 });
@@ -260,6 +299,65 @@ describe('react-query adapter', () => {
       'films',
       'recent',
     ]);
+  });
+
+  it('treats GraphQL empty variables as no-input for query options', async () => {
+    const execute = (() =>
+      Promise.resolve({
+        films: ['Wall-E', 'Inside Out'] as const,
+      } as never)) as ExecuteCall;
+    const adapter = createReactQueryAdapter({
+      execute,
+    });
+    const queryClient = createTestQueryClient();
+    const config = queryOptions(generatedGraphqlCalls.films.featured, {
+      staleTime: 5_000,
+    });
+
+    expect(adapter.resolveQueryOptions(config).queryKey).toEqual([
+      'callsheet',
+      'films',
+      'generatedFeatured',
+    ]);
+
+    await expect(adapter.fetchQuery(queryClient, config)).resolves.toEqual({
+      films: ['Wall-E', 'Inside Out'],
+    });
+  });
+
+  it('treats GraphQL empty variables as no-input for mutation options', async () => {
+    const executeSpy = vi.fn();
+    const execute: ExecuteCall = (context) => {
+      executeSpy(context);
+
+      return Promise.resolve({
+        refreshed: true,
+      } as CallOutputOf<typeof context.call>);
+    };
+    const adapter = createReactQueryAdapter({
+      execute,
+    });
+    const queryClient = createTestQueryClient();
+    const Wrapper = ({ children }: PropsWithChildren) => (
+      <QueryClientProvider client={queryClient}>
+        <CallsheetProvider adapter={adapter}>{children}</CallsheetProvider>
+      </QueryClientProvider>
+    );
+    const { result } = renderHook(
+      () => useMutation(generatedGraphqlCalls.films.refresh),
+      {
+        wrapper: Wrapper,
+      },
+    );
+
+    await result.current.mutateAsync(undefined);
+
+    expect(executeSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        call: generatedGraphqlCalls.films.refresh,
+        input: undefined,
+      }),
+    );
   });
 
   it('throws when a query is missing dataKey and defineCalls metadata', () => {

@@ -42,6 +42,11 @@ interface CallsheetDocumentCandidate {
   operationType?: CallBuilderKind;
 }
 
+interface DocumentReference {
+  expression: ts.Expression;
+  valueDeclaration: ts.VariableDeclaration;
+}
+
 function isDiscoveryInputArray(
   value:
     | GraphQLDocumentDiscoveryInput
@@ -300,10 +305,7 @@ function classifyDocumentExport(
   typescript: typeof ts,
 ): { documentIdentity: string; operationType?: CallBuilderKind } | null {
   const { typeChecker } = projectContext;
-  const resolvedSymbol =
-    symbol.flags & typescript.SymbolFlags.Alias
-      ? typeChecker.getAliasedSymbol(symbol)
-      : symbol;
+  const resolvedSymbol = resolveAliasedSymbol(symbol, typeChecker, typescript);
   const valueDeclaration = resolvedSymbol.valueDeclaration;
 
   if (
@@ -332,12 +334,18 @@ function classifyDocumentExport(
     return null;
   }
 
-  const operationType = readOperationType(
+  const documentReference = resolveDocumentReference(
     documentInitializer,
+    valueDeclaration,
+    typeChecker,
+    typescript,
+  );
+  const operationType = readOperationType(
+    documentReference.expression,
     symbol.getName(),
     typescript,
   );
-  const documentIdentity = `${valueDeclaration.getSourceFile().fileName}:${valueDeclaration.pos}`;
+  const documentIdentity = `${documentReference.valueDeclaration.getSourceFile().fileName}:${documentReference.valueDeclaration.pos}`;
 
   return operationType === undefined
     ? { documentIdentity }
@@ -363,11 +371,11 @@ function isNonDocumentInitializer(
 }
 
 function readOperationType(
-  initializer: ts.Expression,
+  expression: ts.Expression,
   exportName: string,
   typescript: typeof ts,
 ): CallBuilderKind | undefined {
-  const document = skipOuterExpressions(initializer, typescript);
+  const document = skipOuterExpressions(expression, typescript);
 
   if (!typescript.isObjectLiteralExpression(document)) {
     return undefined;
@@ -398,6 +406,82 @@ function readOperationType(
   }
 
   return undefined;
+}
+
+function resolveDocumentReference(
+  expression: ts.Expression,
+  valueDeclaration: ts.VariableDeclaration,
+  typeChecker: ts.TypeChecker,
+  typescript: typeof ts,
+): DocumentReference {
+  let documentReference: DocumentReference = {
+    expression: skipOuterExpressions(expression, typescript),
+    valueDeclaration,
+  };
+  const seenSymbols = new Set<ts.Symbol>();
+
+  while (typescript.isIdentifier(documentReference.expression)) {
+    const nextReference = followDocumentIdentifier(
+      documentReference.expression,
+      typeChecker,
+      seenSymbols,
+      typescript,
+    );
+
+    if (nextReference === undefined) {
+      break;
+    }
+
+    documentReference = nextReference;
+  }
+
+  return documentReference;
+}
+
+function followDocumentIdentifier(
+  expression: ts.Identifier,
+  typeChecker: ts.TypeChecker,
+  seenSymbols: Set<ts.Symbol>,
+  typescript: typeof ts,
+): DocumentReference | undefined {
+  const symbol = typeChecker.getSymbolAtLocation(expression);
+
+  if (symbol === undefined) {
+    return undefined;
+  }
+
+  const resolvedSymbol = resolveAliasedSymbol(symbol, typeChecker, typescript);
+
+  if (seenSymbols.has(resolvedSymbol)) {
+    return undefined;
+  }
+
+  seenSymbols.add(resolvedSymbol);
+
+  const valueDeclaration = resolvedSymbol.valueDeclaration;
+
+  if (
+    valueDeclaration === undefined ||
+    !typescript.isVariableDeclaration(valueDeclaration) ||
+    valueDeclaration.initializer === undefined
+  ) {
+    return undefined;
+  }
+
+  return {
+    expression: skipOuterExpressions(valueDeclaration.initializer, typescript),
+    valueDeclaration,
+  };
+}
+
+function resolveAliasedSymbol(
+  symbol: ts.Symbol,
+  typeChecker: ts.TypeChecker,
+  typescript: typeof ts,
+): ts.Symbol {
+  return symbol.flags & typescript.SymbolFlags.Alias
+    ? typeChecker.getAliasedSymbol(symbol)
+    : symbol;
 }
 
 function readDefinitionOperationType(

@@ -63,7 +63,7 @@ describe('discovery integration', { timeout: 15_000 }, () => {
     ]);
   });
 
-  it('dedupes the same discovered export across duplicate discovery inputs', async () => {
+  it('dedupes discovered exports', async () => {
     const discoveryInput = {
       entries: ['featured.ts'],
       rootDir: fixturePath(basicFixture, 'src/graphql'),
@@ -148,6 +148,25 @@ describe('discovery integration', { timeout: 15_000 }, () => {
     );
   });
 
+  it('throws when wrapper entry modules point at the same document', async () => {
+    await expect(
+      discoverGraphQLDocuments({
+        entries: [
+          'duplicate-reexported-documents.ts',
+          'reexported-documents.ts',
+        ],
+        rootDir: fixturePath(basicFixture, 'src/graphql'),
+        tsconfigFile: fixturePath(basicFixture, 'tsconfig.json'),
+      }),
+    ).rejects.toThrow(
+      [
+        'The same GraphQL document export was discovered from multiple entry modules.',
+        `  First: ${normalizeSourceFile(fixturePath(basicFixture, 'src/graphql/duplicate-reexported-documents.ts'))}#DuplicateFeaturedFilmsDocument`,
+        `  Second: ${normalizeSourceFile(fixturePath(basicFixture, 'src/graphql/reexported-documents.ts'))}#ImportedFeaturedFilmsDocument`,
+      ].join('\n'),
+    );
+  });
+
   it('throws when an entry file is not included in the tsconfig project', async () => {
     await expect(
       discoverGraphQLDocuments({
@@ -206,6 +225,33 @@ describe('discovery integration', { timeout: 15_000 }, () => {
     ]);
   });
 
+  it('query and mutation kinds can be inferred from re-exported documents', async () => {
+    const discovered = await discoverGraphQLDocuments({
+      entries: ['reexported-documents.ts'],
+      rootDir: fixturePath(basicFixture, 'src/graphql'),
+      tsconfigFile: fixturePath(basicFixture, 'tsconfig.json'),
+    });
+
+    expect(discovered).toEqual([
+      {
+        exportName: 'ImportedFeaturedFilmsDocument',
+        kind: 'query',
+        path: ['reexportedDocuments', 'importedFeaturedFilms'],
+        sourceFile: normalizeSourceFile(
+          fixturePath(basicFixture, 'src/graphql/reexported-documents.ts'),
+        ),
+      },
+      {
+        exportName: 'ImportedRefreshFilmsDocument',
+        kind: 'mutation',
+        path: ['reexportedDocuments', 'importedRefreshFilms'],
+        sourceFile: normalizeSourceFile(
+          fixturePath(basicFixture, 'src/graphql/reexported-documents.ts'),
+        ),
+      },
+    ]);
+  });
+
   it('keeps discovered documents when definitions cannot be read', async () => {
     const discovered = await discoverGraphQLDocuments({
       entries: ['unreadable-definitions.ts'],
@@ -244,6 +290,7 @@ describe('discovery integration', { timeout: 15_000 }, () => {
       },
       {
         exportName: 'ReferencedDocument',
+        kind: 'query',
         path: ['unreadableDefinitions', 'referenced'],
         sourceFile: normalizeSourceFile(
           fixturePath(basicFixture, 'src/graphql/unreadable-definitions.ts'),

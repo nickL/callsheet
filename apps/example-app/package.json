@@ -6,6 +6,9 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite",
+    "generate": "pnpm run generate:graphql && pnpm run generate:callsheet",
+    "generate:callsheet": "callsheet-codegen --config callsheet.config.ts && pnpm exec prettier --write src/generated/calls.ts",
+    "generate:graphql": "graphql-codegen --config codegen.ts && pnpm exec prettier --write src/graphql/generated.ts",
     "preview": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit"
@@ -18,10 +21,17 @@
     "react-dom": "^19.2.4"
   },
   "devDependencies": {
+    "@graphql-codegen/cli": "^6.2.1",
+    "@graphql-codegen/typed-document-node": "^6.1.7",
+    "@graphql-codegen/typescript": "^5.0.9",
+    "@graphql-codegen/typescript-operations": "^5.0.9",
+    "@graphql-typed-document-node/core": "^3.2.0",
     "@testing-library/react": "^16.3.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
+    "callsheet-codegen": "workspace:*",
+    "graphql": "^16.13.1",
     "jsdom": "^29.0.0",
     "vite": "^8.0.0"
   }

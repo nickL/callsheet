@@ -11,11 +11,11 @@ import { calls } from './calls';
 
 import type { FeaturedCountResult } from './calls';
 import type {
-  FeaturedFilmsResult,
-  FilmByIdInput,
-  FilmByIdResult,
-  RefreshFilmsResult,
-} from './graphql/documents';
+  FeaturedFilmsQuery,
+  FilmByIdQuery,
+  FilmByIdQueryVariables,
+  RefreshFilmsMutation,
+} from './graphql/generated';
 import type { UserByIdInput, UserByIdResult } from './rest/contract';
 import type { ExecuteCall } from 'callsheet/react-query';
 
@@ -34,7 +34,7 @@ type ExampleRequest =
     }
   | {
       call: typeof calls.films.byId;
-      input: FilmByIdInput;
+      input: FilmByIdQueryVariables;
     }
   | {
       call: typeof calls.films.refresh;
@@ -68,7 +68,7 @@ const exampleState = {
 
 const execute = ((request: ExampleRequest) => {
   if (matchesCall(request, calls.films.featured)) {
-    const featuredFilms: FeaturedFilmsResult = {
+    const featuredFilms: FeaturedFilmsQuery = {
       films: [...exampleState.featuredFilms],
     };
 
@@ -77,7 +77,7 @@ const execute = ((request: ExampleRequest) => {
 
   if (matchesCall(request, calls.films.byId)) {
     const filmId = request.input.id;
-    const film: FilmByIdResult = {
+    const film: FilmByIdQuery = {
       film: {
         id: filmId,
         title: filmId === 'wall-e' ? 'Wall-E' : 'Inside Out',
@@ -88,7 +88,7 @@ const execute = ((request: ExampleRequest) => {
   }
 
   if (matchesCall(request, calls.films.refresh)) {
-    const result: RefreshFilmsResult = {
+    const result: RefreshFilmsMutation = {
       refreshed: true,
     };
 

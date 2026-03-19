@@ -17,6 +17,14 @@ interface TypedDocumentTypeDecoration<
   __apiType?: (variables: TVariables) => TResult;
 }
 
+type NormalizeTypedDocumentVariables<TVariables> = [TVariables] extends [
+  Record<string, never>,
+]
+  ? [Record<string, never>] extends [TVariables]
+    ? void
+    : TVariables
+  : TVariables;
+
 export type TypedDocumentLike<
   TResult = unknown,
   TVariables = Record<string, never>,
@@ -64,7 +72,7 @@ export type CallsheetCustomSource<
 
 export type CallSourceInputOf<TSource> =
   TSource extends TypedDocumentTypeDecoration<infer _TResult, infer TVariables>
-    ? TVariables
+    ? NormalizeTypedDocumentVariables<TVariables>
     : TSource extends CallTypeTag<infer TCallInput, infer _TCallOutput>
       ? TCallInput
       : unknown;

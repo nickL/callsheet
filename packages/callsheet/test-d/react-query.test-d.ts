@@ -1,7 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
 import { expectType } from 'tsd';
 
-import { CALL_KINDS, call } from '../dist/index.js';
+import { CALL_KINDS, call, mutation, query } from '../dist/index.js';
 import {
   createReactQueryAdapter,
   queryOptions,
@@ -9,7 +9,10 @@ import {
   useQuery,
 } from '../dist/react-query/index.js';
 
-import type { CallsheetCustomSource } from '../dist/index.js';
+import type {
+  CallsheetCustomSource,
+  TypedDocumentLike,
+} from '../dist/index.js';
 import type {
   DefinedUseQueryResult,
   UseMutationResult,
@@ -56,6 +59,30 @@ const maybeFilmByIdSource: CallsheetCustomSource<
   sourceId: 'films.maybeById',
 };
 
+const generatedFeaturedDocument: TypedDocumentLike<
+  { films: readonly string[] },
+  Record<string, never>
+> = {
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+    },
+  ],
+};
+
+const generatedRefreshDocument: TypedDocumentLike<
+  { refreshed: boolean },
+  Record<string, never>
+> = {
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+    },
+  ],
+};
+
 const featuredCall = call(featuredSource, {
   dataKey: ['films', 'featured'],
 });
@@ -70,6 +97,12 @@ const updateCall = call(updateFilmSource, {
 
 const maybeByIdCall = call(maybeFilmByIdSource, {
   dataKey: ({ input }) => ['film', input?.id ?? 'unknown'] as const,
+});
+const generatedFeaturedCall = query(generatedFeaturedDocument, {
+  dataKey: ['films', 'generatedFeatured'],
+});
+const generatedRefreshCall = mutation(generatedRefreshDocument, {
+  invalidates: [['films', 'generatedFeatured']] as const,
 });
 
 const featuredConfig = queryOptions(featuredCall, {
@@ -106,6 +139,12 @@ expectType<
 expectType<Promise<{ films: readonly string[] }>>(
   adapter.fetchQuery(new QueryClient(), queryOptions(featuredCall)),
 );
+expectType<Promise<{ films: readonly string[] }>>(
+  adapter.fetchQuery(new QueryClient(), queryOptions(generatedFeaturedCall)),
+);
+expectType<UseMutationResult<{ refreshed: boolean }, Error, void, unknown>>(
+  useMutation(generatedRefreshCall),
+);
 expectType<Promise<{ id: string; title: string }>>(
   adapter.fetchQuery(new QueryClient(), byIdConfig),
 );
@@ -126,6 +165,7 @@ useMutation(updateCall).mutate({
   id: 'film_123',
   title: 'Alien 3',
 });
+useMutation(generatedRefreshCall).mutate(undefined);
 
 const invalidByIdOptions = {
   select: (data: { film: { id: string; title: string } }) => data.film,

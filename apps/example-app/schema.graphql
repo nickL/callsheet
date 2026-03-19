@@ -1,0 +1,18 @@
+type Film {
+  id: ID!
+  title: String!
+}
+
+type Query {
+  featuredFilms: [String!]!
+  filmById(id: ID!): Film!
+}
+
+type Mutation {
+  refreshFilms: Boolean!
+}
+
+schema {
+  query: Query
+  mutation: Mutation
+}

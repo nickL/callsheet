@@ -62,6 +62,29 @@ export interface GeneratedCallOverride {
   options?: ImportedCallOptionsReference;
 }
 
+export interface CallsheetCodegenOutputConfig {
+  /**
+   * Generated Callsheet module file path.
+   */
+  file: string;
+  /**
+   * Defaults to `calls`.
+   */
+  exportName?: string;
+  /**
+   * Defaults to `callsheet`.
+   */
+  importFrom?: string;
+}
+
+export interface CallsheetCodegenConfig {
+  discovery:
+    | GraphQLDocumentDiscoveryInput
+    | readonly GraphQLDocumentDiscoveryInput[];
+  output: CallsheetCodegenOutputConfig;
+  overrides?: readonly GeneratedCallOverride[];
+}
+
 export interface GenerateCallsheetModuleConfig {
   discovery:
     | GraphQLDocumentDiscoveryInput
