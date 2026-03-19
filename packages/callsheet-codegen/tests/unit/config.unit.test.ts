@@ -53,6 +53,13 @@ describe('callsheet config', () => {
           tsconfigFile: path.join(tempRoot, 'tsconfig.json'),
         },
       ],
+      tsRest: [
+        {
+          exportName: 'contract',
+          importFrom: path.join(tempRoot, 'src/rest/contract'),
+          pathPrefix: ['rest'],
+        },
+      ],
     });
     expect(generateConfig.outputFile).toBe(
       path.join(tempRoot, 'src/generated/calls.ts'),

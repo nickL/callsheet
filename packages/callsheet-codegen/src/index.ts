@@ -9,6 +9,7 @@ export type {
   CallsheetCodegenSourcesConfig,
   DiscoveredSourceEntry,
   DiscoveredGraphQLDocument,
+  DiscoveredTsRestRoute,
   GeneratedCallOverride,
   GeneratedCallOverrideEntry,
   GenerateCallsheetModuleConfig,
@@ -16,7 +17,9 @@ export type {
   GeneratedCallsheetEntry,
   GeneratedCallsheetEntryOrigin,
   GeneratedCallsheetEntryOriginGraphQLDocument,
+  GeneratedCallsheetEntryOriginTsRestRoute,
   GraphQLDocumentDiscoveryInput,
   ImportedCallOptionsReference,
   SourceImportReference,
+  TsRestContractDiscoveryInput,
 } from './types';

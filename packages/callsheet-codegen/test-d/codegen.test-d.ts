@@ -14,6 +14,7 @@ import type {
   GenerateCallsheetModuleConfig,
   GenerateCallsheetModuleResult,
   GeneratedCallOverride,
+  TsRestContractDiscoveryInput,
 } from '../dist/index.js';
 
 const override: GeneratedCallOverride = {
@@ -34,6 +35,19 @@ const sources: CallsheetCodegenSourcesConfig = {
       tsconfigFile: 'tsconfig.json',
     },
   ],
+  tsRest: [
+    {
+      exportName: 'contract',
+      importFrom: 'src/rest/contract',
+      pathPrefix: ['rest'],
+    },
+  ],
+};
+
+const tsRestSource: TsRestContractDiscoveryInput = {
+  exportName: 'contract',
+  importFrom: 'src/rest/contract',
+  pathPrefix: ['rest'],
 };
 
 const config: GenerateCallsheetModuleConfig = {
@@ -55,6 +69,7 @@ expectType<Promise<Awaited<ReturnType<typeof discoverGraphQLDocuments>>>>(
 );
 expectType<CallBuilderKind>(override.kind!);
 expectType<CallsheetCodegenConfig>(callsheetConfig);
+expectType<TsRestContractDiscoveryInput>(tsRestSource);
 expectType<Promise<GenerateCallsheetModuleResult>>(
   generateCallsheetModule(config),
 );

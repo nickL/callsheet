@@ -30,11 +30,18 @@
     "jiti": "^2.6.1"
   },
   "devDependencies": {
+    "@ts-rest/core": "^3.52.1",
     "callsheet": "workspace:*",
     "typescript": "^5.9.3"
   },
   "peerDependencies": {
+    "@ts-rest/core": "^3.52.1",
     "callsheet": "^0.0.1",
     "typescript": ">=5"
+  },
+  "peerDependenciesMeta": {
+    "@ts-rest/core": {
+      "optional": true
+    }
   }
 }

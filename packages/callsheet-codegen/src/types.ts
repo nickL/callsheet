@@ -30,8 +30,25 @@ export interface GraphQLDocumentDiscoveryInput {
   pathPrefix?: readonly string[];
 }
 
+export interface TsRestContractDiscoveryInput {
+  /**
+   * File path to the module that exports the ts-rest contract.
+   */
+  importFrom: string;
+  /**
+   * Export name of the ts-rest contract.
+   */
+  exportName: string;
+  /**
+   * Define a path prefix that should be added to all discovered entries from
+   * this source.
+   */
+  pathPrefix?: readonly string[];
+}
+
 export interface CallsheetCodegenSourcesConfig {
   graphql?: readonly GraphQLDocumentDiscoveryInput[];
+  tsRest?: readonly TsRestContractDiscoveryInput[];
 }
 
 export interface ImportedCallOptionsReference {
@@ -51,8 +68,16 @@ export interface GeneratedCallsheetEntryOriginGraphQLDocument {
   sourceFile: string;
 }
 
+export interface GeneratedCallsheetEntryOriginTsRestRoute {
+  kind: 'tsRestRoute';
+  exportName: string;
+  routePath: readonly string[];
+  sourceFile: string;
+}
+
 export type GeneratedCallsheetEntryOrigin =
-  GeneratedCallsheetEntryOriginGraphQLDocument;
+  | GeneratedCallsheetEntryOriginGraphQLDocument
+  | GeneratedCallsheetEntryOriginTsRestRoute;
 
 export interface GeneratedCallOverrideEntryGraphQLDocument {
   kind: 'graphqlDocument';
@@ -60,8 +85,16 @@ export interface GeneratedCallOverrideEntryGraphQLDocument {
   sourceFile: string;
 }
 
+export interface GeneratedCallOverrideEntryTsRestRoute {
+  kind: 'tsRestRoute';
+  exportName: string;
+  routePath: readonly string[];
+  sourceFile: string;
+}
+
 export type GeneratedCallOverrideEntry =
-  GeneratedCallOverrideEntryGraphQLDocument;
+  | GeneratedCallOverrideEntryGraphQLDocument
+  | GeneratedCallOverrideEntryTsRestRoute;
 
 export interface GeneratedCallOverride {
   /**
@@ -138,6 +171,14 @@ export interface DiscoveredGraphQLDocument {
    * Generated Callsheet path before any overrides are applied.
    */
   path: readonly string[];
+}
+
+export interface DiscoveredTsRestRoute {
+  exportName: string;
+  kind: CallBuilderKind;
+  path: readonly string[];
+  routePath: readonly string[];
+  sourceFile: string;
 }
 
 export interface SourceImportReference {

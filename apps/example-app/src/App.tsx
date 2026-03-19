@@ -45,7 +45,7 @@ type ExampleRequest =
       input: void;
     }
   | {
-      call: typeof calls.users.byId;
+      call: typeof calls.rest.users.byId;
       input: UserByIdInput;
     };
 
@@ -107,7 +107,7 @@ const execute = ((request: ExampleRequest) => {
     return Promise.resolve(result);
   }
 
-  if (matchesCall(request, calls.users.byId)) {
+  if (matchesCall(request, calls.rest.users.byId)) {
     const userId = request.input.params.id;
     const user: UserByIdResult = {
       user: exampleState.users[userId as keyof typeof exampleState.users] ?? {
@@ -145,7 +145,7 @@ function FeaturedFilmsSection() {
     }),
   );
   const user = useQuery(
-    queryOptions(calls.users.byId, {
+    queryOptions(calls.rest.users.byId, {
       input: {
         params: {
           id: 'user_1',
@@ -181,6 +181,9 @@ function FeaturedFilmsSection() {
         {calls.films.featured.scope.join('.')}
       </p>
       <p data-testid="film-call-scope">{calls.films.byId.scope.join('.')}</p>
+      <p data-testid="rest-call-scope">
+        {calls.rest.users.byId.scope.join('.')}
+      </p>
       <p data-testid="featured-count">{featuredCount.data}</p>
       <p data-testid="user-name">{user.data.name}</p>
       <p data-testid="selected-film">{wallE.data.title}</p>

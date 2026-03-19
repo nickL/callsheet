@@ -1,8 +1,6 @@
 import { CALL_KINDS, call, defineCalls } from 'callsheet';
-import { call as tsRestCall } from 'callsheet/ts-rest';
 
 import { calls as generatedCalls } from './generated/calls';
-import { contract } from './rest/contract';
 
 import type { CallsheetCustomSource } from 'callsheet';
 
@@ -22,15 +20,10 @@ const featuredCountSource: CallsheetCustomSource<
 };
 
 export const calls = defineCalls({
-  films: generatedCalls.films,
+  ...generatedCalls,
   sdk: {
     featuredCount: call(featuredCountSource, {
       scope: ['sdk', 'featuredCount'] as const,
-    }),
-  },
-  users: {
-    byId: tsRestCall(contract.users.byId, {
-      scope: ['users', 'detail'] as const,
     }),
   },
 } as const);

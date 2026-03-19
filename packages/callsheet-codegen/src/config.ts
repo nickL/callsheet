@@ -5,11 +5,14 @@ import { pathToFileURL } from 'node:url';
 
 import { createJiti } from 'jiti';
 
+import { isObjectRecord } from './internal-utils';
+
 import type {
   CallsheetCodegenConfig,
   CallsheetCodegenSourcesConfig,
   GenerateCallsheetModuleConfig,
   GraphQLDocumentDiscoveryInput,
+  TsRestContractDiscoveryInput,
 } from './types';
 
 const DEFAULT_CONFIG_FILE_NAMES = [
@@ -151,8 +154,7 @@ function readConfigExport(
 }
 
 function getDefaultExport(configModule: unknown): unknown {
-  return typeof configModule === 'object' &&
-    configModule !== null &&
+  return isObjectRecord(configModule) &&
     'default' in configModule &&
     configModule.default !== undefined
     ? configModule.default
@@ -162,12 +164,7 @@ function getDefaultExport(configModule: unknown): unknown {
 function isCallsheetCodegenConfig(
   value: unknown,
 ): value is CallsheetCodegenConfig {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'sources' in value &&
-    'output' in value
-  );
+  return isObjectRecord(value) && 'sources' in value && 'output' in value;
 }
 
 function resolveSourcesConfig(
@@ -182,6 +179,13 @@ function resolveSourcesConfig(
             resolveGraphQLDiscoveryInput(input, configDirectory),
           ),
         }),
+    ...(sources.tsRest === undefined
+      ? {}
+      : {
+          tsRest: sources.tsRest.map((input) =>
+            resolveTsRestDiscoveryInput(input, configDirectory),
+          ),
+        }),
   };
 }
 
@@ -193,5 +197,15 @@ function resolveGraphQLDiscoveryInput(
     ...input,
     rootDir: path.resolve(configDirectory, input.rootDir),
     tsconfigFile: path.resolve(configDirectory, input.tsconfigFile),
+  };
+}
+
+function resolveTsRestDiscoveryInput(
+  input: TsRestContractDiscoveryInput,
+  configDirectory: string,
+): TsRestContractDiscoveryInput {
+  return {
+    ...input,
+    importFrom: path.resolve(configDirectory, input.importFrom),
   };
 }

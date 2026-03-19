@@ -1,5 +1,12 @@
 import path from 'node:path';
 
+import {
+  compareText,
+  formatPathSegments,
+  normalizeSourceFile,
+  toArray,
+} from './internal-utils';
+
 import type {
   CallBuilderKind,
   DiscoveredGraphQLDocument,
@@ -47,25 +54,6 @@ interface CallsheetDocumentCandidate {
 interface DocumentReference {
   expression: ts.Expression;
   valueDeclaration: ts.VariableDeclaration;
-}
-
-function isDiscoveryInputArray(
-  value:
-    | GraphQLDocumentDiscoveryInput
-    | readonly GraphQLDocumentDiscoveryInput[],
-): value is readonly GraphQLDocumentDiscoveryInput[] {
-  return Array.isArray(value);
-}
-
-function compareText(a: string, b: string): number {
-  return a.localeCompare(b, 'en-us', { numeric: true });
-}
-
-function normalizeSourceFile(filePath: string): string {
-  return path
-    .relative(process.cwd(), path.resolve(process.cwd(), filePath))
-    .split(path.sep)
-    .join('/');
 }
 
 function formatConfigDiagnostic(
@@ -132,7 +120,7 @@ function buildDiscoveryInputs(
     | GraphQLDocumentDiscoveryInput
     | readonly GraphQLDocumentDiscoveryInput[],
 ): ResolvedDiscoveryInput[] {
-  const rawInputs = isDiscoveryInputArray(input) ? input : [input];
+  const rawInputs = toArray(input);
 
   return rawInputs.map((config) => {
     const exportSuffix = config.exportSuffix ?? 'Document';
@@ -679,8 +667,8 @@ function compareDiscoveredDocuments(
   b: DiscoveredGraphQLDocument,
 ): number {
   const pathComparison = compareText(
-    formatCallsheetPath(a.path),
-    formatCallsheetPath(b.path),
+    formatPathSegments(a.path),
+    formatPathSegments(b.path),
   );
 
   if (pathComparison !== 0) {
@@ -694,8 +682,4 @@ function compareDiscoveredDocuments(
   }
 
   return compareText(a.exportName, b.exportName);
-}
-
-function formatCallsheetPath(pathSegments: readonly string[]): string {
-  return pathSegments.join('.');
 }

@@ -15,7 +15,7 @@ afterEach(cleanupTempFixtures);
 describe('generate integration', { timeout: 15_000 }, () => {
   const fixture = 'generate-basic';
 
-  it('generates a Callsheet module with overrides and imported options', async () => {
+  it('generates a Callsheet module from GraphQL and ts-rest sources', async () => {
     const result = await generateCallsheetModule({
       sources: {
         graphql: [
@@ -23,6 +23,13 @@ describe('generate integration', { timeout: 15_000 }, () => {
             entries: ['films.ts'],
             rootDir: fixturePath(fixture, 'src/graphql'),
             tsconfigFile: fixturePath(fixture, 'tsconfig.json'),
+          },
+        ],
+        tsRest: [
+          {
+            exportName: 'contract',
+            importFrom: fixturePath(fixture, 'src/rest/contract.ts'),
+            pathPrefix: ['rest'],
           },
         ],
       },
@@ -43,16 +50,26 @@ describe('generate integration', { timeout: 15_000 }, () => {
     expect(result.entries.map((entry) => entry.path.join('.'))).toEqual([
       'films.byId',
       'films.featuredFilms',
+      'rest.users.byId',
+      'rest.users.update',
     ]);
     expect(result.code).toMatchInlineSnapshot(`
       "import { defineCalls, query } from 'callsheet';
+      import { mutation, query as query_2 } from 'callsheet/ts-rest';
       import { FeaturedFilmsDocument, FilmByIdDocument } from '../graphql/films';
+      import { contract } from '../rest/contract';
       import { filmByIdOptions } from '../callsheet-options/films';
 
       export const calls = defineCalls({
         "films": {
           "byId": query(FilmByIdDocument, filmByIdOptions),
           "featuredFilms": query(FeaturedFilmsDocument),
+        },
+        "rest": {
+          "users": {
+            "byId": query_2(contract.users.byId),
+            "update": mutation(contract.users.update),
+          },
         },
       } as const);
       "

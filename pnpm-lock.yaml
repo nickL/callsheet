@@ -154,6 +154,9 @@ importers:
         specifier: ^2.6.1
         version: 2.6.1
     devDependencies:
+      '@ts-rest/core':
+        specifier: ^3.52.1
+        version: 3.52.1(@types/node@25.5.0)(zod@3.25.76)
       callsheet:
         specifier: workspace:*
         version: link:../callsheet

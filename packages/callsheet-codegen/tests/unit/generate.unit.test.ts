@@ -38,6 +38,19 @@ function createGraphQLDocumentOrigin(
   };
 }
 
+function createTsRestRouteOrigin(
+  exportName: string,
+  sourceFile: string,
+  routePath: readonly string[],
+): GeneratedCallsheetEntryOrigin {
+  return {
+    kind: 'tsRestRoute',
+    exportName,
+    routePath,
+    sourceFile,
+  };
+}
+
 function createEntry(
   partial: Partial<DiscoveredSourceEntry> & Pick<DiscoveredSourceEntry, 'path'>,
 ): DiscoveredSourceEntry {
@@ -102,11 +115,12 @@ function createTsRestGeneratedEntry(memberPath: readonly string[]) {
   return createGeneratedEntry({
     builderImportFrom: 'callsheet/ts-rest',
     callsheetPath: ['rest', 'users', 'byId'],
-    origin: createGraphQLDocumentOrigin(
+    origin: createTsRestRouteOrigin(
       'contract',
       normalizeSourceFile(
         fixturePath('generate-basic', 'src/rest/contract.ts'),
       ),
+      memberPath,
     ),
     sourceImport: {
       filePath: fixturePath('generate-basic', 'src/rest/contract.ts'),

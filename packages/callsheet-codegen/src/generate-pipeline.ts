@@ -1,6 +1,8 @@
 import path from 'node:path';
 
 import { discoverGraphQLDocuments } from './discovery';
+import { compareText, formatPathSegments } from './internal-utils';
+import { discoverTsRestRoutes } from './ts-rest-discovery';
 
 import type {
   CallBuilderKind,
@@ -69,16 +71,8 @@ interface MutableGeneratedModuleNode {
   entry?: GeneratedModuleEntry;
 }
 
-function compareText(a: string, b: string): number {
-  return a.localeCompare(b, 'en-us', { numeric: true });
-}
-
-function formatCallsheetPath(pathSegments: readonly string[]): string {
-  return pathSegments.join('.');
-}
-
 function createOverridePathKey(pathSegments: readonly string[]): string {
-  return formatCallsheetPath(pathSegments);
+  return formatPathSegments(pathSegments);
 }
 
 function isIdentifierSegment(segment: string): boolean {
@@ -89,6 +83,8 @@ function formatOrigin(origin: GeneratedCallsheetEntryOrigin): string {
   switch (origin.kind) {
     case 'graphqlDocument':
       return `${origin.sourceFile}#${origin.exportName}`;
+    case 'tsRestRoute':
+      return `${origin.sourceFile}#${origin.exportName}.${formatPathSegments(origin.routePath)}`;
   }
 }
 
@@ -96,6 +92,8 @@ function formatOverrideEntry(entry: GeneratedCallOverrideEntry): string {
   switch (entry.kind) {
     case 'graphqlDocument':
       return `${entry.sourceFile}#${entry.exportName}`;
+    case 'tsRestRoute':
+      return `${entry.sourceFile}#${entry.exportName}.${formatPathSegments(entry.routePath)}`;
   }
 }
 
@@ -109,6 +107,13 @@ function matchesOverrideEntry(
         origin.kind === 'graphqlDocument' &&
         origin.sourceFile === overrideEntry.sourceFile &&
         origin.exportName === overrideEntry.exportName
+      );
+    case 'tsRestRoute':
+      return (
+        origin.kind === 'tsRestRoute' &&
+        origin.sourceFile === overrideEntry.sourceFile &&
+        origin.exportName === overrideEntry.exportName &&
+        compareCallsheetPaths(origin.routePath, overrideEntry.routePath) === 0
       );
   }
 }
@@ -124,7 +129,7 @@ function compareCallsheetPaths(
   a: readonly string[],
   b: readonly string[],
 ): number {
-  return compareText(formatCallsheetPath(a), formatCallsheetPath(b));
+  return compareText(formatPathSegments(a), formatPathSegments(b));
 }
 
 function toImportPath(outputFile: string, filePath: string): string {
@@ -244,6 +249,12 @@ export async function discoverConfiguredSourceEntries(
     );
   }
 
+  if (sources.tsRest?.length) {
+    const discoveredRoutes = await discoverTsRestRoutes(sources.tsRest);
+
+    discoveredEntries.push(...discoveredRoutes.map(toTsRestSourceEntry));
+  }
+
   return discoveredEntries;
 }
 
@@ -263,6 +274,27 @@ function toGraphQLSourceEntry(
     sourceImport: {
       filePath: path.resolve(process.cwd(), document.sourceFile),
       name: document.exportName,
+    },
+  };
+}
+
+function toTsRestSourceEntry(
+  route: Awaited<ReturnType<typeof discoverTsRestRoutes>>[number],
+): DiscoveredSourceEntry {
+  return {
+    builderImportFrom: 'callsheet/ts-rest',
+    kind: route.kind,
+    origin: {
+      kind: 'tsRestRoute',
+      exportName: route.exportName,
+      routePath: route.routePath,
+      sourceFile: route.sourceFile,
+    },
+    path: [...route.path],
+    sourceImport: {
+      filePath: path.resolve(process.cwd(), route.sourceFile),
+      memberPath: route.routePath,
+      name: route.exportName,
     },
   };
 }
@@ -309,7 +341,7 @@ function buildGeneratedEntry(
     throw new Error(
       [
         'Could not tell whether this discovered entry should use a query or mutation builder.',
-        `  Path: ${formatCallsheetPath(entry.path)}`,
+        `  Path: ${formatPathSegments(entry.path)}`,
         `  Origin: ${formatOrigin(entry.origin)}`,
         'Add an explicit kind override for this generated path.',
       ].join('\n'),
@@ -348,7 +380,7 @@ function validateGeneratedEntryPaths(entries: readonly GeneratedEntry[]): void {
     ) {
       throw new Error(
         [
-          `Generated path is empty or invalid: "${formatCallsheetPath(entry.callsheetPath)}".`,
+          `Generated path is empty or invalid: "${formatPathSegments(entry.callsheetPath)}".`,
           `  Origin: ${formatOrigin(entry.origin)}`,
         ].join('\n'),
       );
@@ -359,8 +391,8 @@ function validateGeneratedEntryPaths(entries: readonly GeneratedEntry[]): void {
       continue;
     }
 
-    const previousPath = formatCallsheetPath(previousEntry.callsheetPath);
-    const currentPath = formatCallsheetPath(entry.callsheetPath);
+    const previousPath = formatPathSegments(previousEntry.callsheetPath);
+    const currentPath = formatPathSegments(entry.callsheetPath);
 
     if (previousPath === currentPath) {
       throw new Error(
