@@ -177,14 +177,10 @@ function FeaturedFilmsSection() {
   return (
     <>
       <p data-testid="featured-call-kind">{calls.films.featured.kind}</p>
-      <p data-testid="featured-call-data-key">
-        {Array.isArray(calls.films.featured.dataKey)
-          ? calls.films.featured.dataKey.join('.')
-          : 'dynamic'}
+      <p data-testid="featured-call-scope">
+        {calls.films.featured.scope.join('.')}
       </p>
-      <p data-testid="film-call-data-key">
-        {typeof calls.films.byId.dataKey === 'function' ? 'dynamic' : 'static'}
-      </p>
+      <p data-testid="film-call-scope">{calls.films.byId.scope.join('.')}</p>
       <p data-testid="featured-count">{featuredCount.data}</p>
       <p data-testid="user-name">{user.data.name}</p>
       <p data-testid="selected-film">{wallE.data.title}</p>

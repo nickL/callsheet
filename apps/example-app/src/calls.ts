@@ -25,12 +25,12 @@ export const calls = defineCalls({
   films: generatedCalls.films,
   sdk: {
     featuredCount: call(featuredCountSource, {
-      dataKey: ['sdk', 'featuredCount'] as const,
+      scope: ['sdk', 'featuredCount'] as const,
     }),
   },
   users: {
     byId: tsRestCall(contract.users.byId, {
-      dataKey: ({ input }) => ['user', input.params.id] as const,
+      scope: ['users', 'detail'] as const,
     }),
   },
 } as const);

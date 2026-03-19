@@ -37,10 +37,10 @@ describe('callsheet/ts-rest', () => {
     const calls = defineCalls({
       films: {
         byId: tsRestCall(contract.films.byId, {
-          dataKey: ({ input }) => ['film', input.params.id] as const,
+          scope: ['films', 'detail'] as const,
         }),
         update: tsRestCall(contract.films.update, {
-          invalidates: ({ input }) => [['film', input.params.id]] as const,
+          invalidates: [['films', 'detail']] as const,
         }),
       },
     });
@@ -56,10 +56,10 @@ describe('callsheet/ts-rest', () => {
 
   it('creates query and mutation calls with ts-rest wrappers', () => {
     const byId = tsRestQuery(contract.films.byId, {
-      dataKey: ({ input }) => ['film', input.params.id] as const,
+      scope: ['films', 'detail'] as const,
     });
     const update = tsRestMutation(contract.films.update, {
-      invalidates: ({ input }) => [['film', input.params.id]] as const,
+      invalidates: [['films', 'detail']] as const,
     });
 
     expect(byId.kind).toBe(CALL_KINDS.query);

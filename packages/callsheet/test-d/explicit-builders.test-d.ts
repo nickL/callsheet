@@ -42,20 +42,24 @@ const updateFilmDocument: TypedDocumentLike<
 };
 
 const listCall = query(filmsListDocument, {
-  dataKey: ({ input }) => ['films', input.page] as const,
+  scope: ['films', 'list'] as const,
 });
 
 const updateCall = mutation(updateFilmDocument, {
   invalidates: ({ input, output }) =>
-    [['films'], ['film', input.id, output.updateFilm.id]] as const,
+    [
+      ['films', 'list'],
+      ['films', 'detail', input.id, output.updateFilm.id],
+    ] as const,
 });
 
 const manualQuery = query<{ page: number }, { films: string[] }>({
-  dataKey: ({ input }) => ['films', input.page] as const,
+  scope: ['films', 'list'] as const,
 });
 
 const manualMutation = mutation<{ id: string }, { ok: true }>({
-  invalidates: ({ input, output }) => [['film', input.id, output.ok]] as const,
+  invalidates: ({ input, output }) =>
+    [['films', 'detail', input.id, output.ok]] as const,
 });
 
 void listCall;

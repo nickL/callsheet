@@ -106,16 +106,17 @@ const generatedRefreshDocument: TypedDocumentLike<
 const calls = defineCalls({
   films: {
     byId: call(filmByIdSource, {
-      dataKey: ({ input }) => ['film', input.id] as const,
+      scope: ['films', 'detail'] as const,
     }),
     maybeById: call(maybeFilmByIdSource, {
-      dataKey: ({ input }) => ['film', input?.id ?? 'unknown'] as const,
+      scope: ['films', 'detail'] as const,
+      key: ({ input }) => ['film', { id: input?.id ?? 'unknown' }] as const,
     }),
     featured: call(featuredFilmsSource, {
-      dataKey: ['films', 'featured'],
+      scope: ['films', 'list'] as const,
     }),
     update: call(updateFilmSource, {
-      invalidates: ({ input }) => [['film', input.id]] as const,
+      invalidates: [['films', 'detail']] as const,
     }),
   },
 });
@@ -123,10 +124,10 @@ const calls = defineCalls({
 const generatedGraphqlCalls = defineCalls({
   films: {
     featured: query(generatedFeaturedDocument, {
-      dataKey: ['films', 'generatedFeatured'],
+      scope: ['films', 'list'] as const,
     }),
     refresh: mutation(generatedRefreshDocument, {
-      invalidates: [['films', 'generatedFeatured']] as const,
+      invalidates: [['films', 'list']] as const,
     }),
   },
 });
@@ -134,6 +135,27 @@ const generatedGraphqlCalls = defineCalls({
 const metadataFallbackCalls = defineCalls({
   films: {
     recent: call(featuredFilmsSource),
+  },
+});
+
+const staticKeyCalls = defineCalls({
+  films: {
+    archived: call(featuredFilmsSource, {
+      scope: ['films', 'archive'] as const,
+      key: ['legacy-films', { view: 'archived' }] as const,
+    }),
+  },
+});
+
+const functionInvalidationCalls = defineCalls({
+  films: {
+    rename: call(updateFilmSource, {
+      invalidates: ({ input, output }) =>
+        [
+          ['films', 'detail'],
+          ['films', 'renamed', input.id, output.updateFilm.title],
+        ] as const,
+    }),
   },
 });
 
@@ -253,12 +275,14 @@ describe('react-query adapter', () => {
     expect(featuredOptions.queryKey).toEqual([
       'callsheet',
       'films',
-      'featured',
+      'list',
+      { call: ['films', 'featured'] },
     ]);
     expect(byIdOptions.queryKey).toEqual([
       'callsheet',
-      'film',
-      'film_123',
+      'films',
+      'detail',
+      { call: ['films', 'byId'] },
       { input: { id: 'film_123' } },
     ]);
 
@@ -284,13 +308,13 @@ describe('react-query adapter', () => {
 
     expect(adapter.resolveQueryOptions(maybeByIdConfig).queryKey).toEqual([
       'callsheet',
-      'film',
-      'unknown',
-      { input: undefined },
+      'films',
+      'detail',
+      { key: ['film', { id: 'unknown' }] },
     ]);
   });
 
-  it('falls back to the call path when no dataKey is defined', () => {
+  it('uses the defineCalls path as the default scope when none is provided', () => {
     const { adapter } = createWrapper();
     const recentConfig = queryOptions(metadataFallbackCalls.films.recent);
 
@@ -298,6 +322,18 @@ describe('react-query adapter', () => {
       'callsheet',
       'films',
       'recent',
+    ]);
+  });
+
+  it('uses static key overrides when provided', () => {
+    const { adapter } = createWrapper();
+    const archivedConfig = queryOptions(staticKeyCalls.films.archived);
+
+    expect(adapter.resolveQueryOptions(archivedConfig).queryKey).toEqual([
+      'callsheet',
+      'films',
+      'archive',
+      { key: ['legacy-films', { view: 'archived' }] },
     ]);
   });
 
@@ -317,7 +353,8 @@ describe('react-query adapter', () => {
     expect(adapter.resolveQueryOptions(config).queryKey).toEqual([
       'callsheet',
       'films',
-      'generatedFeatured',
+      'list',
+      { call: ['films', 'featured'] },
     ]);
 
     await expect(adapter.fetchQuery(queryClient, config)).resolves.toEqual({
@@ -360,12 +397,12 @@ describe('react-query adapter', () => {
     );
   });
 
-  it('throws when a query is missing dataKey and defineCalls metadata', () => {
+  it('throws when a query is missing scope and defineCalls metadata', () => {
     const { adapter } = createWrapper();
     const unregisteredConfig = queryOptions(unregisteredFeaturedCall);
 
     expect(() => adapter.resolveQueryOptions(unregisteredConfig)).toThrow(
-      'Unable to build a React Query key. Define `dataKey` on the call or register the call with defineCalls(...).',
+      'Unable to resolve scope for this call. Define `scope` on the call or register the call with defineCalls(...).',
     );
   });
 
@@ -473,7 +510,7 @@ describe('react-query adapter', () => {
     });
 
     expect(invalidateQueriesSpy).toHaveBeenCalledWith({
-      queryKey: ['callsheet', 'film', 'film_123'],
+      queryKey: ['callsheet', 'films', 'detail'],
     });
   });
 
@@ -501,7 +538,34 @@ describe('react-query adapter', () => {
     });
 
     expect(invalidateQueriesSpy).toHaveBeenCalledWith({
-      queryKey: ['callsheet', 'film', 'film_123'],
+      queryKey: ['callsheet', 'films', 'detail'],
+    });
+  });
+
+  it('resolves invalidation scopes from invalidates callbacks', async () => {
+    const { Wrapper, adapter, queryClient } = createWrapper();
+    const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+    const { result } = renderHook(
+      () =>
+        useTanstackMutation(
+          adapter.mutationOptions(functionInvalidationCalls.films.rename),
+        ),
+      {
+        wrapper: Wrapper,
+      },
+    );
+
+    await result.current.mutateAsync({
+      id: 'film_123',
+      title: 'Inside Out',
+    });
+
+    expect(invalidateQueriesSpy).toHaveBeenNthCalledWith(1, {
+      queryKey: ['callsheet', 'films', 'detail'],
+    });
+    expect(invalidateQueriesSpy).toHaveBeenNthCalledWith(2, {
+      queryKey: ['callsheet', 'films', 'renamed', 'film_123', 'Inside Out'],
     });
   });
 

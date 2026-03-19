@@ -1,3 +1,3 @@
 export const sharedOptions = {
-  dataKey: ['alpha'] as const,
+  scope: ['alpha'] as const,
 };

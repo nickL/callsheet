@@ -84,25 +84,26 @@ const generatedRefreshDocument: TypedDocumentLike<
 };
 
 const featuredCall = call(featuredSource, {
-  dataKey: ['films', 'featured'],
+  scope: ['films', 'list'] as const,
 });
 
 const byIdCall = call(filmByIdSource, {
-  dataKey: ({ input }) => ['film', input.id] as const,
+  scope: ['films', 'detail'] as const,
 });
 
 const updateCall = call(updateFilmSource, {
-  invalidates: ({ input }) => [['film', input.id]] as const,
+  invalidates: [['films', 'detail']] as const,
 });
 
 const maybeByIdCall = call(maybeFilmByIdSource, {
-  dataKey: ({ input }) => ['film', input?.id ?? 'unknown'] as const,
+  scope: ['films', 'detail'] as const,
+  key: ({ input }) => ['film', { id: input?.id ?? 'unknown' }] as const,
 });
 const generatedFeaturedCall = query(generatedFeaturedDocument, {
-  dataKey: ['films', 'generatedFeatured'],
+  scope: ['films', 'list'] as const,
 });
 const generatedRefreshCall = mutation(generatedRefreshDocument, {
-  invalidates: [['films', 'generatedFeatured']] as const,
+  invalidates: [['films', 'list']] as const,
 });
 
 const featuredConfig = queryOptions(featuredCall, {

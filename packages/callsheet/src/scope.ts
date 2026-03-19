@@ -1,11 +1,25 @@
 /**
- * Data key is the identifier for the data a call represents.
+ * Scope groups calls that represent the same family of data.
+ * It is used for cache grouping and invalidation.
+ *
  */
-export type DataKeyPart = string | number | boolean | null | undefined;
-export type DataKey = readonly DataKeyPart[];
+export type ScopePart = string | number | boolean | null | undefined;
+export type Scope = readonly ScopePart[];
+
+/**
+ * Key is the exact cache identity for a specific call.
+ * Its meant to stay broad so adapters can preserve specific key shapes.
+ *
+ */
+export type KeyPart = unknown;
+export type Key = readonly KeyPart[];
 
 export interface CallInputContext<TCallInput> {
   input: TCallInput;
+}
+
+export interface KeyContext<TCallInput> extends CallInputContext<TCallInput> {
+  scope: Scope;
 }
 
 export interface MutationResultContext<
@@ -15,27 +29,27 @@ export interface MutationResultContext<
   output: TCallOutput;
 }
 
-export type DataKeyResolver<TCallInput> = (
-  context: CallInputContext<TCallInput>,
-) => DataKey;
+export type KeyResolver<TCallInput> = (context: KeyContext<TCallInput>) => Key;
 
 export type InvalidationResolver<TCallInput, TCallOutput> = (
   context: MutationResultContext<TCallInput, TCallOutput>,
-) => readonly DataKey[];
+) => readonly Scope[];
 
-export type DataKeyConfig<TCallInput> = DataKey | DataKeyResolver<TCallInput>;
+export type KeyConfig<TCallInput> = Key | KeyResolver<TCallInput>;
 
 export type InvalidationConfig<TCallInput, TCallOutput> =
-  | readonly DataKey[]
+  | readonly Scope[]
   | InvalidationResolver<TCallInput, TCallOutput>;
 
 export interface CallOptions<TCallInput = unknown, TCallOutput = unknown> {
-  dataKey?: DataKeyConfig<TCallInput>;
+  scope?: Scope;
+  key?: KeyConfig<TCallInput>;
   invalidates?: InvalidationConfig<TCallInput, TCallOutput>;
 }
 
 export interface QueryOptions<TCallInput = unknown> {
-  dataKey?: DataKeyConfig<TCallInput>;
+  scope?: Scope;
+  key?: KeyConfig<TCallInput>;
 }
 
 export interface MutationOptions<

@@ -1,3 +1,3 @@
 export const adminOptions = {
-  dataKey: ['zulu'] as const,
+  scope: ['zulu'] as const,
 };

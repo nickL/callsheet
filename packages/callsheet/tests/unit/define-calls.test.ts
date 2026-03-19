@@ -63,16 +63,14 @@ describe('defineCalls', () => {
         create: mutation({
           invalidates: [['films']],
         }),
-        list: query({
-          dataKey: ['films'],
-        }),
+        list: query(),
         ignoredLeaf: 'not-a-call',
       },
     });
 
     expect(calls.films.create.kind).toBe(CALL_KINDS.mutation);
     expect(calls.films.list.kind).toBe(CALL_KINDS.query);
-    expect(calls.films.list.dataKey).toEqual(['films']);
+    expect(calls.films.list.scope).toEqual(['films', 'list']);
     expect(getCallMetadata(calls.films.list)).toEqual({
       path: ['films', 'list'],
     });
@@ -84,7 +82,7 @@ describe('defineCalls', () => {
     const calls = defineCalls({
       films: {
         list: call(filmsListDocument, {
-          dataKey: ['films'],
+          scope: ['films'],
         }),
         update: call(updateFilmRoute, {
           invalidates: [['films']],
@@ -100,11 +98,11 @@ describe('defineCalls', () => {
     ]);
 
     const explicitQuery = query(filmsListDocument, {
-      dataKey: ['films', 'explicit-list'],
+      scope: ['films', 'explicit-list'],
     });
     expect(explicitQuery.kind).toBe(CALL_KINDS.query);
     expect(explicitQuery.source).toEqual(filmsListDocument);
-    expect(explicitQuery.dataKey).toEqual(['films', 'explicit-list']);
+    expect(explicitQuery.scope).toEqual(['films', 'explicit-list']);
   });
 
   it('requires explicit query or mutation calls when kind cannot be inferred', () => {
@@ -127,11 +125,11 @@ describe('defineCalls', () => {
     expect(optionsQuery.source).toEqual(optionsRoute);
 
     const optionsQueryWithConfig = query(optionsRoute, {
-      dataKey: ['films', 'options'],
+      scope: ['films', 'options'],
     });
     expect(optionsQueryWithConfig.kind).toBe(CALL_KINDS.query);
     expect(optionsQueryWithConfig.source).toEqual(optionsRoute);
-    expect(optionsQueryWithConfig.dataKey).toEqual(['films', 'options']);
+    expect(optionsQueryWithConfig.scope).toEqual(['films', 'options']);
 
     const optionsMutation = mutation(optionsRoute, {
       invalidates: [['films']],
@@ -274,7 +272,7 @@ describe('defineCalls', () => {
           method: 'GET',
         } as unknown as RestSourceLike<'GET'>,
         {
-          dataKey: ['films'],
+          scope: ['films'],
         },
       );
     }).toThrow('The provided source shape is not supported by callsheet.');

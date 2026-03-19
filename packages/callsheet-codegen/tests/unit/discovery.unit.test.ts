@@ -2,6 +2,8 @@ import path from 'node:path';
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import type * as TypeScript from 'typescript';
+
 afterEach(() => {
   vi.doUnmock('typescript');
   vi.resetModules();
@@ -27,17 +29,18 @@ describe('discovery unit', () => {
 
   it('throws when typescript returns no parsed tsconfig', async () => {
     vi.resetModules();
-    vi.doMock('typescript', () => {
+    vi.doMock('typescript', async () => {
+      const actual = await vi.importActual<typeof TypeScript>('typescript');
       const mockedTypeScript = {
+        ...actual,
         getParsedCommandLineOfConfigFile() {
           return undefined;
         },
-        sys: {},
       };
 
       return {
-        default: mockedTypeScript,
         ...mockedTypeScript,
+        default: mockedTypeScript,
       };
     });
 

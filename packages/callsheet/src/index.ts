@@ -4,16 +4,19 @@ export { defineCalls, getCallMetadata } from './define-calls';
 export type {
   CallOptions,
   CallInputContext,
-  DataKey,
-  DataKeyConfig,
-  DataKeyPart,
-  DataKeyResolver,
   InvalidationConfig,
   InvalidationResolver,
+  Key,
+  KeyConfig,
+  KeyContext,
+  KeyPart,
+  KeyResolver,
   MutationOptions,
   MutationResultContext,
   QueryOptions,
-} from './data-key';
+  Scope,
+  ScopePart,
+} from './scope';
 
 export type {
   Call,

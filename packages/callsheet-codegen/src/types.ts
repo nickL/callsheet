@@ -57,7 +57,7 @@ export interface GeneratedCallOverride {
    */
   kind?: CallBuilderKind;
   /**
-   * Import call options such as `dataKey` or `invalidates` from another module.
+   * Import call options such as `scope`, `key`, or `invalidates` from another module.
    */
   options?: ImportedCallOptionsReference;
 }

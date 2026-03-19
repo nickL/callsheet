@@ -36,15 +36,15 @@ const contract = c.router({
 });
 
 const byIdCall = call(contract.films.byId, {
-  dataKey: ({ input }) => ['film', input.params.id] as const,
+  scope: ['films', 'detail'] as const,
 });
 
 const byIdQuery = query(contract.films.byId, {
-  dataKey: ({ input }) => ['film', input.params.id] as const,
+  scope: ['films', 'detail'] as const,
 });
 
 const updateMutation = mutation(contract.films.update, {
-  invalidates: ({ input }) => [['film', input.params.id]] as const,
+  invalidates: [['films', 'detail']] as const,
 });
 
 expectType<{ film: { id: string; title: string } }>(
@@ -63,7 +63,7 @@ query(contract.films.byId, {
 });
 
 mutation(contract.films.update, {
-  dataKey: ({ input }) => ['film', input.params.id] as const,
+  key: ({ input }) => ['film', { id: input.params.id }] as const,
   // @ts-expect-error select is only available on query calls
   select: (result) => result.updated,
 });

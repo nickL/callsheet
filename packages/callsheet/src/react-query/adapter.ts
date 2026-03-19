@@ -10,7 +10,7 @@ import { hasExplicitInput } from './query-options';
 import type { MutationKind } from '../call-kind';
 import type { CallTypeTag } from '../call-type-tag';
 import type { CallInputOf, CallOutputOf } from '../call-types';
-import type { DataKey, InvalidationConfig } from '../data-key';
+import type { InvalidationConfig, Scope } from '../scope';
 import type {
   QueryCallLike,
   QueryConfig,
@@ -124,7 +124,7 @@ function resolveMutationInvalidations<TCall extends MutationCallLike>(
   },
   input: CallInputOf<TCall>,
   output: CallOutputOf<TCall>,
-): readonly DataKey[] {
+): readonly Scope[] {
   if (typeof call.invalidates === 'function') {
     return call.invalidates({ input, output });
   }
@@ -270,9 +270,9 @@ export function createReactQueryAdapter(
     );
 
     await Promise.all(
-      invalidationTargets.map((dataKey) =>
+      invalidationTargets.map((scope) =>
         queryClient.invalidateQueries({
-          queryKey: buildInvalidationKey(queryKeyPrefix, dataKey),
+          queryKey: buildInvalidationKey(queryKeyPrefix, scope),
         }),
       ),
     );
