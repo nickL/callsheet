@@ -1,47 +1,42 @@
 import { defineConfig } from 'callsheet-codegen';
 
 export default defineConfig({
-  discovery: {
-    rootDir: '.',
-    tsconfigFile: './tsconfig.json',
-    entries: ['src/graphql/generated.ts'],
+  sources: {
+    graphql: [
+      {
+        rootDir: './src/graphql',
+        tsconfigFile: './tsconfig.json',
+        entries: ['generated.ts'],
+      },
+    ],
   },
   output: {
     file: './src/generated/calls.ts',
   },
   overrides: [
     {
-      match: {
-        sourceFile: 'src/graphql/generated.ts',
-        exportName: 'FeaturedFilmsDocument',
-      },
+      path: ['featuredFilms'],
+      as: ['films', 'featured'],
       options: {
         from: '../callsheet-options/films',
         name: 'featuredFilmsOptions',
       },
-      path: ['films', 'featured'],
     },
     {
-      match: {
-        sourceFile: 'src/graphql/generated.ts',
-        exportName: 'FilmByIdDocument',
-      },
+      path: ['filmById'],
+      as: ['films', 'byId'],
       options: {
         from: '../callsheet-options/films',
         name: 'filmByIdOptions',
       },
-      path: ['films', 'byId'],
     },
     {
-      match: {
-        sourceFile: 'src/graphql/generated.ts',
-        exportName: 'RefreshFilmsDocument',
-      },
+      path: ['refreshFilms'],
+      as: ['films', 'refresh'],
       options: {
         from: '../callsheet-options/films',
         name: 'refreshFilmsOptions',
       },
-      path: ['films', 'refresh'],
     },
   ],
 });

@@ -1,9 +1,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { discoverGraphQLDocuments } from './discovery';
 import {
   buildGeneratedEntries,
+  discoverConfiguredSourceEntries,
   orderGeneratedEntries,
   planGeneratedModule,
   prepareGenerationConfig,
@@ -21,9 +21,12 @@ export async function generateCallsheetModule(
   config: GenerateCallsheetModuleConfig,
 ): Promise<GenerateCallsheetModuleResult> {
   const preparedConfig = prepareGenerationConfig(config);
-  const discoveredDocuments = await discoverGraphQLDocuments(config.discovery);
+  const discoveredEntries = await discoverConfiguredSourceEntries(
+    config.sources,
+    preparedConfig,
+  );
   const generatedEntriesResult = buildGeneratedEntries(
-    discoveredDocuments,
+    discoveredEntries,
     preparedConfig,
   );
 

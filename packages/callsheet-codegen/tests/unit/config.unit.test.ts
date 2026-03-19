@@ -17,10 +17,14 @@ describe('callsheet config', () => {
 
   it('returns the same config object from defineConfig', () => {
     const config = {
-      discovery: {
-        rootDir: '.',
-        tsconfigFile: './tsconfig.json',
-        entries: ['src/graphql/generated.ts'],
+      sources: {
+        graphql: [
+          {
+            rootDir: './src/graphql',
+            tsconfigFile: './tsconfig.json',
+            entries: ['generated.ts'],
+          },
+        ],
       },
       output: {
         file: './src/generated/calls.ts',
@@ -30,7 +34,7 @@ describe('callsheet config', () => {
     expect(defineConfig(config)).toBe(config);
   });
 
-  it('loads Typscript config files and resolves paths from the config directory', async () => {
+  it('loads TS config files and resolves paths from the config directory', async () => {
     const tempRoot = await copyFixtureToTemp('generate-basic');
     const configFile = path.join(tempRoot, 'callsheet.config.ts');
 
@@ -41,21 +45,22 @@ describe('callsheet config', () => {
     );
 
     expect(loadedConfig.configFilePath).toBe(configFile);
-    expect(generateConfig.discovery).toEqual({
-      entries: ['src/graphql/generated.ts'],
-      rootDir: tempRoot,
-      tsconfigFile: path.join(tempRoot, 'tsconfig.json'),
+    expect(generateConfig.sources).toEqual({
+      graphql: [
+        {
+          entries: ['generated.ts'],
+          rootDir: path.join(tempRoot, 'src/graphql'),
+          tsconfigFile: path.join(tempRoot, 'tsconfig.json'),
+        },
+      ],
     });
     expect(generateConfig.outputFile).toBe(
       path.join(tempRoot, 'src/generated/calls.ts'),
     );
     expect(generateConfig.overrides).toEqual([
       {
-        match: {
-          sourceFile: 'src/graphql/generated.ts',
-          exportName: 'FeaturedFilmsDocument',
-        },
-        path: ['films', 'featured'],
+        path: ['featuredFilms'],
+        as: ['films', 'featured'],
       },
     ]);
   });
@@ -66,7 +71,7 @@ describe('callsheet config', () => {
 
     await fs.writeFile(
       configFile,
-      "module.exports = { discovery: { rootDir: '.', tsconfigFile: './tsconfig.json', entries: ['src/graphql/generated.ts'] }, output: { file: './src/generated/calls.ts' } };",
+      "module.exports = { sources: { graphql: [{ rootDir: './src/graphql', tsconfigFile: './tsconfig.json', entries: ['generated.ts'] }] }, output: { file: './src/generated/calls.ts' } };",
     );
 
     const loadedConfig = await loadCallsheetCodegenConfig(configFile);
@@ -76,10 +81,14 @@ describe('callsheet config', () => {
     );
 
     expect(loadedConfig.configFilePath).toBe(configFile);
-    expect(generateConfig.discovery).toEqual({
-      entries: ['src/graphql/generated.ts'],
-      rootDir: tempRoot,
-      tsconfigFile: path.join(tempRoot, 'tsconfig.json'),
+    expect(generateConfig.sources).toEqual({
+      graphql: [
+        {
+          entries: ['generated.ts'],
+          rootDir: path.join(tempRoot, 'src/graphql'),
+          tsconfigFile: path.join(tempRoot, 'tsconfig.json'),
+        },
+      ],
     });
     expect(generateConfig.outputFile).toBe(
       path.join(tempRoot, 'src/generated/calls.ts'),

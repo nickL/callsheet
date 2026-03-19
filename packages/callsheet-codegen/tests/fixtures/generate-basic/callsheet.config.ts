@@ -1,10 +1,14 @@
 import { overrides } from './overrides';
 
 export default {
-  discovery: {
-    rootDir: '.',
-    tsconfigFile: './tsconfig.json',
-    entries: ['src/graphql/generated.ts'],
+  sources: {
+    graphql: [
+      {
+        rootDir: './src/graphql',
+        tsconfigFile: './tsconfig.json',
+        entries: ['generated.ts'],
+      },
+    ],
   },
   output: {
     file: './src/generated/calls.ts',

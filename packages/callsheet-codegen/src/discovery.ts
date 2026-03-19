@@ -9,6 +9,7 @@ import type * as ts from 'typescript';
 
 const DEFAULT_EXCLUDE = ['**/*.d.ts'];
 const GENERIC_FILE_NAMES = new Set([
+  'generated',
   'graphql',
   'documents',
   'mutations',
@@ -26,6 +27,7 @@ interface ResolvedDiscoveryInput {
   entries: readonly string[];
   exclude: readonly string[];
   exportSuffix: string;
+  pathPrefix: readonly string[];
 }
 
 interface ProjectContext {
@@ -143,6 +145,7 @@ function buildDiscoveryInputs(
       entries: config.entries,
       exclude: config.exclude ?? DEFAULT_EXCLUDE,
       exportSuffix,
+      pathPrefix: config.pathPrefix ?? [],
       rootDir: path.resolve(process.cwd(), config.rootDir),
       tsconfigFile: path.resolve(process.cwd(), config.tsconfigFile),
     };
@@ -258,6 +261,7 @@ function collectDocumentExports(
             entryModulePath,
             exportName,
             discoveryInput.exportSuffix,
+            discoveryInput.pathPrefix,
           ),
           documentIdentity: classification.documentIdentity,
           entryModulePath: entryModuleFile,
@@ -561,6 +565,7 @@ function buildCallsheetPath(
   entryModulePath: string,
   exportName: string,
   exportSuffix: string,
+  pathPrefix: readonly string[],
 ): string[] {
   const relativeFilePath = path.relative(rootDir, entryModulePath);
   const parsed = path.parse(relativeFilePath);
@@ -577,8 +582,8 @@ function buildCallsheetPath(
   const leaf = lowerFirst(exportName.slice(0, -exportSuffix.length));
 
   return shouldUseFileSegment
-    ? [...directorySegments, fileSegment, leaf]
-    : [...directorySegments, leaf];
+    ? [...pathPrefix, ...directorySegments, fileSegment, leaf]
+    : [...pathPrefix, ...directorySegments, leaf];
 }
 
 function toCamelCaseSegment(value: string): string {

@@ -10,57 +10,143 @@ import {
 } from '../../src/generate-pipeline';
 
 import type {
-  DiscoveredGraphQLDocument,
+  DiscoveredSourceEntry,
   GeneratedCallOverride,
+  GeneratedCallOverrideEntry,
+  GeneratedCallsheetEntryOrigin,
+  SourceImportReference,
 } from '../../src/types';
 
 function createConfig(overrides: readonly GeneratedCallOverride[] = []) {
   return prepareGenerationConfig({
-    discovery: {
-      entries: [],
-      rootDir: '.',
-      tsconfigFile: './tsconfig.json',
-    },
     outputFile: fixturePath('generate-basic', 'src/generated/calls.ts'),
     overrides,
+    sources: {
+      graphql: [],
+    },
   });
 }
 
-function createDocument(
-  partial: Partial<DiscoveredGraphQLDocument> &
-    Pick<DiscoveredGraphQLDocument, 'exportName' | 'path' | 'sourceFile'>,
-): DiscoveredGraphQLDocument {
+function createGraphQLDocumentOrigin(
+  exportName: string,
+  sourceFile: string,
+): GeneratedCallsheetEntryOrigin {
   return {
-    ...partial,
+    kind: 'graphqlDocument',
+    exportName,
+    sourceFile,
   };
 }
 
+function createEntry(
+  partial: Partial<DiscoveredSourceEntry> & Pick<DiscoveredSourceEntry, 'path'>,
+): DiscoveredSourceEntry {
+  const { path, ...rest } = partial;
+  const sourceFile = normalizeSourceFile(
+    fixturePath('generate-basic', 'src/graphql/films.ts'),
+  );
+  const exportName = 'FeaturedFilmsDocument';
+
+  return {
+    builderImportFrom: 'callsheet',
+    origin: createGraphQLDocumentOrigin(exportName, sourceFile),
+    path,
+    sourceImport: {
+      filePath: fixturePath('generate-basic', 'src/graphql/films.ts'),
+      name: exportName,
+    },
+    ...rest,
+  };
+}
+
+function createOverrideEntry(
+  exportName: string,
+  sourceFile: string,
+): GeneratedCallOverrideEntry {
+  return {
+    kind: 'graphqlDocument',
+    exportName,
+    sourceFile,
+  };
+}
+
+function createGeneratedEntry(partial: {
+  builder?: 'query' | 'mutation';
+  builderImportFrom?: string;
+  callsheetPath: readonly string[];
+  options?: { from: string; name: string };
+  origin?: GeneratedCallsheetEntryOrigin;
+  sourceImport?: SourceImportReference;
+}) {
+  const sourceImport = partial.sourceImport ?? {
+    filePath: fixturePath('generate-basic', 'src/graphql/films.ts'),
+    name: 'FeaturedFilmsDocument',
+  };
+
+  return {
+    builder: partial.builder ?? 'query',
+    builderImportFrom: partial.builderImportFrom ?? 'callsheet',
+    callsheetPath: partial.callsheetPath,
+    ...(partial.options === undefined ? {} : { options: partial.options }),
+    origin:
+      partial.origin ??
+      createGraphQLDocumentOrigin(
+        sourceImport.name,
+        normalizeSourceFile(sourceImport.filePath),
+      ),
+    sourceImport,
+  };
+}
+
+function createTsRestGeneratedEntry(memberPath: readonly string[]) {
+  return createGeneratedEntry({
+    builderImportFrom: 'callsheet/ts-rest',
+    callsheetPath: ['rest', 'users', 'byId'],
+    origin: createGraphQLDocumentOrigin(
+      'contract',
+      normalizeSourceFile(
+        fixturePath('generate-basic', 'src/rest/contract.ts'),
+      ),
+    ),
+    sourceImport: {
+      filePath: fixturePath('generate-basic', 'src/rest/contract.ts'),
+      memberPath,
+      name: 'contract',
+    },
+  });
+}
+
 describe('generate unit', () => {
-  it('matches overrides after normalizing source file paths', () => {
-    const sourceFile = normalizeSourceFile(
-      fixturePath('generate-basic', 'src/graphql/film-by-id.ts'),
-    );
+  it('matches overrides by generated path', () => {
     const preparedConfig = createConfig([
       {
-        match: {
-          sourceFile: `./${sourceFile}`,
-          exportName: 'FilmByIdDocument',
-        },
+        path: ['filmById'],
+        as: ['films', 'byId'],
         kind: 'query',
         options: {
           from: '../callsheet-options/films',
           name: 'filmByIdOptions',
         },
-        path: ['films', 'byId'],
       },
     ]);
 
     const result = buildGeneratedEntries(
       [
-        createDocument({
-          exportName: 'FilmByIdDocument',
-          path: ['filmById', 'filmById'],
-          sourceFile,
+        createEntry({
+          origin: createGraphQLDocumentOrigin(
+            'FilmByIdDocument',
+            normalizeSourceFile(
+              fixturePath('generate-basic', 'src/graphql/film-by-id.ts'),
+            ),
+          ),
+          path: ['filmById'],
+          sourceImport: {
+            filePath: fixturePath(
+              'generate-basic',
+              'src/graphql/film-by-id.ts',
+            ),
+            name: 'FilmByIdDocument',
+          },
         }),
       ],
       preparedConfig,
@@ -69,38 +155,40 @@ describe('generate unit', () => {
     expect(result.entries).toEqual([
       {
         builder: 'query',
+        builderImportFrom: 'callsheet',
         callsheetPath: ['films', 'byId'],
-        exportName: 'FilmByIdDocument',
         options: {
           from: '../callsheet-options/films',
           name: 'filmByIdOptions',
         },
-        sourceFile,
+        origin: {
+          kind: 'graphqlDocument',
+          exportName: 'FilmByIdDocument',
+          sourceFile: normalizeSourceFile(
+            fixturePath('generate-basic', 'src/graphql/film-by-id.ts'),
+          ),
+        },
+        sourceImport: {
+          filePath: fixturePath('generate-basic', 'src/graphql/film-by-id.ts'),
+          name: 'FilmByIdDocument',
+        },
       },
     ]);
   });
 
-  it('throws when an override does not match a discovered document export', () => {
-    const sourceFile = normalizeSourceFile(
-      fixturePath('generate-basic', 'src/graphql/films.ts'),
-    );
+  it('throws when an override does not match a generated path', () => {
     const preparedConfig = createConfig([
       {
-        match: {
-          sourceFile,
-          exportName: 'MissingDocument',
-        },
         kind: 'query',
+        path: ['missingDocument'],
       },
     ]);
 
     const result = buildGeneratedEntries(
       [
-        createDocument({
-          exportName: 'FeaturedFilmsDocument',
+        createEntry({
           kind: 'query',
-          path: ['films', 'featuredFilms'],
-          sourceFile,
+          path: ['featuredFilms'],
         }),
       ],
       preparedConfig,
@@ -108,85 +196,147 @@ describe('generate unit', () => {
 
     expect(() => validateGeneratedEntries(result, preparedConfig)).toThrow(
       [
-        'Some overrides did not match a discovered GraphQL document export.',
-        `  ${sourceFile}#MissingDocument`,
+        'Some overrides did not match a generated path.',
+        '  missingDocument',
       ].join('\n'),
     );
   });
 
-  it('throws when a discovered document kind cannot be inferred and no kind override is provided', () => {
-    const sourceFile = normalizeSourceFile(
-      fixturePath('generate-basic', 'src/graphql/unknown-kind.ts'),
-    );
-
+  it('throws when a discovered source kind cannot be inferred and no kind override is provided', () => {
     expect(() =>
       buildGeneratedEntries(
         [
-          createDocument({
-            exportName: 'FilmByIdDocument',
+          createEntry({
+            origin: createGraphQLDocumentOrigin(
+              'FilmByIdDocument',
+              normalizeSourceFile(
+                fixturePath('generate-basic', 'src/graphql/unknown-kind.ts'),
+              ),
+            ),
             path: ['unknownKind', 'filmById'],
-            sourceFile,
+            sourceImport: {
+              filePath: fixturePath(
+                'generate-basic',
+                'src/graphql/unknown-kind.ts',
+              ),
+              name: 'FilmByIdDocument',
+            },
           }),
         ],
         createConfig(),
       ),
     ).toThrow(
       [
-        'Could not tell if this discovered GraphQL document is a query or mutation.',
-        `  ${sourceFile}#FilmByIdDocument`,
-        'Add an explicit kind override for this document.',
+        'Could not tell whether this discovered entry should use a query or mutation builder.',
+        '  Path: unknownKind.filmById',
+        `  Origin: ${normalizeSourceFile(
+          fixturePath('generate-basic', 'src/graphql/unknown-kind.ts'),
+        )}#FilmByIdDocument`,
+        'Add an explicit kind override for this generated path.',
       ].join('\n'),
     );
   });
 
-  it('throws when duplicate overrides match the same discovered document export', () => {
-    const sourceFile = normalizeSourceFile(
-      fixturePath('generate-basic', 'src/graphql/films.ts'),
-    );
-
+  it('throws when duplicate overrides target the same generated path', () => {
     expect(() =>
       createConfig([
         {
-          match: {
-            sourceFile,
-            exportName: 'FeaturedFilmsDocument',
-          },
           kind: 'query',
+          path: ['featuredFilms'],
         },
         {
-          match: {
-            sourceFile,
-            exportName: 'FeaturedFilmsDocument',
-          },
           kind: 'query',
+          path: ['featuredFilms'],
         },
       ]),
     ).toThrow(
-      [
-        'Two overrides matched the same GraphQL document export.',
-        `  ${sourceFile}#FeaturedFilmsDocument`,
-      ].join('\n'),
+      ['Two overrides target the same generated path.', '  featuredFilms'].join(
+        '\n',
+      ),
     );
   });
 
-  it('throws on generated path collisions', () => {
-    const sourceFile = normalizeSourceFile(
+  it('allows different aliases for two document exports that share one generated path', () => {
+    const firstSourceFile = normalizeSourceFile(
       fixturePath('generate-basic', 'src/graphql/films.ts'),
     );
+    const secondSourceFile = normalizeSourceFile(
+      fixturePath('generate-basic', 'src/graphql/shared.ts'),
+    );
+    const preparedConfig = createConfig([
+      {
+        path: ['films', 'filmById'],
+        entry: createOverrideEntry('FilmByIdDocument', firstSourceFile),
+        as: ['films', 'byId'],
+        kind: 'query',
+      },
+      {
+        path: ['films', 'filmById'],
+        entry: createOverrideEntry('SharedFilmByIdDocument', secondSourceFile),
+        as: ['films', 'sharedById'],
+        kind: 'query',
+      },
+    ]);
+    const result = buildGeneratedEntries(
+      [
+        createEntry({
+          kind: 'query',
+          origin: createGraphQLDocumentOrigin(
+            'FilmByIdDocument',
+            firstSourceFile,
+          ),
+          path: ['films', 'filmById'],
+          sourceImport: {
+            filePath: fixturePath('generate-basic', 'src/graphql/films.ts'),
+            name: 'FilmByIdDocument',
+          },
+        }),
+        createEntry({
+          kind: 'query',
+          origin: createGraphQLDocumentOrigin(
+            'SharedFilmByIdDocument',
+            secondSourceFile,
+          ),
+          path: ['films', 'filmById'],
+          sourceImport: {
+            filePath: fixturePath('generate-basic', 'src/graphql/shared.ts'),
+            name: 'SharedFilmByIdDocument',
+          },
+        }),
+      ],
+      preparedConfig,
+    );
+
+    expect(result.entries.map((entry) => entry.callsheetPath)).toEqual([
+      ['films', 'byId'],
+      ['films', 'sharedById'],
+    ]);
+    expect(() =>
+      validateGeneratedEntries(result, preparedConfig),
+    ).not.toThrow();
+  });
+
+  it('throws on generated path collisions', () => {
     const preparedConfig = createConfig();
     const result = buildGeneratedEntries(
       [
-        createDocument({
-          exportName: 'FilmByIdDocument',
+        createEntry({
           kind: 'query',
           path: ['films', 'filmById'],
-          sourceFile,
         }),
-        createDocument({
-          exportName: 'SharedFilmByIdDocument',
+        createEntry({
           kind: 'query',
+          origin: createGraphQLDocumentOrigin(
+            'SharedFilmByIdDocument',
+            normalizeSourceFile(
+              fixturePath('generate-basic', 'src/graphql/films.ts'),
+            ),
+          ),
           path: ['films', 'filmById'],
-          sourceFile,
+          sourceImport: {
+            filePath: fixturePath('generate-basic', 'src/graphql/films.ts'),
+            name: 'SharedFilmByIdDocument',
+          },
         }),
       ],
       preparedConfig,
@@ -204,17 +354,26 @@ describe('generate unit', () => {
     const preparedConfig = createConfig();
     const result = buildGeneratedEntries(
       [
-        createDocument({
-          exportName: 'FilmsDocument',
+        createEntry({
           kind: 'query',
+          origin: createGraphQLDocumentOrigin('FilmsDocument', sourceFile),
           path: ['films'],
-          sourceFile,
+          sourceImport: {
+            filePath: fixturePath('generate-basic', 'src/graphql/root.ts'),
+            name: 'FilmsDocument',
+          },
         }),
-        createDocument({
-          exportName: 'FeaturedFilmsDocument',
+        createEntry({
           kind: 'query',
+          origin: createGraphQLDocumentOrigin(
+            'FeaturedFilmsDocument',
+            sourceFile,
+          ),
           path: ['films', 'featured'],
-          sourceFile,
+          sourceImport: {
+            filePath: fixturePath('generate-basic', 'src/graphql/root.ts'),
+            name: 'FeaturedFilmsDocument',
+          },
         }),
       ],
       preparedConfig,
@@ -225,25 +384,30 @@ describe('generate unit', () => {
     );
   });
 
-  it('throws when an override creates an empty generated path segment', () => {
-    const sourceFile = normalizeSourceFile(
-      fixturePath('generate-basic', 'src/graphql/films.ts'),
-    );
-    const preparedConfig = createConfig();
+  it('throws when an aliased path creates an empty generated path segment', () => {
+    const preparedConfig = createConfig([
+      {
+        path: ['featuredFilms'],
+        as: ['films', ''],
+      },
+    ]);
     const result = buildGeneratedEntries(
       [
-        createDocument({
-          exportName: 'FeaturedFilmsDocument',
+        createEntry({
           kind: 'query',
-          path: ['films', ''],
-          sourceFile,
+          path: ['featuredFilms'],
         }),
       ],
       preparedConfig,
     );
 
     expect(() => validateGeneratedEntries(result, preparedConfig)).toThrow(
-      `Generated path is empty or invalid for ${sourceFile}#FeaturedFilmsDocument.`,
+      [
+        'Generated path is empty or invalid: "films.".',
+        `  Origin: ${normalizeSourceFile(
+          fixturePath('generate-basic', 'src/graphql/films.ts'),
+        )}#FeaturedFilmsDocument`,
+      ].join('\n'),
     );
   });
 
@@ -251,42 +415,50 @@ describe('generate unit', () => {
     const preparedConfig = createConfig();
     const modulePlan = planGeneratedModule(
       [
-        {
-          builder: 'query',
-          callsheetPath: ['adminStatus', 'adminStatus'],
-          exportName: 'AdminStatusDocument',
+        createGeneratedEntry({
+          origin: createGraphQLDocumentOrigin(
+            'AdminStatusDocument',
+            normalizeSourceFile(
+              fixturePath('generate-basic', 'src/graphql/admin-status.ts'),
+            ),
+          ),
           options: {
             from: '../callsheet-options/zulu',
             name: 'adminOptions',
           },
-          sourceFile: normalizeSourceFile(
-            fixturePath('generate-basic', 'src/graphql/admin-status.ts'),
-          ),
-        },
-        {
-          builder: 'query',
+          callsheetPath: ['adminStatus', 'adminStatus'],
+          sourceImport: {
+            filePath: fixturePath(
+              'generate-basic',
+              'src/graphql/admin-status.ts',
+            ),
+            name: 'AdminStatusDocument',
+          },
+        }),
+        createGeneratedEntry({
+          options: {
+            from: '../callsheet-options/alpha',
+            name: 'sharedOptions',
+          },
           callsheetPath: ['films', 'featuredFilms'],
-          exportName: 'FeaturedFilmsDocument',
+        }),
+        createGeneratedEntry({
+          origin: createGraphQLDocumentOrigin(
+            'FilmByIdDocument',
+            normalizeSourceFile(
+              fixturePath('generate-basic', 'src/graphql/films.ts'),
+            ),
+          ),
           options: {
             from: '../callsheet-options/alpha',
             name: 'sharedOptions',
           },
-          sourceFile: normalizeSourceFile(
-            fixturePath('generate-basic', 'src/graphql/films.ts'),
-          ),
-        },
-        {
-          builder: 'query',
           callsheetPath: ['films', 'filmById'],
-          exportName: 'FilmByIdDocument',
-          options: {
-            from: '../callsheet-options/alpha',
-            name: 'sharedOptions',
+          sourceImport: {
+            filePath: fixturePath('generate-basic', 'src/graphql/films.ts'),
+            name: 'FilmByIdDocument',
           },
-          sourceFile: normalizeSourceFile(
-            fixturePath('generate-basic', 'src/graphql/films.ts'),
-          ),
-        },
+        }),
       ],
       preparedConfig,
     );
@@ -314,23 +486,23 @@ describe('generate unit', () => {
 
   it('adds ./ when generated imports stay under the output directory', () => {
     const preparedConfig = prepareGenerationConfig({
-      discovery: {
-        entries: [],
-        rootDir: '.',
-        tsconfigFile: './tsconfig.json',
-      },
       outputFile: fixturePath('generate-basic', 'src/generated/calls.ts'),
+      sources: {
+        graphql: [],
+      },
     });
     const modulePlan = planGeneratedModule(
       [
-        {
-          builder: 'query',
+        createGeneratedEntry({
           callsheetPath: ['films', 'featuredFilms'],
-          exportName: 'FeaturedFilmsDocument',
-          sourceFile: normalizeSourceFile(
-            fixturePath('generate-basic', 'src/generated/graphql/films.ts'),
-          ),
-        },
+          sourceImport: {
+            filePath: fixturePath(
+              'generate-basic',
+              'src/generated/graphql/films.ts',
+            ),
+            name: 'FeaturedFilmsDocument',
+          },
+        }),
       ],
       preparedConfig,
     );
@@ -344,22 +516,32 @@ describe('generate unit', () => {
     const preparedConfig = createConfig();
     const modulePlan = planGeneratedModule(
       [
-        {
-          builder: 'query',
+        createGeneratedEntry({
+          origin: createGraphQLDocumentOrigin(
+            'StatusDocument',
+            normalizeSourceFile(
+              fixturePath('generate-basic', 'src/graphql/admin.ts'),
+            ),
+          ),
           callsheetPath: ['admin', 'status'],
-          exportName: 'StatusDocument',
-          sourceFile: normalizeSourceFile(
-            fixturePath('generate-basic', 'src/graphql/admin.ts'),
+          sourceImport: {
+            filePath: fixturePath('generate-basic', 'src/graphql/admin.ts'),
+            name: 'StatusDocument',
+          },
+        }),
+        createGeneratedEntry({
+          origin: createGraphQLDocumentOrigin(
+            'StatusDocument',
+            normalizeSourceFile(
+              fixturePath('generate-basic', 'src/graphql/system.ts'),
+            ),
           ),
-        },
-        {
-          builder: 'query',
           callsheetPath: ['system', 'status'],
-          exportName: 'StatusDocument',
-          sourceFile: normalizeSourceFile(
-            fixturePath('generate-basic', 'src/graphql/system.ts'),
-          ),
-        },
+          sourceImport: {
+            filePath: fixturePath('generate-basic', 'src/graphql/system.ts'),
+            name: 'StatusDocument',
+          },
+        }),
       ],
       preparedConfig,
     );
@@ -373,5 +555,41 @@ describe('generate unit', () => {
     );
     expect(code).toContain(`query(StatusDocument),`);
     expect(code).toContain(`query(StatusDocument_2),`);
+  });
+
+  it('renders a call from a contract entry path', () => {
+    const preparedConfig = createConfig();
+    const modulePlan = planGeneratedModule(
+      [createTsRestGeneratedEntry(['users', 'byId'])],
+      preparedConfig,
+    );
+
+    expect(renderModuleSource(preparedConfig, modulePlan))
+      .toMatchInlineSnapshot(`
+      "import { defineCalls } from 'callsheet';
+      import { query } from 'callsheet/ts-rest';
+      import { contract } from '../rest/contract';
+
+      export const calls = defineCalls({
+        "rest": {
+          "users": {
+            "byId": query(contract.users.byId),
+          },
+        },
+      } as const);
+      "
+    `);
+  });
+
+  it('uses bracket access when a contract key is not a valid identifier', () => {
+    const preparedConfig = createConfig();
+    const modulePlan = planGeneratedModule(
+      [createTsRestGeneratedEntry(['users', 'by-id'])],
+      preparedConfig,
+    );
+
+    expect(renderModuleSource(preparedConfig, modulePlan)).toContain(
+      `query(contract.users["by-id"])`,
+    );
   });
 });

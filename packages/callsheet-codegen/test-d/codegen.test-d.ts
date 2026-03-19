@@ -10,45 +10,48 @@ import {
 import type {
   CallBuilderKind,
   CallsheetCodegenConfig,
-  DiscoveredGraphQLDocument,
+  CallsheetCodegenSourcesConfig,
   GenerateCallsheetModuleConfig,
   GenerateCallsheetModuleResult,
   GeneratedCallOverride,
 } from '../dist/index.js';
 
 const override: GeneratedCallOverride = {
-  match: {
-    sourceFile: 'src/graphql/films.ts',
-    exportName: 'FilmByIdDocument',
-  },
+  path: ['filmById'],
+  as: ['films', 'byId'],
   kind: 'query',
   options: {
     from: '../callsheet-options/films',
     name: 'filmByIdOptions',
   },
-  path: ['films', 'byId'],
+};
+
+const sources: CallsheetCodegenSourcesConfig = {
+  graphql: [
+    {
+      entries: ['films.ts'],
+      rootDir: 'src/graphql',
+      tsconfigFile: 'tsconfig.json',
+    },
+  ],
 };
 
 const config: GenerateCallsheetModuleConfig = {
-  discovery: {
-    entries: ['films.ts'],
-    rootDir: 'src/graphql',
-    tsconfigFile: 'tsconfig.json',
-  },
+  sources,
   outputFile: 'src/generated/calls.ts',
   overrides: [override],
 };
 
 const callsheetConfig: CallsheetCodegenConfig = defineConfig({
-  discovery: config.discovery,
+  sources,
   output: {
     file: config.outputFile,
   },
   overrides: [override],
 });
 
-expectType<Promise<DiscoveredGraphQLDocument[]>>(
-  discoverGraphQLDocuments(config.discovery),
+expectType<Promise<Awaited<ReturnType<typeof discoverGraphQLDocuments>>>>(
+  discoverGraphQLDocuments(sources.graphql!),
 );
 expectType<CallBuilderKind>(override.kind!);
 expectType<CallsheetCodegenConfig>(callsheetConfig);

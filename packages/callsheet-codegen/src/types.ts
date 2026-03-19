@@ -23,6 +23,15 @@ export interface GraphQLDocumentDiscoveryInput {
    * Defaults to `Document`.
    */
   exportSuffix?: string;
+  /**
+   * Define a path prefix that should be added to all discovered entries from
+   * this source.
+   */
+  pathPrefix?: readonly string[];
+}
+
+export interface CallsheetCodegenSourcesConfig {
+  graphql?: readonly GraphQLDocumentDiscoveryInput[];
 }
 
 export interface ImportedCallOptionsReference {
@@ -36,24 +45,41 @@ export interface ImportedCallOptionsReference {
   name: string;
 }
 
-export interface GeneratedCallOverrideMatch {
-  /**
-   * Source file path resolved from `process.cwd()` used for normalization and
-   * matching.
-   */
-  sourceFile: string;
+export interface GeneratedCallsheetEntryOriginGraphQLDocument {
+  kind: 'graphqlDocument';
   exportName: string;
+  sourceFile: string;
 }
 
+export type GeneratedCallsheetEntryOrigin =
+  GeneratedCallsheetEntryOriginGraphQLDocument;
+
+export interface GeneratedCallOverrideEntryGraphQLDocument {
+  kind: 'graphqlDocument';
+  exportName: string;
+  sourceFile: string;
+}
+
+export type GeneratedCallOverrideEntry =
+  GeneratedCallOverrideEntryGraphQLDocument;
+
 export interface GeneratedCallOverride {
-  match: GeneratedCallOverrideMatch;
   /**
-   * Override the generated Callsheet path for this document.
+   * Target the generated entry at this path before aliasing.
    */
-  path?: readonly string[];
+  path: readonly string[];
+  /**
+   * Use this when multiple generated entries share the same path and this
+   * override should only apply to one of them.
+   */
+  entry?: GeneratedCallOverrideEntry;
+  /**
+   * Expose the generated entry at a different path in the final Callsheet tree.
+   */
+  as?: readonly string[];
   /**
    * Override the generated call type when discovery can't tell whether the
-   * document is a query or a mutation.
+   * source should use a query or mutation builder.
    */
   kind?: CallBuilderKind;
   /**
@@ -78,17 +104,13 @@ export interface CallsheetCodegenOutputConfig {
 }
 
 export interface CallsheetCodegenConfig {
-  discovery:
-    | GraphQLDocumentDiscoveryInput
-    | readonly GraphQLDocumentDiscoveryInput[];
+  sources: CallsheetCodegenSourcesConfig;
   output: CallsheetCodegenOutputConfig;
   overrides?: readonly GeneratedCallOverride[];
 }
 
 export interface GenerateCallsheetModuleConfig {
-  discovery:
-    | GraphQLDocumentDiscoveryInput
-    | readonly GraphQLDocumentDiscoveryInput[];
+  sources: CallsheetCodegenSourcesConfig;
   /**
    * Output file path used for relative import generation.
    */
@@ -118,11 +140,24 @@ export interface DiscoveredGraphQLDocument {
   path: readonly string[];
 }
 
-export interface GeneratedCallsheetEntry {
-  exportName: string;
+export interface SourceImportReference {
+  filePath: string;
+  name: string;
+  memberPath?: readonly string[];
+}
+
+export interface DiscoveredSourceEntry {
   path: readonly string[];
-  sourceFile: string;
+  kind?: CallBuilderKind;
+  builderImportFrom: string;
+  sourceImport: SourceImportReference;
+  origin: GeneratedCallsheetEntryOrigin;
+}
+
+export interface GeneratedCallsheetEntry {
   builder: CallBuilderKind;
+  origin: GeneratedCallsheetEntryOrigin;
+  path: readonly string[];
   options?: ImportedCallOptionsReference;
 }
 

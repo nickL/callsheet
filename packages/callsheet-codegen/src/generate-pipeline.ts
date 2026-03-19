@@ -1,32 +1,39 @@
 import path from 'node:path';
 
+import { discoverGraphQLDocuments } from './discovery';
+
 import type {
   CallBuilderKind,
-  DiscoveredGraphQLDocument,
+  CallsheetCodegenSourcesConfig,
+  DiscoveredSourceEntry,
   GenerateCallsheetModuleConfig,
   GeneratedCallOverride,
   GeneratedCallsheetEntry,
+  GeneratedCallOverrideEntry,
+  GeneratedCallsheetEntryOrigin,
   ImportedCallOptionsReference,
+  SourceImportReference,
 } from './types';
 
 export interface PreparedGenerationConfig {
   outputFile: string;
   exportName: string;
   importFrom: string;
-  overridesByMatchKey: ReadonlyMap<string, GeneratedCallOverride>;
+  overridesByPath: ReadonlyMap<string, readonly GeneratedCallOverride[]>;
 }
 
 export interface GeneratedEntry {
-  sourceFile: string;
-  exportName: string;
   builder: CallBuilderKind;
+  builderImportFrom: string;
   callsheetPath: readonly string[];
   options?: ImportedCallOptionsReference;
+  origin: GeneratedCallsheetEntryOrigin;
+  sourceImport: SourceImportReference;
 }
 
 export interface GeneratedEntriesResult {
   entries: readonly GeneratedEntry[];
-  matchedOverrideKeys: ReadonlySet<string>;
+  matchedOverridePaths: ReadonlySet<string>;
 }
 
 interface PlannedImport {
@@ -40,9 +47,9 @@ interface PlannedImportGroup {
 }
 
 interface GeneratedModuleEntry {
-  builder: CallBuilderKind;
-  documentLocalName: string;
+  builderLocalName: string;
   optionsLocalName?: string;
+  sourceExpression: string;
 }
 
 export interface GeneratedModuleNode {
@@ -51,9 +58,9 @@ export interface GeneratedModuleNode {
 }
 
 export interface GeneratedModulePlan {
-  runtimeImports: readonly PlannedImportGroup[];
-  documentImports: readonly PlannedImportGroup[];
   optionImports: readonly PlannedImportGroup[];
+  runtimeImports: readonly PlannedImportGroup[];
+  sourceImports: readonly PlannedImportGroup[];
   tree: GeneratedModuleNode;
 }
 
@@ -66,11 +73,51 @@ function compareText(a: string, b: string): number {
   return a.localeCompare(b, 'en-us', { numeric: true });
 }
 
-function normalizeSourceFile(filePath: string): string {
-  return path
-    .relative(process.cwd(), path.resolve(process.cwd(), filePath))
-    .split(path.sep)
-    .join('/');
+function formatCallsheetPath(pathSegments: readonly string[]): string {
+  return pathSegments.join('.');
+}
+
+function createOverridePathKey(pathSegments: readonly string[]): string {
+  return formatCallsheetPath(pathSegments);
+}
+
+function isIdentifierSegment(segment: string): boolean {
+  return /^[$A-Z_a-z][$\w]*$/u.test(segment);
+}
+
+function formatOrigin(origin: GeneratedCallsheetEntryOrigin): string {
+  switch (origin.kind) {
+    case 'graphqlDocument':
+      return `${origin.sourceFile}#${origin.exportName}`;
+  }
+}
+
+function formatOverrideEntry(entry: GeneratedCallOverrideEntry): string {
+  switch (entry.kind) {
+    case 'graphqlDocument':
+      return `${entry.sourceFile}#${entry.exportName}`;
+  }
+}
+
+function matchesOverrideEntry(
+  overrideEntry: GeneratedCallOverrideEntry,
+  origin: GeneratedCallsheetEntryOrigin,
+): boolean {
+  switch (overrideEntry.kind) {
+    case 'graphqlDocument':
+      return (
+        origin.kind === 'graphqlDocument' &&
+        origin.sourceFile === overrideEntry.sourceFile &&
+        origin.exportName === overrideEntry.exportName
+      );
+  }
+}
+
+function compareOrigins(
+  a: GeneratedCallsheetEntryOrigin,
+  b: GeneratedCallsheetEntryOrigin,
+): number {
+  return compareText(formatOrigin(a), formatOrigin(b));
 }
 
 function compareCallsheetPaths(
@@ -80,16 +127,9 @@ function compareCallsheetPaths(
   return compareText(formatCallsheetPath(a), formatCallsheetPath(b));
 }
 
-function createOverrideMatchKey(
-  sourceFile: string,
-  exportName: string,
-): string {
-  return `${sourceFile}#${exportName}`;
-}
-
-function toImportPath(outputFile: string, sourceFile: string): string {
+function toImportPath(outputFile: string, filePath: string): string {
   const outputDirectory = path.dirname(outputFile);
-  const relative = path.relative(outputDirectory, sourceFile);
+  const relative = path.relative(outputDirectory, filePath);
   const normalized = relative.split(path.sep).join('/');
   const withoutExtension = normalized.replace(/\.[^.]+$/u, '');
 
@@ -113,6 +153,23 @@ function createUniqueLocalName(name: string, usedNames: Set<string>): string {
   return localName;
 }
 
+function renderSourceExpression(
+  localName: string,
+  memberPath?: readonly string[],
+): string {
+  if (memberPath === undefined || memberPath.length === 0) {
+    return localName;
+  }
+
+  return memberPath.reduce(
+    (expression, segment) =>
+      isIdentifierSegment(segment)
+        ? `${expression}.${segment}`
+        : `${expression}[${JSON.stringify(segment)}]`,
+    localName,
+  );
+}
+
 export function prepareGenerationConfig(
   config: GenerateCallsheetModuleConfig,
 ): PreparedGenerationConfig {
@@ -120,90 +177,152 @@ export function prepareGenerationConfig(
     outputFile: path.resolve(process.cwd(), config.outputFile),
     exportName: config.exportName ?? 'calls',
     importFrom: config.importFrom ?? 'callsheet',
-    overridesByMatchKey: buildOverrideMap(config.overrides ?? []),
+    overridesByPath: buildOverrideMap(config.overrides ?? []),
   };
 }
 
 function buildOverrideMap(
   overrides: readonly GeneratedCallOverride[],
-): ReadonlyMap<string, GeneratedCallOverride> {
-  const overridesByMatchKey = new Map<string, GeneratedCallOverride>();
+): ReadonlyMap<string, readonly GeneratedCallOverride[]> {
+  const overridesByPath = new Map<string, GeneratedCallOverride[]>();
 
   for (const override of overrides) {
-    const overrideKey = createOverrideMatchKey(
-      normalizeSourceFile(override.match.sourceFile),
-      override.match.exportName,
+    const overrideKey = createOverridePathKey(override.path);
+    const existingOverrides = overridesByPath.get(overrideKey) ?? [];
+    const duplicateOverride = existingOverrides.find((existingOverride) =>
+      isSameOverrideEntry(existingOverride.entry, override.entry),
     );
 
-    if (overridesByMatchKey.has(overrideKey)) {
+    if (duplicateOverride) {
+      const duplicateMessage =
+        override.entry === undefined
+          ? 'Two overrides target the same generated path.'
+          : 'Two overrides target the same generated path and entry.';
+
       throw new Error(
-        [
-          'Two overrides matched the same GraphQL document export.',
-          `  ${overrideKey}`,
-        ].join('\n'),
+        [duplicateMessage, `  ${formatOverrideLabel(override)}`].join('\n'),
       );
     }
 
-    overridesByMatchKey.set(overrideKey, override);
+    existingOverrides.push(override);
+    overridesByPath.set(overrideKey, existingOverrides);
   }
 
-  return overridesByMatchKey;
+  return overridesByPath;
 }
 
-export function buildGeneratedEntries(
-  discoveredDocuments: readonly DiscoveredGraphQLDocument[],
+function isSameOverrideEntry(
+  a?: GeneratedCallOverrideEntry,
+  b?: GeneratedCallOverrideEntry,
+): boolean {
+  if (a === undefined || b === undefined) {
+    return a === b;
+  }
+
+  return formatOverrideEntry(a) === formatOverrideEntry(b);
+}
+
+function formatOverrideLabel(override: GeneratedCallOverride): string {
+  return override.entry === undefined
+    ? createOverridePathKey(override.path)
+    : `${createOverridePathKey(override.path)} (${formatOverrideEntry(override.entry)})`;
+}
+
+export async function discoverConfiguredSourceEntries(
+  sources: CallsheetCodegenSourcesConfig,
   preparedConfig: PreparedGenerationConfig,
-): GeneratedEntriesResult {
-  if (discoveredDocuments.length === 0) {
-    throw new Error(
-      'No GraphQL document exports were discovered for the provided Callsheet codegen config.',
+): Promise<DiscoveredSourceEntry[]> {
+  const discoveredEntries: DiscoveredSourceEntry[] = [];
+
+  if (sources.graphql?.length) {
+    const discoveredDocuments = await discoverGraphQLDocuments(sources.graphql);
+
+    discoveredEntries.push(
+      ...discoveredDocuments.map((document) =>
+        toGraphQLSourceEntry(document, preparedConfig.importFrom),
+      ),
     );
   }
 
-  const matchedOverrideKeys = new Set<string>();
-  const entries = discoveredDocuments.map((document) =>
-    buildGeneratedEntry(document, preparedConfig, matchedOverrideKeys),
+  return discoveredEntries;
+}
+
+function toGraphQLSourceEntry(
+  document: Awaited<ReturnType<typeof discoverGraphQLDocuments>>[number],
+  builderImportFrom: string,
+): DiscoveredSourceEntry {
+  return {
+    builderImportFrom,
+    ...(document.kind === undefined ? {} : { kind: document.kind }),
+    origin: {
+      kind: 'graphqlDocument',
+      exportName: document.exportName,
+      sourceFile: document.sourceFile,
+    },
+    path: [...document.path],
+    sourceImport: {
+      filePath: path.resolve(process.cwd(), document.sourceFile),
+      name: document.exportName,
+    },
+  };
+}
+
+export function buildGeneratedEntries(
+  discoveredEntries: readonly DiscoveredSourceEntry[],
+  preparedConfig: PreparedGenerationConfig,
+): GeneratedEntriesResult {
+  if (discoveredEntries.length === 0) {
+    throw new Error(
+      'No Callsheet source entries were discovered for the provided Callsheet codegen config.',
+    );
+  }
+
+  const matchedOverridePaths = new Set<string>();
+  const entries = discoveredEntries.map((entry) =>
+    buildGeneratedEntry(entry, preparedConfig, matchedOverridePaths),
   );
 
   return {
     entries,
-    matchedOverrideKeys,
+    matchedOverridePaths,
   };
 }
 
 function buildGeneratedEntry(
-  document: DiscoveredGraphQLDocument,
+  entry: DiscoveredSourceEntry,
   preparedConfig: PreparedGenerationConfig,
-  matchedOverrideKeys: Set<string>,
+  matchedOverridePaths: Set<string>,
 ): GeneratedEntry {
-  const overrideKey = createOverrideMatchKey(
-    document.sourceFile,
-    document.exportName,
+  const overridePathKey = createOverridePathKey(entry.path);
+  const override = resolveOverride(
+    preparedConfig.overridesByPath.get(overridePathKey),
+    entry.origin,
   );
-  const override = preparedConfig.overridesByMatchKey.get(overrideKey);
 
   if (override) {
-    matchedOverrideKeys.add(overrideKey);
+    matchedOverridePaths.add(formatOverrideLabel(override));
   }
 
-  const builder = override?.kind ?? document.kind;
+  const builder = override?.kind ?? entry.kind;
 
   if (builder === undefined) {
     throw new Error(
       [
-        'Could not tell if this discovered GraphQL document is a query or mutation.',
-        `  ${document.sourceFile}#${document.exportName}`,
-        'Add an explicit kind override for this document.',
+        'Could not tell whether this discovered entry should use a query or mutation builder.',
+        `  Path: ${formatCallsheetPath(entry.path)}`,
+        `  Origin: ${formatOrigin(entry.origin)}`,
+        'Add an explicit kind override for this generated path.',
       ].join('\n'),
     );
   }
 
   return {
-    sourceFile: document.sourceFile,
-    exportName: document.exportName,
     builder,
-    callsheetPath: [...(override?.path ?? document.path)],
+    builderImportFrom: entry.builderImportFrom,
+    callsheetPath: [...(override?.as ?? entry.path)],
     ...(override?.options === undefined ? {} : { options: override.options }),
+    origin: entry.origin,
+    sourceImport: entry.sourceImport,
   };
 }
 
@@ -213,8 +332,8 @@ export function validateGeneratedEntries(
 ): void {
   validateGeneratedEntryPaths(generatedEntriesResult.entries);
   validateMatchedOverrides(
-    generatedEntriesResult.matchedOverrideKeys,
-    preparedConfig.overridesByMatchKey,
+    generatedEntriesResult.matchedOverridePaths,
+    preparedConfig.overridesByPath,
   );
 }
 
@@ -228,7 +347,10 @@ function validateGeneratedEntryPaths(entries: readonly GeneratedEntry[]): void {
       entry.callsheetPath.some((segment) => segment === '')
     ) {
       throw new Error(
-        `Generated path is empty or invalid for ${entry.sourceFile}#${entry.exportName}.`,
+        [
+          `Generated path is empty or invalid: "${formatCallsheetPath(entry.callsheetPath)}".`,
+          `  Origin: ${formatOrigin(entry.origin)}`,
+        ].join('\n'),
       );
     }
 
@@ -244,9 +366,9 @@ function validateGeneratedEntryPaths(entries: readonly GeneratedEntry[]): void {
       throw new Error(
         [
           `Two generated entries use the same path: "${currentPath}".`,
-          `  First: ${previousEntry.sourceFile}#${previousEntry.exportName}`,
-          `  Second: ${entry.sourceFile}#${entry.exportName}`,
-          'Add an override path to separate them.',
+          `  First: ${formatOrigin(previousEntry.origin)}`,
+          `  Second: ${formatOrigin(entry.origin)}`,
+          'Add an alias with `as` to separate them.',
         ].join('\n'),
       );
     }
@@ -256,7 +378,7 @@ function validateGeneratedEntryPaths(entries: readonly GeneratedEntry[]): void {
         [
           `Generated paths conflict: "${previousPath}" and "${currentPath}".`,
           "Callsheet can't use the same path as both a call and a namespace.",
-          'Add an override path to separate them.',
+          'Add an alias with `as` to separate them.',
         ].join('\n'),
       );
     }
@@ -266,22 +388,41 @@ function validateGeneratedEntryPaths(entries: readonly GeneratedEntry[]): void {
 }
 
 function validateMatchedOverrides(
-  matchedOverrideKeys: ReadonlySet<string>,
-  overridesByMatchKey: ReadonlyMap<string, GeneratedCallOverride>,
+  matchedOverridePaths: ReadonlySet<string>,
+  overridesByPath: ReadonlyMap<string, readonly GeneratedCallOverride[]>,
 ): void {
-  const unmatchedOverrideKeys = [...overridesByMatchKey.keys()]
-    .filter((overrideKey) => !matchedOverrideKeys.has(overrideKey))
+  const unmatchedOverridePaths = [...overridesByPath.values()]
+    .flat()
+    .map(formatOverrideLabel)
+    .filter((overrideLabel) => !matchedOverridePaths.has(overrideLabel))
     .sort(compareText);
 
-  if (unmatchedOverrideKeys.length === 0) {
+  if (unmatchedOverridePaths.length === 0) {
     return;
   }
 
   throw new Error(
     [
-      'Some overrides did not match a discovered GraphQL document export.',
-      ...unmatchedOverrideKeys.map((overrideKey) => `  ${overrideKey}`),
+      'Some overrides did not match a generated path.',
+      ...unmatchedOverridePaths.map((overridePath) => `  ${overridePath}`),
     ].join('\n'),
+  );
+}
+
+function resolveOverride(
+  overrides: readonly GeneratedCallOverride[] | undefined,
+  origin: GeneratedCallsheetEntryOrigin,
+): GeneratedCallOverride | undefined {
+  if (overrides === undefined) {
+    return undefined;
+  }
+
+  return (
+    overrides.find(
+      (override) =>
+        override.entry !== undefined &&
+        matchesOverrideEntry(override.entry, origin),
+    ) ?? overrides.find((override) => override.entry === undefined)
   );
 }
 
@@ -301,17 +442,7 @@ function compareGeneratedEntries(a: GeneratedEntry, b: GeneratedEntry): number {
     return callsheetPathComparison;
   }
 
-  const sourceFileComparison = compareText(a.sourceFile, b.sourceFile);
-
-  if (sourceFileComparison !== 0) {
-    return sourceFileComparison;
-  }
-
-  return compareText(a.exportName, b.exportName);
-}
-
-function formatCallsheetPath(pathSegments: readonly string[]): string {
-  return pathSegments.join('.');
+  return compareOrigins(a.origin, b.origin);
 }
 
 function isPrefixPath(
@@ -329,27 +460,38 @@ export function planGeneratedModule(
   preparedConfig: PreparedGenerationConfig,
 ): GeneratedModulePlan {
   const usedLocalNames = new Set<string>();
-  const runtimeImports = createRuntimeImportGroups(entries, preparedConfig);
-  const documentImportsByModule = new Map<string, Map<string, string>>();
+  const runtimeImportsByModule = new Map<string, Map<string, string>>();
+  const sourceImportsByModule = new Map<string, Map<string, string>>();
   const optionImportsByModule = new Map<string, Map<string, string>>();
   const root = createMutableGeneratedModuleNode();
 
-  for (const runtimeImportGroup of runtimeImports) {
-    for (const plannedImport of runtimeImportGroup.imports) {
-      usedLocalNames.add(plannedImport.local);
-    }
-  }
+  getOrCreateImportLocalName(
+    runtimeImportsByModule,
+    preparedConfig.importFrom,
+    'defineCalls',
+    usedLocalNames,
+  );
 
   for (const entry of entries) {
-    const documentImportPath = toImportPath(
-      preparedConfig.outputFile,
-      path.resolve(process.cwd(), entry.sourceFile),
-    );
-    const documentLocalName = getOrCreateImportLocalName(
-      documentImportsByModule,
-      documentImportPath,
-      entry.exportName,
+    const builderLocalName = getOrCreateImportLocalName(
+      runtimeImportsByModule,
+      entry.builderImportFrom,
+      entry.builder,
       usedLocalNames,
+    );
+    const sourceImportPath = toImportPath(
+      preparedConfig.outputFile,
+      entry.sourceImport.filePath,
+    );
+    const sourceLocalName = getOrCreateImportLocalName(
+      sourceImportsByModule,
+      sourceImportPath,
+      entry.sourceImport.name,
+      usedLocalNames,
+    );
+    const sourceExpression = renderSourceExpression(
+      sourceLocalName,
+      entry.sourceImport.memberPath,
     );
     const optionsLocalName =
       entry.options === undefined
@@ -362,43 +504,18 @@ export function planGeneratedModule(
           );
 
     insertGeneratedModuleEntry(root, entry.callsheetPath, {
-      builder: entry.builder,
-      documentLocalName,
+      builderLocalName,
       ...(optionsLocalName === undefined ? {} : { optionsLocalName }),
+      sourceExpression,
     });
   }
 
   return {
-    runtimeImports,
-    documentImports: finalizePlannedImportGroups(documentImportsByModule),
     optionImports: finalizePlannedImportGroups(optionImportsByModule),
+    runtimeImports: finalizePlannedImportGroups(runtimeImportsByModule),
+    sourceImports: finalizePlannedImportGroups(sourceImportsByModule),
     tree: finalizeGeneratedModuleNode(root),
   };
-}
-
-function createRuntimeImportGroups(
-  entries: readonly GeneratedEntry[],
-  preparedConfig: PreparedGenerationConfig,
-): readonly PlannedImportGroup[] {
-  const runtimeImports: PlannedImport[] = [
-    {
-      imported: 'defineCalls',
-      local: 'defineCalls',
-    },
-    ...[...new Set(entries.map((entry) => entry.builder))]
-      .sort(compareText)
-      .map((builder) => ({
-        imported: builder,
-        local: builder,
-      })),
-  ];
-
-  return [
-    {
-      from: preparedConfig.importFrom,
-      imports: runtimeImports,
-    },
-  ];
 }
 
 function getOrCreateImportLocalName(
@@ -491,7 +608,7 @@ export function renderModuleSource(
 ): string {
   const importLines = [
     ...renderImportGroups(modulePlan.runtimeImports),
-    ...renderImportGroups(modulePlan.documentImports),
+    ...renderImportGroups(modulePlan.sourceImports),
     ...renderImportGroups(modulePlan.optionImports),
   ];
 
@@ -534,7 +651,7 @@ function renderGeneratedModuleNode(
           : `, ${childNode.entry.optionsLocalName}`;
 
       lines.push(
-        `${indent}${JSON.stringify(segment)}: ${childNode.entry.builder}(${childNode.entry.documentLocalName}${optionsArgument}),`,
+        `${indent}${JSON.stringify(segment)}: ${childNode.entry.builderLocalName}(${childNode.entry.sourceExpression}${optionsArgument}),`,
       );
       continue;
     }
@@ -551,10 +668,9 @@ export function toGeneratedCallsheetEntry(
   entry: GeneratedEntry,
 ): GeneratedCallsheetEntry {
   return {
-    sourceFile: entry.sourceFile,
-    exportName: entry.exportName,
-    path: [...entry.callsheetPath],
     builder: entry.builder,
+    origin: entry.origin,
+    path: [...entry.callsheetPath],
     ...(entry.options === undefined ? {} : { options: entry.options }),
   };
 }

@@ -7,6 +7,7 @@ import { createJiti } from 'jiti';
 
 import type {
   CallsheetCodegenConfig,
+  CallsheetCodegenSourcesConfig,
   GenerateCallsheetModuleConfig,
   GraphQLDocumentDiscoveryInput,
 } from './types';
@@ -71,14 +72,9 @@ export function toGenerateCallsheetModuleConfig(
   configFilePath: string,
 ): GenerateCallsheetModuleConfig {
   const configDirectory = path.dirname(configFilePath);
-  const discovery = isDiscoveryInputList(config.discovery)
-    ? config.discovery.map((input) =>
-        resolveDiscoveryInput(input, configDirectory),
-      )
-    : resolveDiscoveryInput(config.discovery, configDirectory);
 
   return {
-    discovery,
+    sources: resolveSourcesConfig(config.sources, configDirectory),
     outputFile: path.resolve(configDirectory, config.output.file),
     ...(config.output.exportName === undefined
       ? {}
@@ -139,12 +135,6 @@ async function loadTypeScriptConfigModule(
   return configModule;
 }
 
-function isDiscoveryInputList(
-  discovery: CallsheetCodegenConfig['discovery'],
-): discovery is readonly GraphQLDocumentDiscoveryInput[] {
-  return Array.isArray(discovery);
-}
-
 function readConfigExport(
   configModule: unknown,
   configFilePath: string,
@@ -175,12 +165,27 @@ function isCallsheetCodegenConfig(
   return (
     typeof value === 'object' &&
     value !== null &&
-    'discovery' in value &&
+    'sources' in value &&
     'output' in value
   );
 }
 
-function resolveDiscoveryInput(
+function resolveSourcesConfig(
+  sources: CallsheetCodegenSourcesConfig,
+  configDirectory: string,
+): CallsheetCodegenSourcesConfig {
+  return {
+    ...(sources.graphql === undefined
+      ? {}
+      : {
+          graphql: sources.graphql.map((input) =>
+            resolveGraphQLDiscoveryInput(input, configDirectory),
+          ),
+        }),
+  };
+}
+
+function resolveGraphQLDiscoveryInput(
   input: GraphQLDocumentDiscoveryInput,
   configDirectory: string,
 ): GraphQLDocumentDiscoveryInput {

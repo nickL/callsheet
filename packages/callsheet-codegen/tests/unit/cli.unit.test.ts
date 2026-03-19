@@ -45,12 +45,15 @@ describe('callsheet codegen cli', () => {
       .mockImplementation(() => true);
 
     loadCallsheetCodegenConfig.mockResolvedValue({
-      config: { discovery: [], output: { file: './src/generated/calls.ts' } },
+      config: {
+        output: { file: './src/generated/calls.ts' },
+        sources: { graphql: [] },
+      },
       configFilePath: '/tmp/callsheet.config.ts',
     });
     toGenerateCallsheetModuleConfig.mockReturnValue({
-      discovery: [],
       outputFile: '/tmp/src/generated/calls.ts',
+      sources: { graphql: [] },
     });
     writeCallsheetModule.mockResolvedValue({
       code: 'export const calls = {};',
@@ -64,12 +67,15 @@ describe('callsheet codegen cli', () => {
       'callsheet.config.ts',
     );
     expect(toGenerateCallsheetModuleConfig).toHaveBeenCalledWith(
-      { discovery: [], output: { file: './src/generated/calls.ts' } },
+      {
+        output: { file: './src/generated/calls.ts' },
+        sources: { graphql: [] },
+      },
       '/tmp/callsheet.config.ts',
     );
     expect(writeCallsheetModule).toHaveBeenCalledWith({
-      discovery: [],
       outputFile: '/tmp/src/generated/calls.ts',
+      sources: { graphql: [] },
     });
     expect(stdout).toHaveBeenCalledWith(
       'Generated /tmp/src/generated/calls.ts\n',
