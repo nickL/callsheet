@@ -1,11 +1,12 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   CallsheetProvider,
   createReactQueryAdapter,
   queryOptions,
   useMutation,
   useQuery,
-} from 'callsheet/react-query';
+  type ExecuteCall,
+} from '@callsheet/react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { calls } from './calls';
 
@@ -17,7 +18,6 @@ import type {
   RefreshFilmsMutation,
 } from './graphql/generated';
 import type { UserByIdInput, UserByIdResult } from './rest/contract';
-import type { ExecuteCall } from 'callsheet/react-query';
 
 const queryClient = new QueryClient({
   defaultOptions: {

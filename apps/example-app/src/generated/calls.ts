@@ -1,5 +1,5 @@
-import { defineCalls, mutation, query } from 'callsheet';
-import { query as query_2 } from 'callsheet/ts-rest';
+import { defineCalls, mutation, query } from '@callsheet/react-query';
+import { query as query_2 } from '@callsheet/ts-rest';
 import {
   FeaturedFilmsDocument,
   FilmByIdDocument,

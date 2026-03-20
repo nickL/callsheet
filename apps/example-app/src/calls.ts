@@ -1,8 +1,11 @@
-import { CALL_KINDS, call, defineCalls } from 'callsheet';
+import {
+  CALL_KINDS,
+  call,
+  defineCalls,
+  type CallsheetCustomSource,
+} from '@callsheet/react-query';
 
 import { calls as generatedCalls } from './generated/calls';
-
-import type { CallsheetCustomSource } from 'callsheet';
 
 export interface FeaturedCountResult {
   count: number;

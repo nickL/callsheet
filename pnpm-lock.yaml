@@ -65,15 +65,18 @@ importers:
 
   apps/example-app:
     dependencies:
+      '@callsheet/react-query':
+        specifier: workspace:*
+        version: link:../../packages/callsheet-react-query
+      '@callsheet/ts-rest':
+        specifier: workspace:*
+        version: link:../../packages/callsheet-ts-rest
       '@tanstack/react-query':
         specifier: ^5.90.21
         version: 5.90.21(react@19.2.4)
       '@ts-rest/core':
         specifier: ^3.52.1
         version: 3.52.1(@types/node@25.5.0)(zod@3.25.76)
-      callsheet:
-        specifier: workspace:*
-        version: link:../../packages/callsheet
       react:
         specifier: ^19.2.4
         version: 19.2.4
@@ -81,6 +84,9 @@ importers:
         specifier: ^19.2.4
         version: 19.2.4(react@19.2.4)
     devDependencies:
+      '@callsheet/codegen':
+        specifier: workspace:*
+        version: link:../../packages/callsheet-codegen
       '@graphql-codegen/cli':
         specifier: ^6.2.1
         version: 6.2.1(@types/node@25.5.0)(graphql@16.13.1)(typescript@5.9.3)
@@ -108,9 +114,6 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^6.0.1
         version: 6.0.1(vite@8.0.0(@types/node@25.5.0)(esbuild@0.27.4)(jiti@2.6.1)(yaml@2.8.2))
-      callsheet-codegen:
-        specifier: workspace:*
-        version: link:../../packages/callsheet-codegen
       graphql:
         specifier: ^16.13.1
         version: 16.13.1
@@ -154,15 +157,39 @@ importers:
         specifier: ^2.6.1
         version: 2.6.1
     devDependencies:
+      '@callsheet/react-query':
+        specifier: workspace:*
+        version: link:../callsheet-react-query
+      '@callsheet/ts-rest':
+        specifier: workspace:*
+        version: link:../callsheet-ts-rest
       '@ts-rest/core':
         specifier: ^3.52.1
         version: 3.52.1(@types/node@25.5.0)(zod@3.25.76)
-      callsheet:
-        specifier: workspace:*
-        version: link:../callsheet
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+
+  packages/callsheet-react-query:
+    dependencies:
+      '@callsheet/core':
+        specifier: workspace:*
+        version: link:../callsheet
+      '@tanstack/react-query':
+        specifier: ^5.0.0
+        version: 5.90.21(react@19.2.4)
+      react:
+        specifier: ^18 || ^19
+        version: 19.2.4
+
+  packages/callsheet-ts-rest:
+    dependencies:
+      '@callsheet/core':
+        specifier: workspace:*
+        version: link:../callsheet
+      '@ts-rest/core':
+        specifier: ^3.52.1
+        version: 3.52.1(@types/node@25.5.0)(zod@3.25.76)
 
 packages:
 

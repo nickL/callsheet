@@ -1,6 +1,11 @@
-import type { TypedDocumentLike } from 'callsheet';
-
 import { GeneratedFeaturedFilmsDocument } from './generated-documents';
+
+interface TypedDocumentLike<TResult, TVariables> {
+  readonly __resultType?: TResult;
+  readonly __variablesType?: TVariables;
+  readonly definitions: readonly unknown[];
+  readonly kind: 'Document';
+}
 
 export interface DuplicateFeaturedFilmsResult {
   films: readonly string[];

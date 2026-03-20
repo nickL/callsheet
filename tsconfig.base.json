@@ -6,10 +6,14 @@
     "moduleResolution": "Bundler",
     "baseUrl": ".",
     "paths": {
-      "callsheet": ["packages/callsheet/src/index.ts"],
-      "callsheet/react-query": ["packages/callsheet/src/react-query/index.ts"],
-      "callsheet/ts-rest": ["packages/callsheet/src/ts-rest/index.ts"],
-      "callsheet-codegen": ["packages/callsheet-codegen/src/index.ts"]
+      "@callsheet/core": ["packages/callsheet/src/index.ts"],
+      "@callsheet/core/react-query": [
+        "packages/callsheet/src/react-query/index.ts"
+      ],
+      "@callsheet/core/ts-rest": ["packages/callsheet/src/ts-rest/index.ts"],
+      "@callsheet/react-query": ["packages/callsheet-react-query/src/index.ts"],
+      "@callsheet/ts-rest": ["packages/callsheet-ts-rest/src/index.ts"],
+      "@callsheet/codegen": ["packages/callsheet-codegen/src/index.ts"]
     },
     "jsx": "react-jsx",
     "strict": true,

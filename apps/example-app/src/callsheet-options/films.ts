@@ -2,7 +2,7 @@ import type {
   FilmByIdQueryVariables,
   RefreshFilmsMutation,
 } from '../graphql/generated';
-import type { MutationOptions, QueryOptions } from 'callsheet';
+import type { MutationOptions, QueryOptions } from '@callsheet/react-query';
 
 export const featuredFilmsOptions: QueryOptions<void> = {
   scope: ['films', 'list'] as const,

@@ -61,7 +61,7 @@ function createEntry(
   const exportName = 'FeaturedFilmsDocument';
 
   return {
-    builderImportFrom: 'callsheet',
+    builderImportFrom: '@callsheet/react-query',
     origin: createGraphQLDocumentOrigin(exportName, sourceFile),
     path,
     sourceImport: {
@@ -98,7 +98,7 @@ function createGeneratedEntry(partial: {
 
   return {
     builder: partial.builder ?? 'query',
-    builderImportFrom: partial.builderImportFrom ?? 'callsheet',
+    builderImportFrom: partial.builderImportFrom ?? '@callsheet/react-query',
     callsheetPath: partial.callsheetPath,
     ...(partial.options === undefined ? {} : { options: partial.options }),
     origin:
@@ -113,7 +113,7 @@ function createGeneratedEntry(partial: {
 
 function createTsRestGeneratedEntry(memberPath: readonly string[]) {
   return createGeneratedEntry({
-    builderImportFrom: 'callsheet/ts-rest',
+    builderImportFrom: '@callsheet/ts-rest',
     callsheetPath: ['rest', 'users', 'byId'],
     origin: createTsRestRouteOrigin(
       'contract',
@@ -169,7 +169,7 @@ describe('generate unit', () => {
     expect(result.entries).toEqual([
       {
         builder: 'query',
-        builderImportFrom: 'callsheet',
+        builderImportFrom: '@callsheet/react-query',
         callsheetPath: ['films', 'byId'],
         options: {
           from: '../callsheet-options/films',
@@ -479,7 +479,7 @@ describe('generate unit', () => {
 
     expect(renderModuleSource(preparedConfig, modulePlan))
       .toMatchInlineSnapshot(`
-      "import { defineCalls, query } from 'callsheet';
+      "import { defineCalls, query } from '@callsheet/react-query';
       import { AdminStatusDocument } from '../graphql/admin-status';
       import { FeaturedFilmsDocument, FilmByIdDocument } from '../graphql/films';
       import { sharedOptions } from '../callsheet-options/alpha';
@@ -580,8 +580,8 @@ describe('generate unit', () => {
 
     expect(renderModuleSource(preparedConfig, modulePlan))
       .toMatchInlineSnapshot(`
-      "import { defineCalls } from 'callsheet';
-      import { query } from 'callsheet/ts-rest';
+      "import { defineCalls } from '@callsheet/react-query';
+      import { query } from '@callsheet/ts-rest';
       import { contract } from '../rest/contract';
 
       export const calls = defineCalls({

@@ -54,8 +54,8 @@ describe('generate integration', { timeout: 15_000 }, () => {
       'rest.users.update',
     ]);
     expect(result.code).toMatchInlineSnapshot(`
-      "import { defineCalls, query } from 'callsheet';
-      import { mutation, query as query_2 } from 'callsheet/ts-rest';
+      "import { defineCalls, query } from '@callsheet/react-query';
+      import { mutation, query as query_2 } from '@callsheet/ts-rest';
       import { FeaturedFilmsDocument, FilmByIdDocument } from '../graphql/films';
       import { contract } from '../rest/contract';
       import { filmByIdOptions } from '../callsheet-options/films';
@@ -91,7 +91,7 @@ describe('generate integration', { timeout: 15_000 }, () => {
     });
 
     expect(result.code).toContain(
-      `import { defineCalls, mutation } from 'callsheet';`,
+      `import { defineCalls, mutation } from '@callsheet/react-query';`,
     );
     expect(result.code).toContain(
       `"updateFilm": mutation(UpdateFilmDocument),`,

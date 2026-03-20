@@ -181,7 +181,7 @@ export function prepareGenerationConfig(
   return {
     outputFile: path.resolve(process.cwd(), config.outputFile),
     exportName: config.exportName ?? 'calls',
-    importFrom: config.importFrom ?? 'callsheet',
+    importFrom: config.importFrom ?? '@callsheet/react-query',
     overridesByPath: buildOverrideMap(config.overrides ?? []),
   };
 }
@@ -282,7 +282,7 @@ function toTsRestSourceEntry(
   route: Awaited<ReturnType<typeof discoverTsRestRoutes>>[number],
 ): DiscoveredSourceEntry {
   return {
-    builderImportFrom: 'callsheet/ts-rest',
+    builderImportFrom: '@callsheet/ts-rest',
     kind: route.kind,
     origin: {
       kind: 'tsRestRoute',

@@ -131,7 +131,7 @@ export interface CallsheetCodegenOutputConfig {
    */
   exportName?: string;
   /**
-   * Defaults to `callsheet`.
+   * Defaults to `@callsheet/react-query`.
    */
   importFrom?: string;
 }
@@ -153,7 +153,7 @@ export interface GenerateCallsheetModuleConfig {
    */
   exportName?: string;
   /**
-   * Defaults to `callsheet`.
+   * Defaults to `@callsheet/react-query`.
    */
   importFrom?: string;
   overrides?: readonly GeneratedCallOverride[];

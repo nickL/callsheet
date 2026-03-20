@@ -1,5 +1,5 @@
 {
-  "name": "callsheet-codegen",
+  "name": "@callsheet/codegen",
   "version": "0.0.1",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -31,15 +31,20 @@
   },
   "devDependencies": {
     "@ts-rest/core": "^3.52.1",
-    "callsheet": "workspace:*",
+    "@callsheet/react-query": "workspace:*",
+    "@callsheet/ts-rest": "workspace:*",
     "typescript": "^5.9.3"
   },
   "peerDependencies": {
+    "@callsheet/react-query": "^0.0.1",
+    "@callsheet/ts-rest": "^0.0.1",
     "@ts-rest/core": "^3.52.1",
-    "callsheet": "^0.0.1",
     "typescript": ">=5"
   },
   "peerDependenciesMeta": {
+    "@callsheet/ts-rest": {
+      "optional": true
+    },
     "@ts-rest/core": {
       "optional": true
     }

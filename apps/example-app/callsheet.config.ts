@@ -1,4 +1,4 @@
-import { defineConfig } from 'callsheet-codegen';
+import { defineConfig } from '@callsheet/codegen';
 
 export default defineConfig({
   sources: {

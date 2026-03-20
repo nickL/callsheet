@@ -14,9 +14,10 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@callsheet/react-query": "workspace:*",
+    "@callsheet/ts-rest": "workspace:*",
     "@tanstack/react-query": "^5.90.21",
     "@ts-rest/core": "^3.52.1",
-    "callsheet": "workspace:*",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
   },
@@ -30,7 +31,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
-    "callsheet-codegen": "workspace:*",
+    "@callsheet/codegen": "workspace:*",
     "graphql": "^16.13.1",
     "jsdom": "^29.0.0",
     "vite": "^8.0.0"
