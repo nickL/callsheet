@@ -252,7 +252,11 @@ export async function discoverConfiguredSourceEntries(
   if (sources.tsRest?.length) {
     const discoveredRoutes = await discoverTsRestRoutes(sources.tsRest);
 
-    discoveredEntries.push(...discoveredRoutes.map(toTsRestSourceEntry));
+    discoveredEntries.push(
+      ...discoveredRoutes.map((route) =>
+        toTsRestSourceEntry(route, preparedConfig.importFrom),
+      ),
+    );
   }
 
   return discoveredEntries;
@@ -280,9 +284,10 @@ function toGraphQLSourceEntry(
 
 function toTsRestSourceEntry(
   route: Awaited<ReturnType<typeof discoverTsRestRoutes>>[number],
+  builderImportFrom: string,
 ): DiscoveredSourceEntry {
   return {
-    builderImportFrom: '@callsheet/ts-rest',
+    builderImportFrom,
     kind: route.kind,
     origin: {
       kind: 'tsRestRoute',

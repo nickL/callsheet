@@ -118,6 +118,53 @@ export interface ReactQueryAdapterConfig {
   queryKeyPrefix?: QueryKey;
 }
 
+function resolveCallQueryDefaults<TCall extends QueryCallLike>(
+  call: TCall,
+): Record<string, unknown> {
+  const {
+    _defaulted: _ignoredDefaulted,
+    enabled: _ignoredEnabled,
+    experimental_prefetchInRender: _ignoredExperimentalPrefetchInRender,
+    initialData: _ignoredInitialData,
+    initialDataUpdatedAt: _ignoredInitialDataUpdatedAt,
+    invalidates: _ignoredInvalidates,
+    key: _ignoredKey,
+    kind: _ignoredKind,
+    maxPages: _ignoredMaxPages,
+    notifyOnChangeProps: _ignoredNotifyOnChangeProps,
+    placeholderData: _ignoredPlaceholderData,
+    queryFn: _ignoredQueryFn,
+    queryHash: _ignoredQueryHash,
+    queryKey: _ignoredQueryKey,
+    scope: _ignoredScope,
+    select: _ignoredSelect,
+    source: _ignoredSource,
+    subscribed: _ignoredSubscribed,
+    suspense: _ignoredSuspense,
+    ...reactQueryDefaults
+  } = call as TCall & Record<string, unknown>;
+
+  return reactQueryDefaults;
+}
+
+function resolveCallMutationDefaults<TCall extends MutationCallLike>(
+  call: TCall,
+): Record<string, unknown> {
+  const {
+    _defaulted: _ignoredDefaulted,
+    invalidates: _ignoredInvalidates,
+    key: _ignoredKey,
+    kind: _ignoredKind,
+    mutationFn: _ignoredMutationFn,
+    onSuccess: _ignoredOnSuccess,
+    scope: _ignoredScope,
+    source: _ignoredSource,
+    ...reactQueryDefaults
+  } = call as TCall & Record<string, unknown>;
+
+  return reactQueryDefaults;
+}
+
 function resolveMutationInvalidations<TCall extends MutationCallLike>(
   call: TCall & {
     invalidates?: InvalidationConfig<CallInputOf<TCall>, CallOutputOf<TCall>>;
@@ -189,6 +236,7 @@ export function createReactQueryAdapter(
     queryConfig: QueryConfig<TCall, TSelected>,
   ): ResolvedQueryOptions<TCall, TSelected> {
     const call = queryConfig.call;
+    const callDefinedDefaults = resolveCallQueryDefaults(call);
     const input = queryConfig.input as CallInputOf<TCall> | undefined;
     const queryKey = buildQueryKey(
       queryKeyPrefix,
@@ -199,6 +247,7 @@ export function createReactQueryAdapter(
     const { call: _call, input: _input, ...reactQueryOptions } = queryConfig;
 
     return {
+      ...callDefinedDefaults,
       ...reactQueryOptions,
       queryKey,
       queryFn: (reactQuery) =>
@@ -239,7 +288,10 @@ export function createReactQueryAdapter(
     call: TCall,
     options?: MutationCallOptions<TCall, TOnMutateResult>,
   ): ResolvedMutationOptions<TCall, TOnMutateResult> {
+    const callDefinedDefaults = resolveCallMutationDefaults(call);
+
     return tanstackMutationOptions({
+      ...callDefinedDefaults,
       ...options,
       mutationFn: (
         input: CallInputOf<TCall>,

@@ -1,12 +1,10 @@
 export {
-  call,
-  mutation,
-  query,
   defineCalls,
   getCallMetadata,
   CALL_KINDS,
   GRAPHQL_OPERATION_KINDS,
 } from '@callsheet/core';
+export { call, mutation, query } from './builders';
 
 export type {
   Call,
@@ -30,17 +28,19 @@ export type {
   KeyResolver,
   MutationCall,
   MutationKind,
-  MutationOptions,
   MutationResultContext,
   QueryCall,
   QueryKind,
-  QueryOptions,
   RestSourceLike,
   Scope,
   ScopePart,
   SubscriptionOperationKind,
   TypedDocumentLike,
 } from '@callsheet/core';
+export type {
+  MutationDefinitionOptions,
+  QueryDefinitionOptions,
+} from './definition-options';
 
 export {
   createReactQueryAdapter,

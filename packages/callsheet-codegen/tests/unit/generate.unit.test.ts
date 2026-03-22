@@ -113,7 +113,7 @@ function createGeneratedEntry(partial: {
 
 function createTsRestGeneratedEntry(memberPath: readonly string[]) {
   return createGeneratedEntry({
-    builderImportFrom: '@callsheet/ts-rest',
+    builderImportFrom: '@callsheet/react-query',
     callsheetPath: ['rest', 'users', 'byId'],
     origin: createTsRestRouteOrigin(
       'contract',
@@ -580,8 +580,7 @@ describe('generate unit', () => {
 
     expect(renderModuleSource(preparedConfig, modulePlan))
       .toMatchInlineSnapshot(`
-      "import { defineCalls } from '@callsheet/react-query';
-      import { query } from '@callsheet/ts-rest';
+      "import { defineCalls, query } from '@callsheet/react-query';
       import { contract } from '../rest/contract';
 
       export const calls = defineCalls({

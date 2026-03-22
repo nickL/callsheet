@@ -40,7 +40,11 @@ export type {
 } from './call-kind';
 
 export type {
+  CallSourceInputOf,
+  CallSourceKindOf,
+  CallSourceOutputOf,
   CallsheetCustomSource,
+  CompatibleSource,
   HttpMethod,
   RestSourceLike,
   TypedDocumentLike,

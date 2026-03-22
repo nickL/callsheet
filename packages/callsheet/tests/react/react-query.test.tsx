@@ -159,6 +159,33 @@ const functionInvalidationCalls = defineCalls({
   },
 });
 
+const queryDefaultCalls = defineCalls({
+  films: {
+    byId: call(
+      filmByIdSource,
+      {
+        retry: 2,
+        scope: ['films', 'detail'] as const,
+        staleTime: 30_000,
+        throwOnError: true,
+      } as never,
+    ),
+  },
+});
+
+const mutationDefaultCalls = defineCalls({
+  films: {
+    update: call(
+      updateFilmSource,
+      {
+        invalidates: [['films', 'detail']] as const,
+        meta: { source: 'call' },
+        retry: 2,
+      } as never,
+    ),
+  },
+});
+
 const unregisteredFeaturedCall = call(featuredFilmsSource);
 const updateWithoutInvalidationCall = call(updateFilmSource);
 
@@ -671,6 +698,55 @@ describe('react-query adapter', () => {
       meta: { source: 'test' },
       mutationKey: ['films', 'update'],
     });
+  });
+
+  it('merges call-defined query defaults and lets local overrides win', () => {
+    const { adapter } = createWrapper();
+
+    const resolvedDefaulted = adapter.resolveQueryOptions(
+      queryOptions(queryDefaultCalls.films.byId, {
+        input: { id: 'film_123' },
+      }),
+    );
+
+    expect(resolvedDefaulted.retry).toBe(2);
+    expect(resolvedDefaulted.staleTime).toBe(30_000);
+    expect(resolvedDefaulted.throwOnError).toBe(true);
+
+    const resolvedOverridden = adapter.resolveQueryOptions(
+      queryOptions(queryDefaultCalls.films.byId, {
+        input: { id: 'film_123' },
+        retry: 1,
+        staleTime: 5_000,
+        throwOnError: false,
+      }),
+    );
+
+    expect(resolvedOverridden.retry).toBe(1);
+    expect(resolvedOverridden.staleTime).toBe(5_000);
+    expect(resolvedOverridden.throwOnError).toBe(false);
+  });
+
+  it('merges call-defined mutation defaults and lets local overrides win', () => {
+    const { adapter } = createWrapper();
+
+    const defaultedOptions = adapter.mutationOptions(
+      mutationDefaultCalls.films.update,
+    );
+
+    expect(defaultedOptions.meta).toEqual({ source: 'call' });
+    expect(defaultedOptions.retry).toBe(2);
+
+    const overriddenOptions = adapter.mutationOptions(
+      mutationDefaultCalls.films.update,
+      {
+        meta: { source: 'local' },
+        retry: 1,
+      },
+    );
+
+    expect(overriddenOptions.meta).toEqual({ source: 'local' });
+    expect(overriddenOptions.retry).toBe(1);
   });
 
   it('throws when useMutation is called without CallsheetProvider', () => {

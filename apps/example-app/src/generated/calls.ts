@@ -1,5 +1,4 @@
 import { defineCalls, mutation, query } from '@callsheet/react-query';
-import { query as query_2 } from '@callsheet/ts-rest';
 import {
   FeaturedFilmsDocument,
   FilmByIdDocument,
@@ -20,7 +19,7 @@ export const calls = defineCalls({
   },
   rest: {
     users: {
-      byId: query_2(contract.users.byId),
+      byId: query(contract.users.byId),
     },
   },
 } as const);

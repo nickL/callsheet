@@ -8,13 +8,15 @@
   },
   "scripts": {
     "build": "pnpm -r --if-present build",
+    "build:packages": "pnpm --filter @callsheet/core build && pnpm --filter @callsheet/react-query build && pnpm --filter @callsheet/ts-rest build && pnpm --filter @callsheet/codegen build",
     "dev:example": "pnpm --filter @callsheet/example-app dev",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings=0 && prettier --check .",
-    "test": "pnpm -r --if-present test && pnpm run check:example-generated && pnpm --filter @callsheet/core build && pnpm --filter @callsheet/react-query build && pnpm --filter @callsheet/ts-rest build && pnpm --filter @callsheet/codegen build && pnpm --filter @callsheet/core test:types && pnpm --filter @callsheet/codegen test:types",
+    "test": "pnpm run test:workspace && pnpm run check:example-generated && pnpm run build:packages && pnpm run test:types",
     "test:coverage": "pnpm --filter @callsheet/core test:coverage && pnpm --filter @callsheet/codegen test:coverage",
-    "test:types": "pnpm --filter @callsheet/core test:types && pnpm --filter @callsheet/codegen test:types",
+    "test:types": "pnpm --filter @callsheet/core test:types && pnpm --filter @callsheet/react-query test:types && pnpm --filter @callsheet/codegen test:types",
+    "test:workspace": "pnpm -r --if-present test",
     "typecheck": "pnpm -r --if-present typecheck",
     "check:example-generated": "pnpm --filter @callsheet/example-app generate && git diff --exit-code -- apps/example-app/src/graphql/generated.ts apps/example-app/src/generated/calls.ts"
   },
