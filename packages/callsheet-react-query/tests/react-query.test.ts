@@ -85,13 +85,13 @@ describe('@callsheet/react-query runtime surface', () => {
     const calls = defineCalls({
       films: {
         byId: call(filmByIdSource, {
+          family: ['films', 'detail'] as const,
           retry: 1,
-          scope: ['films', 'detail'] as const,
           staleTime: 30_000,
         }),
         featured: query(featuredFilmsDocument, {
+          family: ['films', 'list'] as const,
           queryKeyHashFn: (queryKey) => JSON.stringify(queryKey),
-          scope: ['films', 'list'] as const,
           staleTime: 60_000,
         }),
         update: mutation(updateFilmSource, {
@@ -116,7 +116,7 @@ describe('@callsheet/react-query runtime surface', () => {
 
   it('supports ts-rest routes', () => {
     const byId = query(contract.films.byId, {
-      scope: ['films', 'detail'] as const,
+      family: ['films', 'detail'] as const,
       staleTime: 30_000,
     });
     const update = mutation(contract.films.update, {
@@ -137,9 +137,9 @@ describe('@callsheet/react-query runtime surface', () => {
       JSON.stringify(queryKey),
     );
     const filmByIdCall = query(filmByIdSource, {
+      family: ['films', 'detail'] as const,
       queryKeyHashFn,
       retry: 2,
-      scope: ['films', 'detail'] as const,
       staleTime: 30_000,
       throwOnError: true,
     });
@@ -159,6 +159,25 @@ describe('@callsheet/react-query runtime surface', () => {
     expect(resolved.retry).toBe(1);
     expect(resolved.staleTime).toBe(30_000);
     expect(resolved.throwOnError).toBe(true);
+  });
+
+  it('passes React Query mutation scope through definition defaults', () => {
+    const updateCall = mutation(updateFilmSource, {
+      invalidates: [['films', 'detail']] as const,
+      scope: {
+        id: 'films.update',
+      },
+    });
+
+    const adapter = createReactQueryAdapter({
+      execute: createExecuteStub(),
+    });
+
+    const resolved = adapter.mutationOptions(updateCall);
+
+    expect(resolved.scope).toEqual({
+      id: 'films.update',
+    });
   });
 
   it('local onSuccess ordering works with call definitions', async () => {

@@ -1,10 +1,10 @@
 /**
- * Scope groups calls that represent the same family of data.
- * It is used for cache grouping and invalidation.
+ * Family identifies the related data a call belongs to.
+ * It is used for query-key grouping and invalidation.
  *
  */
-export type ScopePart = string | number | boolean | null | undefined;
-export type Scope = readonly ScopePart[];
+export type FamilyPart = string | number | boolean | null | undefined;
+export type Family = readonly FamilyPart[];
 
 /**
  * Key is the exact cache identity for a specific call.
@@ -19,7 +19,7 @@ export interface CallInputContext<TCallInput> {
 }
 
 export interface KeyContext<TCallInput> extends CallInputContext<TCallInput> {
-  scope: Scope;
+  family: Family;
 }
 
 export interface MutationResultContext<
@@ -33,22 +33,22 @@ export type KeyResolver<TCallInput> = (context: KeyContext<TCallInput>) => Key;
 
 export type InvalidationResolver<TCallInput, TCallOutput> = (
   context: MutationResultContext<TCallInput, TCallOutput>,
-) => readonly Scope[];
+) => readonly Family[];
 
 export type KeyConfig<TCallInput> = Key | KeyResolver<TCallInput>;
 
 export type InvalidationConfig<TCallInput, TCallOutput> =
-  | readonly Scope[]
+  | readonly Family[]
   | InvalidationResolver<TCallInput, TCallOutput>;
 
 export interface CallOptions<TCallInput = unknown, TCallOutput = unknown> {
-  scope?: Scope;
+  family?: Family;
   key?: KeyConfig<TCallInput>;
   invalidates?: InvalidationConfig<TCallInput, TCallOutput>;
 }
 
 export interface QueryOptions<TCallInput = unknown> {
-  scope?: Scope;
+  family?: Family;
   key?: KeyConfig<TCallInput>;
 }
 

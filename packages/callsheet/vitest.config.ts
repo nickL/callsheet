@@ -15,7 +15,7 @@ export default defineConfig({
         '**/tests/**',
         '**/src/call-type-tag.ts',
         '**/src/call-types.ts',
-        '**/src/scope.ts',
+        '**/src/family.ts',
         '**/src/index.ts',
         '**/src/react-query/index.ts',
       ],

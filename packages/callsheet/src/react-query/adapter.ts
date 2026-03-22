@@ -10,7 +10,7 @@ import { hasExplicitInput } from './query-options';
 import type { MutationKind } from '../call-kind';
 import type { CallTypeTag } from '../call-type-tag';
 import type { CallInputOf, CallOutputOf } from '../call-types';
-import type { InvalidationConfig, Scope } from '../scope';
+import type { Family, InvalidationConfig } from '../family';
 import type {
   QueryCallLike,
   QueryConfig,
@@ -136,7 +136,7 @@ function resolveCallQueryDefaults<TCall extends QueryCallLike>(
     queryFn: _ignoredQueryFn,
     queryHash: _ignoredQueryHash,
     queryKey: _ignoredQueryKey,
-    scope: _ignoredScope,
+    family: _ignoredFamily,
     select: _ignoredSelect,
     source: _ignoredSource,
     subscribed: _ignoredSubscribed,
@@ -152,12 +152,12 @@ function resolveCallMutationDefaults<TCall extends MutationCallLike>(
 ): Record<string, unknown> {
   const {
     _defaulted: _ignoredDefaulted,
+    family: _ignoredFamily,
     invalidates: _ignoredInvalidates,
     key: _ignoredKey,
     kind: _ignoredKind,
     mutationFn: _ignoredMutationFn,
     onSuccess: _ignoredOnSuccess,
-    scope: _ignoredScope,
     source: _ignoredSource,
     ...reactQueryDefaults
   } = call as TCall & Record<string, unknown>;
@@ -171,7 +171,7 @@ function resolveMutationInvalidations<TCall extends MutationCallLike>(
   },
   input: CallInputOf<TCall>,
   output: CallOutputOf<TCall>,
-): readonly Scope[] {
+): readonly Family[] {
   if (typeof call.invalidates === 'function') {
     return call.invalidates({ input, output });
   }
@@ -322,9 +322,9 @@ export function createReactQueryAdapter(
     );
 
     await Promise.all(
-      invalidationTargets.map((scope) =>
+      invalidationTargets.map((family) =>
         queryClient.invalidateQueries({
-          queryKey: buildInvalidationKey(queryKeyPrefix, scope),
+          queryKey: buildInvalidationKey(queryKeyPrefix, family),
         }),
       ),
     );

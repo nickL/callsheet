@@ -4,6 +4,8 @@ export { defineCalls, getCallMetadata } from './define-calls';
 export type {
   CallOptions,
   CallInputContext,
+  Family,
+  FamilyPart,
   InvalidationConfig,
   InvalidationResolver,
   Key,
@@ -14,9 +16,7 @@ export type {
   MutationOptions,
   MutationResultContext,
   QueryOptions,
-  Scope,
-  ScopePart,
-} from './scope';
+} from './family';
 
 export type {
   Call,

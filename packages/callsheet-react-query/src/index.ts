@@ -32,8 +32,8 @@ export type {
   QueryCall,
   QueryKind,
   RestSourceLike,
-  Scope,
-  ScopePart,
+  Family,
+  FamilyPart,
   SubscriptionOperationKind,
   TypedDocumentLike,
 } from '@callsheet/core';

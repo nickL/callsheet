@@ -23,7 +23,7 @@ import type {
   MutationCall,
   QueryCall,
 } from './call-types';
-import type { CallOptions, MutationOptions, QueryOptions } from './scope';
+import type { CallOptions, MutationOptions, QueryOptions } from './family';
 
 interface OptionsOnlyShape {
   callsheetKind?: never;

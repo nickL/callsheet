@@ -1,3 +1,3 @@
 export const sharedOptions = {
-  scope: ['alpha'] as const,
+  family: ['alpha'] as const,
 };

@@ -1,3 +1,3 @@
 export const adminOptions = {
-  scope: ['zulu'] as const,
+  family: ['zulu'] as const,
 };

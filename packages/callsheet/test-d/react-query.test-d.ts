@@ -11,6 +11,7 @@ import {
 
 import type {
   CallsheetCustomSource,
+  Family,
   TypedDocumentLike,
 } from '../dist/index.js';
 import type {
@@ -84,11 +85,11 @@ const generatedRefreshDocument: TypedDocumentLike<
 };
 
 const featuredCall = call(featuredSource, {
-  scope: ['films', 'list'] as const,
+  family: ['films', 'list'] as const,
 });
 
 const byIdCall = call(filmByIdSource, {
-  scope: ['films', 'detail'] as const,
+  family: ['films', 'detail'] as const,
 });
 
 const updateCall = call(updateFilmSource, {
@@ -96,11 +97,15 @@ const updateCall = call(updateFilmSource, {
 });
 
 const maybeByIdCall = call(maybeFilmByIdSource, {
-  scope: ['films', 'detail'] as const,
-  key: ({ input }) => ['film', { id: input?.id ?? 'unknown' }] as const,
+  family: ['films', 'detail'] as const,
+  key: ({ family, input }) => {
+    expectType<Family>(family);
+
+    return ['film', family[1], { id: input?.id ?? 'unknown' }] as const;
+  },
 });
 const generatedFeaturedCall = query(generatedFeaturedDocument, {
-  scope: ['films', 'list'] as const,
+  family: ['films', 'list'] as const,
 });
 const generatedRefreshCall = mutation(generatedRefreshDocument, {
   invalidates: [['films', 'list']] as const,

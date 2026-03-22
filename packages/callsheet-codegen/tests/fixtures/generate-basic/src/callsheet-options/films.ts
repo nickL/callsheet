@@ -1,3 +1,3 @@
 export const filmByIdOptions = {
-  scope: ['films', 'detail'] as const,
+  family: ['films', 'detail'] as const,
 };

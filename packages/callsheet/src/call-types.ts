@@ -1,6 +1,6 @@
 import type { CallKind, MutationKind, QueryKind } from './call-kind';
 import type { CallTypeTag } from './call-type-tag';
-import type { CallOptions, MutationOptions, QueryOptions } from './scope';
+import type { CallOptions, MutationOptions, QueryOptions } from './family';
 
 export interface CallMetadata {
   path: readonly string[];

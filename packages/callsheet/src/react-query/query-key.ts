@@ -2,7 +2,7 @@ import { getCallMetadata } from '../define-calls';
 
 import type { CallTypeTag } from '../call-type-tag';
 import type { CallInputOf } from '../call-types';
-import type { Key, KeyConfig, Scope } from '../scope';
+import type { Family, Key, KeyConfig } from '../family';
 import type { QueryKey } from '@tanstack/react-query';
 
 const callSegmentKey = 'call';
@@ -12,37 +12,37 @@ type CallLike = CallTypeTag<unknown, unknown>;
 
 export const defaultQueryKeyPrefix = ['callsheet'] as const satisfies QueryKey;
 
-function compareScope(a: Scope, b: Scope): boolean {
+function compareFamily(a: Family, b: Family): boolean {
   return (
     a.length === b.length && a.every((segment, index) => segment === b[index])
   );
 }
 
-export function resolveCallScope<TCall extends CallLike>(
+export function resolveCallFamily<TCall extends CallLike>(
   call: TCall & {
-    scope?: Scope;
+    family?: Family;
   },
-): Scope {
-  if (call.scope) {
-    return call.scope;
+): Family {
+  if (call.family) {
+    return call.family;
   }
 
   throw new Error(
-    'Unable to resolve scope for this call. Define `scope` on the call or register the call with defineCalls(...).',
+    'Unable to resolve family for this call. Define `family` on the call or register the call with defineCalls(...).',
   );
 }
 
 function resolveKeyOverride<TCall extends CallLike>(
   call: TCall & {
     key?: KeyConfig<CallInputOf<TCall>>;
-    scope?: Scope;
+    family?: Family;
   },
   input: CallInputOf<TCall>,
 ): Key | undefined {
   if (typeof call.key === 'function') {
     return call.key({
+      family: resolveCallFamily(call),
       input,
-      scope: resolveCallScope(call),
     });
   }
 
@@ -53,21 +53,21 @@ export function buildQueryKey<TCall extends CallLike>(
   prefix: QueryKey,
   call: TCall & {
     key?: KeyConfig<CallInputOf<TCall>>;
-    scope?: Scope;
+    family?: Family;
   },
   input: CallInputOf<TCall> | undefined,
   includeInputSegment = input !== undefined,
 ): QueryKey {
-  const scope = resolveCallScope(call);
+  const family = resolveCallFamily(call);
   const metadata = getCallMetadata(call);
   const keyOverride = resolveKeyOverride(call, input!);
-  const queryKeySegments: unknown[] = [...prefix, ...scope];
+  const queryKeySegments: unknown[] = [...prefix, ...family];
 
   if (keyOverride) {
     return [...queryKeySegments, { [keySegmentKey]: keyOverride }];
   }
 
-  if (metadata && !compareScope(metadata.path, scope)) {
+  if (metadata && !compareFamily(metadata.path, family)) {
     queryKeySegments.push({ [callSegmentKey]: metadata.path });
   }
 
@@ -78,6 +78,9 @@ export function buildQueryKey<TCall extends CallLike>(
   return [...queryKeySegments, { [inputSegmentKey]: input }];
 }
 
-export function buildInvalidationKey(prefix: QueryKey, scope: Scope): QueryKey {
-  return [...prefix, ...scope];
+export function buildInvalidationKey(
+  prefix: QueryKey,
+  family: Family,
+): QueryKey {
+  return [...prefix, ...family];
 }

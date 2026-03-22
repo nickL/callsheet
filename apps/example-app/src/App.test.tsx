@@ -14,10 +14,10 @@ describe('App', () => {
     expect(screen.getAllByText('Wall-E')).toHaveLength(2);
     expect(screen.getByText('Inside Out')).toBeTruthy();
     expect(screen.getByTestId('featured-call-kind').textContent).toBe('query');
-    expect(screen.getByTestId('featured-call-scope').textContent).toBe(
+    expect(screen.getByTestId('featured-call-family').textContent).toBe(
       'films.list',
     );
-    expect(screen.getByTestId('film-call-scope').textContent).toBe(
+    expect(screen.getByTestId('film-call-family').textContent).toBe(
       'films.detail',
     );
     expect(screen.getByTestId('featured-count').textContent).toBe('2');

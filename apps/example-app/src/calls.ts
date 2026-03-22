@@ -26,7 +26,7 @@ export const calls = defineCalls({
   ...generatedCalls,
   sdk: {
     featuredCount: call(featuredCountSource, {
-      scope: ['sdk', 'featuredCount'] as const,
+      family: ['sdk', 'featuredCount'] as const,
     }),
   },
 } as const);

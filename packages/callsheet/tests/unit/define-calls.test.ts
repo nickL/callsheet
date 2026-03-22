@@ -70,7 +70,7 @@ describe('defineCalls', () => {
 
     expect(calls.films.create.kind).toBe(CALL_KINDS.mutation);
     expect(calls.films.list.kind).toBe(CALL_KINDS.query);
-    expect(calls.films.list.scope).toEqual(['films', 'list']);
+    expect(calls.films.list.family).toEqual(['films', 'list']);
     expect(getCallMetadata(calls.films.list)).toEqual({
       path: ['films', 'list'],
     });
@@ -82,7 +82,7 @@ describe('defineCalls', () => {
     const calls = defineCalls({
       films: {
         list: call(filmsListDocument, {
-          scope: ['films'],
+          family: ['films'],
         }),
         update: call(updateFilmRoute, {
           invalidates: [['films']],
@@ -98,11 +98,11 @@ describe('defineCalls', () => {
     ]);
 
     const explicitQuery = query(filmsListDocument, {
-      scope: ['films', 'explicit-list'],
+      family: ['films', 'explicit-list'],
     });
     expect(explicitQuery.kind).toBe(CALL_KINDS.query);
     expect(explicitQuery.source).toEqual(filmsListDocument);
-    expect(explicitQuery.scope).toEqual(['films', 'explicit-list']);
+    expect(explicitQuery.family).toEqual(['films', 'explicit-list']);
   });
 
   it('requires explicit query or mutation calls when kind cannot be inferred', () => {
@@ -125,11 +125,11 @@ describe('defineCalls', () => {
     expect(optionsQuery.source).toEqual(optionsRoute);
 
     const optionsQueryWithConfig = query(optionsRoute, {
-      scope: ['films', 'options'],
+      family: ['films', 'options'],
     });
     expect(optionsQueryWithConfig.kind).toBe(CALL_KINDS.query);
     expect(optionsQueryWithConfig.source).toEqual(optionsRoute);
-    expect(optionsQueryWithConfig.scope).toEqual(['films', 'options']);
+    expect(optionsQueryWithConfig.family).toEqual(['films', 'options']);
 
     const optionsMutation = mutation(optionsRoute, {
       invalidates: [['films']],
@@ -272,7 +272,7 @@ describe('defineCalls', () => {
           method: 'GET',
         } as unknown as RestSourceLike<'GET'>,
         {
-          scope: ['films'],
+          family: ['films'],
         },
       );
     }).toThrow('The provided source shape is not supported by callsheet.');

@@ -42,7 +42,7 @@ const updateFilmDocument: TypedDocumentLike<
 };
 
 const listCall = query(filmsListDocument, {
-  scope: ['films', 'list'] as const,
+  family: ['films', 'list'] as const,
 });
 
 const updateCall = mutation(updateFilmDocument, {
@@ -54,7 +54,7 @@ const updateCall = mutation(updateFilmDocument, {
 });
 
 const manualQuery = query<{ page: number }, { films: string[] }>({
-  scope: ['films', 'list'] as const,
+  family: ['films', 'list'] as const,
 });
 
 const manualMutation = mutation<{ id: string }, { ok: true }>({

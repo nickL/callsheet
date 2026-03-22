@@ -29,7 +29,6 @@ type UnsupportedQueryDefinitionOptionKeys =
 
 type UnsupportedMutationDefinitionOptionKeys =
   | 'mutationFn'
-  | 'scope'
   | '_defaulted'
   | 'onSuccess';
 

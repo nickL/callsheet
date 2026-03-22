@@ -36,11 +36,11 @@ const contract = c.router({
 });
 
 const byIdCall = call(contract.films.byId, {
-  scope: ['films', 'detail'] as const,
+  family: ['films', 'detail'] as const,
 });
 
 const byIdQuery = query(contract.films.byId, {
-  scope: ['films', 'detail'] as const,
+  family: ['films', 'detail'] as const,
 });
 
 const updateMutation = mutation(contract.films.update, {

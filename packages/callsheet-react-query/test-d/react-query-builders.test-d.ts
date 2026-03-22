@@ -73,7 +73,7 @@ const filmByIdOptions: QueryDefinitionOptions<
   { film: { id: string; title: string } }
 > = {
   retry: 1,
-  scope: ['films', 'detail'] as const,
+  family: ['films', 'detail'] as const,
   staleTime: 30_000,
   throwOnError: true,
 };
@@ -91,12 +91,12 @@ const updateFilmOptions: MutationDefinitionOptions<
 
 const byIdCall = call(filmByIdSource, filmByIdOptions);
 const generatedFeaturedCall = query(generatedFeaturedDocument, {
+  family: ['films', 'list'] as const,
   queryKeyHashFn: (queryKey) => JSON.stringify(queryKey),
-  scope: ['films', 'list'] as const,
   staleTime: 30_000,
 });
 const tsRestByIdCall = query(contract.films.byId, {
-  scope: ['films', 'detail'] as const,
+  family: ['films', 'detail'] as const,
   staleTime: 30_000,
 });
 const updateCall = mutation(updateFilmSource, updateFilmOptions);
@@ -149,8 +149,6 @@ mutation(updateFilmSource, {
   onSuccess: () => {},
 });
 
-// TODO: rename Callsheet `scope` in React Query defineCall options.
-// @ts-expect-error TanStack mutation scope still collides with Callsheet scope
 mutation(updateFilmSource, {
   scope: {
     id: 'films.update',

@@ -177,12 +177,12 @@ function FeaturedFilmsSection() {
   return (
     <>
       <p data-testid="featured-call-kind">{calls.films.featured.kind}</p>
-      <p data-testid="featured-call-scope">
-        {calls.films.featured.scope.join('.')}
+      <p data-testid="featured-call-family">
+        {calls.films.featured.family.join('.')}
       </p>
-      <p data-testid="film-call-scope">{calls.films.byId.scope.join('.')}</p>
-      <p data-testid="rest-call-scope">
-        {calls.rest.users.byId.scope.join('.')}
+      <p data-testid="film-call-family">{calls.films.byId.family.join('.')}</p>
+      <p data-testid="rest-call-family">
+        {calls.rest.users.byId.family.join('.')}
       </p>
       <p data-testid="featured-count">{featuredCount.data}</p>
       <p data-testid="user-name">{user.data.name}</p>

@@ -48,10 +48,10 @@ const restRoute: CallsheetCustomSource<
 const calls = defineCalls({
   films: {
     byId: call(restRoute, {
-      scope: ['films', 'detail'] as const,
+      family: ['films', 'detail'] as const,
     }),
     list: call(filmsListDocument, {
-      scope: ['films', 'list'] as const,
+      family: ['films', 'list'] as const,
     }),
   },
 });

@@ -106,14 +106,15 @@ const generatedRefreshDocument: TypedDocumentLike<
 const calls = defineCalls({
   films: {
     byId: call(filmByIdSource, {
-      scope: ['films', 'detail'] as const,
+      family: ['films', 'detail'] as const,
     }),
     maybeById: call(maybeFilmByIdSource, {
-      scope: ['films', 'detail'] as const,
-      key: ({ input }) => ['film', { id: input?.id ?? 'unknown' }] as const,
+      family: ['films', 'detail'] as const,
+      key: ({ family, input }) =>
+        ['film', family[1], { id: input?.id ?? 'unknown' }] as const,
     }),
     featured: call(featuredFilmsSource, {
-      scope: ['films', 'list'] as const,
+      family: ['films', 'list'] as const,
     }),
     update: call(updateFilmSource, {
       invalidates: [['films', 'detail']] as const,
@@ -124,7 +125,7 @@ const calls = defineCalls({
 const generatedGraphqlCalls = defineCalls({
   films: {
     featured: query(generatedFeaturedDocument, {
-      scope: ['films', 'list'] as const,
+      family: ['films', 'list'] as const,
     }),
     refresh: mutation(generatedRefreshDocument, {
       invalidates: [['films', 'list']] as const,
@@ -141,7 +142,7 @@ const metadataFallbackCalls = defineCalls({
 const staticKeyCalls = defineCalls({
   films: {
     archived: call(featuredFilmsSource, {
-      scope: ['films', 'archive'] as const,
+      family: ['films', 'archive'] as const,
       key: ['legacy-films', { view: 'archived' }] as const,
     }),
   },
@@ -165,7 +166,7 @@ const queryDefaultCalls = defineCalls({
       filmByIdSource,
       {
         retry: 2,
-        scope: ['films', 'detail'] as const,
+        family: ['films', 'detail'] as const,
         staleTime: 30_000,
         throwOnError: true,
       } as never,
@@ -337,11 +338,11 @@ describe('react-query adapter', () => {
       'callsheet',
       'films',
       'detail',
-      { key: ['film', { id: 'unknown' }] },
+      { key: ['film', 'detail', { id: 'unknown' }] },
     ]);
   });
 
-  it('uses the defineCalls path as the default scope when none is provided', () => {
+  it('uses the defineCalls path as the default family when none is provided', () => {
     const { adapter } = createWrapper();
     const recentConfig = queryOptions(metadataFallbackCalls.films.recent);
 
@@ -424,12 +425,12 @@ describe('react-query adapter', () => {
     );
   });
 
-  it('throws when a query is missing scope and defineCalls metadata', () => {
+  it('throws when a query is missing family and defineCalls metadata', () => {
     const { adapter } = createWrapper();
     const unregisteredConfig = queryOptions(unregisteredFeaturedCall);
 
     expect(() => adapter.resolveQueryOptions(unregisteredConfig)).toThrow(
-      'Unable to resolve scope for this call. Define `scope` on the call or register the call with defineCalls(...).',
+      'Unable to resolve family for this call. Define `family` on the call or register the call with defineCalls(...).',
     );
   });
 
@@ -569,7 +570,7 @@ describe('react-query adapter', () => {
     });
   });
 
-  it('resolves invalidation scopes from invalidates callbacks', async () => {
+  it('resolves invalidation families from invalidates callbacks', async () => {
     const { Wrapper, adapter, queryClient } = createWrapper();
     const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries');
 
