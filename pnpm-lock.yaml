@@ -175,16 +175,16 @@ importers:
       '@callsheet/core':
         specifier: workspace:*
         version: link:../callsheet
-      '@tanstack/react-query':
-        specifier: ^5.0.0
-        version: 5.90.21(react@19.2.4)
-      react:
-        specifier: ^18 || ^19
-        version: 19.2.4
     devDependencies:
+      '@tanstack/react-query':
+        specifier: ^5.90.21
+        version: 5.90.21(react@19.2.4)
       '@ts-rest/core':
         specifier: ^3.52.1
         version: 3.52.1(@types/node@25.5.0)(zod@3.25.76)
+      react:
+        specifier: ^19.2.4
+        version: 19.2.4
 
   packages/callsheet-ts-rest:
     dependencies:

@@ -14,7 +14,7 @@
     "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings=0 && prettier --check .",
     "test": "pnpm run test:workspace && pnpm run check:example-generated && pnpm run build:packages && pnpm run test:types",
-    "test:coverage": "pnpm --filter @callsheet/core test:coverage && pnpm --filter @callsheet/codegen test:coverage",
+    "test:coverage": "pnpm --filter @callsheet/core test:coverage && pnpm --filter @callsheet/react-query test:coverage && pnpm --filter @callsheet/codegen test:coverage",
     "test:types": "pnpm --filter @callsheet/core test:types && pnpm --filter @callsheet/react-query test:types && pnpm --filter @callsheet/codegen test:types",
     "test:workspace": "pnpm -r --if-present test",
     "typecheck": "pnpm -r --if-present typecheck",
