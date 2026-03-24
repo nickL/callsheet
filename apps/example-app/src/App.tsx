@@ -76,7 +76,7 @@ const execute = ((request: ExampleRequest) => {
   }
 
   if (matchesCall(request, calls.films.byId)) {
-    const input = request.input as FilmByIdQueryVariables;
+    const input = request.input;
     const filmId = input.id;
     const film: FilmByIdQuery = {
       film: {

@@ -409,7 +409,7 @@ describe('react-query adapter', () => {
       },
     );
 
-    await result.current.mutateAsync(undefined);
+    await result.current.mutateAsync();
 
     expect(executeSpy).toHaveBeenCalledWith(
       expect.objectContaining({

@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import { fixturePath, normalizeSourceFile } from './test-helpers';
-import { discoverTsRestRoutes } from '../../src/ts-rest-discovery';
+import {
+  createTsRestCoreLoadError,
+  discoverTsRestRoutes,
+} from '../../src/ts-rest-discovery';
 
 describe('ts-rest discovery', () => {
   it('discovers contract routes and applies a path prefix', async () => {
@@ -40,5 +43,21 @@ describe('ts-rest discovery', () => {
         importFrom: fixturePath('generate-basic', 'src/rest/contract.ts'),
       }),
     ).rejects.toThrow(`Configured tsRest export was not found.`);
+  });
+
+  it('adds error msg for ts-rest load failures', () => {
+    const error = createTsRestCoreLoadError(
+      new Error("Cannot find package 'zod'"),
+    );
+
+    expect(error.message).toContain(
+      'Callsheet codegen could not load `@ts-rest/core` for tsRest sources.',
+    );
+    expect(error.message).toContain(
+      "along with any required peer dependencies for the version you're using",
+    );
+    expect(error.message).toContain(
+      "Original error: Cannot find package 'zod'",
+    );
   });
 });

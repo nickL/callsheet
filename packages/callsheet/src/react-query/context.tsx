@@ -17,6 +17,7 @@ import type {
 import type {
   DefaultError,
   DefinedUseQueryResult,
+  MutateOptions,
   QueryClient,
   UseMutationResult,
   UseQueryResult,
@@ -26,6 +27,48 @@ import type { PropsWithChildren } from 'react';
 type MutationCallLike = CallTypeTag<unknown, unknown> & {
   kind: MutationKind;
 };
+
+type CallsheetMutateFunction<TData, TError, TVariables, TOnMutateResult> = [
+  TVariables,
+] extends [void]
+  ? (
+      variables?: TVariables,
+      options?: MutateOptions<TData, TError, TVariables, TOnMutateResult>,
+    ) => void
+  : (
+      variables: TVariables,
+      options?: MutateOptions<TData, TError, TVariables, TOnMutateResult>,
+    ) => void;
+
+type CallsheetMutateAsyncFunction<TData, TError, TVariables, TOnMutateResult> =
+  [TVariables] extends [void]
+    ? (
+        variables?: TVariables,
+        options?: MutateOptions<TData, TError, TVariables, TOnMutateResult>,
+      ) => Promise<TData>
+    : (
+        variables: TVariables,
+        options?: MutateOptions<TData, TError, TVariables, TOnMutateResult>,
+      ) => Promise<TData>;
+
+type CallsheetUseMutationResult<TData, TError, TVariables, TOnMutateResult> =
+  UseMutationResult<TData, TError, TVariables, TOnMutateResult> &
+    ([TVariables] extends [void]
+      ? {
+          mutate: CallsheetMutateFunction<
+            TData,
+            TError,
+            TVariables,
+            TOnMutateResult
+          >;
+          mutateAsync: CallsheetMutateAsyncFunction<
+            TData,
+            TError,
+            TVariables,
+            TOnMutateResult
+          >;
+        }
+      : unknown);
 
 const callsheetAdapterContext = createContext<ReactQueryAdapter | null>(null);
 
@@ -96,7 +139,7 @@ export function useMutation<
   call: TCall,
   options?: MutationCallOptions<TCall, TOnMutateResult>,
   queryClient?: QueryClient,
-): UseMutationResult<
+): CallsheetUseMutationResult<
   CallOutputOf<TCall>,
   DefaultError,
   CallInputOf<TCall>,
@@ -107,5 +150,10 @@ export function useMutation<
   return useTanstackMutation(
     adapter.mutationOptions(call, options),
     queryClient,
-  );
+  ) as CallsheetUseMutationResult<
+    CallOutputOf<TCall>,
+    DefaultError,
+    CallInputOf<TCall>,
+    TOnMutateResult
+  >;
 }

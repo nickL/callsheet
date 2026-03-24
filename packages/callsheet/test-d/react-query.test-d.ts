@@ -1,5 +1,5 @@
 import { QueryClient } from '@tanstack/react-query';
-import { expectType } from 'tsd';
+import { expectAssignable, expectType } from 'tsd';
 
 import { CALL_KINDS, call, mutation, query } from '../dist/index.js';
 import {
@@ -134,7 +134,7 @@ expectType<UseQueryResult<{ id: string; title: string }>>(useQuery(byIdConfig));
 expectType<DefinedUseQueryResult<{ film: { id: string; title: string } }>>(
   useQuery(byIdConfigWithInitialData),
 );
-expectType<
+expectAssignable<
   UseMutationResult<
     { updateFilm: { id: string; title: string } },
     Error,
@@ -148,9 +148,9 @@ expectType<Promise<{ films: readonly string[] }>>(
 expectType<Promise<{ films: readonly string[] }>>(
   adapter.fetchQuery(new QueryClient(), queryOptions(generatedFeaturedCall)),
 );
-expectType<UseMutationResult<{ refreshed: boolean }, Error, void, unknown>>(
-  useMutation(generatedRefreshCall),
-);
+expectAssignable<
+  UseMutationResult<{ refreshed: boolean }, Error, void, unknown>
+>(useMutation(generatedRefreshCall));
 expectType<Promise<{ id: string; title: string }>>(
   adapter.fetchQuery(new QueryClient(), byIdConfig),
 );
@@ -171,7 +171,8 @@ useMutation(updateCall).mutate({
   id: 'film_123',
   title: 'Alien 3',
 });
-useMutation(generatedRefreshCall).mutate(undefined);
+useMutation(generatedRefreshCall).mutate();
+void useMutation(generatedRefreshCall).mutateAsync();
 
 const invalidByIdOptions = {
   select: (data: { film: { id: string; title: string } }) => data.film,

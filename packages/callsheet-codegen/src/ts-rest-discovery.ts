@@ -69,11 +69,25 @@ async function loadTsRestCore(): Promise<TsRestCoreModule> {
       isAppRoute: (value) => module.isAppRoute(value),
       isAppRouteQuery: (route) => module.isAppRouteQuery(route),
     };
-  } catch {
-    throw new Error(
-      'Callsheet codegen requires `@ts-rest/core` to generate from tsRest sources.',
-    );
+  } catch (error) {
+    throw createTsRestCoreLoadError(error);
   }
+}
+
+export function createTsRestCoreLoadError(cause: unknown): Error {
+  const detail =
+    cause instanceof Error && cause.message
+      ? [``, `Original error: ${cause.message}`]
+      : [];
+
+  return new Error(
+    [
+      'Callsheet codegen could not load `@ts-rest/core` for tsRest sources.',
+      "Make sure `@ts-rest/core` is installed, along with any required peer dependencies for the version you're using.",
+      ...detail,
+    ].join('\n'),
+    { cause },
+  );
 }
 
 async function collectContractRoutes(
