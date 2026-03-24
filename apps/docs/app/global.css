@@ -141,6 +141,11 @@ h1.text-\[1\.75em\] {
   letter-spacing: -0.025em;
 }
 
+article#nd-page {
+  position: relative;
+  z-index: 1;
+}
+
 /* descriptions */
 p.mb-8.text-lg.text-fd-muted-foreground {
   margin-bottom: 2.5rem;
@@ -316,6 +321,10 @@ pre code {
 }
 
 /* Sidebar nav ---------------  */
+
+#nd-docs-layout {
+  --fd-layout-width: 300rem;
+}
 
 #nd-sidebar a {
   font-size: 0.865rem;

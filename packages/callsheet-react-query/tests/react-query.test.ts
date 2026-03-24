@@ -73,9 +73,9 @@ const featuredFilmsDocument: TypedDocumentLike<
 };
 
 function createExecuteStub(): ExecuteCall {
-  return vi.fn(async () => {
-    throw new Error('execute should not be called in this test');
-  });
+  return vi.fn(() =>
+    Promise.reject(new Error('execute should not be called in this test')),
+  );
 }
 
 describe('@callsheet/react-query runtime surface', () => {
@@ -194,8 +194,9 @@ describe('@callsheet/react-query runtime surface', () => {
     });
 
     const resolved = adapter.mutationOptions(updateCall, {
-      onSuccess: async () => {
+      onSuccess: () => {
         order.push('local');
+        return Promise.resolve();
       },
       retry: 1,
     });
@@ -203,9 +204,9 @@ describe('@callsheet/react-query runtime surface', () => {
     const queryClient = new QueryClient();
     const invalidateQueries = vi
       .spyOn(queryClient, 'invalidateQueries')
-      .mockImplementation(async () => {
+      .mockImplementation(() => {
         order.push('invalidate');
-        return undefined as never;
+        return Promise.resolve(undefined as never);
       });
 
     await resolved.onSuccess?.(

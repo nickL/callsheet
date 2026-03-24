@@ -162,28 +162,22 @@ const functionInvalidationCalls = defineCalls({
 
 const queryDefaultCalls = defineCalls({
   films: {
-    byId: call(
-      filmByIdSource,
-      {
-        retry: 2,
-        family: ['films', 'detail'] as const,
-        staleTime: 30_000,
-        throwOnError: true,
-      } as never,
-    ),
+    byId: call(filmByIdSource, {
+      retry: 2,
+      family: ['films', 'detail'] as const,
+      staleTime: 30_000,
+      throwOnError: true,
+    } as never),
   },
 });
 
 const mutationDefaultCalls = defineCalls({
   films: {
-    update: call(
-      updateFilmSource,
-      {
-        invalidates: [['films', 'detail']] as const,
-        meta: { source: 'call' },
-        retry: 2,
-      } as never,
-    ),
+    update: call(updateFilmSource, {
+      invalidates: [['films', 'detail']] as const,
+      meta: { source: 'call' },
+      retry: 2,
+    } as never),
   },
 });
 

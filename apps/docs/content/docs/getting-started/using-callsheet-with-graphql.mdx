@@ -3,20 +3,14 @@ title: Using Callsheet with GraphQL
 description: Use Callsheet with GraphQL documents, with or without code generation.
 ---
 
-Callsheet works great with manually typed GraphQL documents, but it shines when you point it at generated documents from [GraphQL Code Generator](https://github.com/dotansimha/graphql-code-generator). 
+Callsheet works great with manually typed GraphQL documents, but it shines when you point it at generated documents from [GraphQL Code Generator](https://github.com/dotansimha/graphql-code-generator).
 
 With generated documents, the workflow is pretty simple:
 
 <Steps>
-  <Step>
-      Point Callsheet at your generated documents
-  </Step>
-  <Step>
-      Generate your Callsheet
-  </Step>
-  <Step>
-     Use your calls in React Query.
-  </Step>
+  <Step>Point Callsheet at your generated documents</Step>
+  <Step>Generate your Callsheet</Step>
+  <Step>Use your calls in React Query.</Step>
 </Steps>
 
 ### Walkthrough[!toc]
@@ -31,12 +25,9 @@ First, if you haven't already install **@callsheet/react-query** and **@callshee
     ```
   </Tab>
 
-  <Tab value="npm">
-    ```sh
-    npm add @callsheet/react-query
-    npm add -D @callsheet/codegen
-    ```
-  </Tab>
+<Tab value="npm">
+  ```sh npm add @callsheet/react-query npm add -D @callsheet/codegen ```
+</Tab>
 
   <Tab value="yarn">
     ```sh
@@ -45,7 +36,6 @@ First, if you haven't already install **@callsheet/react-query** and **@callshee
     ```
   </Tab>
 </Tabs>
-
 
 ### Add generated documents
 
@@ -80,17 +70,13 @@ Then build Callsheet from your generated docs. It creates a `calls` module you c
 pnpm callsheet-codegen --config callsheet.config.ts
 ```
 
-<Callout title="Output">
-  This generates `src/generated/calls.ts`.
-</Callout>
+<Callout title="Output">This generates `src/generated/calls.ts`.</Callout>
 
 If you need to, you can change the output location in `callsheet.config.ts`.
-
 
 ### Use generated calls
 
 Once generated, you can import the `calls` module and use it with the React Query APIs you already know.
-
 
 ```ts title="src/FilmPage.tsx"
 import { queryOptions } from '@callsheet/react-query';
@@ -103,8 +89,8 @@ const film = useQuery(
   }),
 );
 ```
-Read more about the shared call surface in [Calls](/core-concepts/calls).
 
+Read more about the shared call surface in [Calls](/core-concepts/calls).
 
 ## Without GraphQL Code Generator
 
@@ -122,7 +108,6 @@ export const calls = defineCalls({
 ```
 
 In either setup, generated or manual, Callsheet gives you one shared call surface to use across your React Query app. Learn more in [Calls](/core-concepts/calls), [Using Callsheet with React Query](/guides/react-query), and [Call Family and Identity](/core-concepts/call-family-and-identity).
-
 
 ## Related Docs
 

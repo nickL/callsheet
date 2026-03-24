@@ -29,9 +29,13 @@ export default tseslint.config(
   {
     ignores: [
       '.internal/**',
+      '**/.next/**',
       '**/coverage/**',
       '**/dist/**',
       '**/node_modules/**',
+      '**/out/**',
+      'apps/docs/.source/**',
+      'apps/docs/next-env.d.ts',
       'apps/example-app/src/generated/**',
       'apps/example-app/src/graphql/generated.ts',
       '**/tests/fixtures/**',
@@ -57,7 +61,10 @@ export default tseslint.config(
       ecmaVersion: 'latest',
       parserOptions: {
         projectService: {
-          allowDefaultProject: ['packages/callsheet/test-d/*.test-d.ts'],
+          allowDefaultProject: [
+            'packages/callsheet/test-d/*.test-d.ts',
+            'packages/callsheet-react-query/tests/react-query.test.ts',
+          ],
           defaultProject: 'tsconfig.base.json',
         },
         tsconfigRootDir: rootDir,
@@ -68,6 +75,7 @@ export default tseslint.config(
       import: importPlugin,
     },
     settings: {
+      'import/core-modules': ['fumadocs-mdx:collections/server'],
       'import/resolver': {
         node: true,
         typescript: {

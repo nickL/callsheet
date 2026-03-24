@@ -3,7 +3,7 @@ title: Packages and Imports
 description: What each Callsheet package does and when to use it.
 ---
 
-Callsheet is composable so you can use just the parts you need, and none of what you don't. 
+Callsheet is composable so you can use just the parts you need, and none of what you don't.
 
 ## Start here
 
@@ -35,26 +35,28 @@ import {
 
 It's a thin wrapper around React Query that helps Callsheet organize calls. It includes call builders (`query`, `mutation`), React Query helpers (`queryOptions`, `useMutation`), and the adapter that connects Callsheet.
 
-
 ### @callsheet/codegen
 
 Callsheet build-time package for generating a `calls` module from typed sources like GraphQL documents and ts-rest contracts.
 
-**Install as a dev dependency.**  You don't need to import this package in your app components.
+**Install as a dev dependency.** You don't need to import this package in your app components.
 
 ```ts title="callsheet.config.ts"
 import { defineConfig } from '@callsheet/codegen';
 
 export default defineConfig({
-  sources: { /* ... */ },
+  sources: {
+    /* ... */
+  },
   output: { file: './src/generated/calls.ts' },
 });
 ```
+
 For the full config reference, see [Codegen Config](/reference/codegen-config).
 
 ### @callsheet/ts-rest
 
-You need this package when you are wrapping `ts-rest` routes by hand in a `defineCalls` block. 
+You need this package when you are wrapping `ts-rest` routes by hand in a `defineCalls` block.
 
 ```ts title="src/calls.ts"
 import { query, mutation } from '@callsheet/ts-rest';

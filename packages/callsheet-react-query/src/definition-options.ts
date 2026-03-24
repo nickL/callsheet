@@ -1,7 +1,9 @@
-import type { CallKind, MutationKind, QueryKind } from '@callsheet/core';
 import type {
+  CallKind,
   CallOptions as CoreCallOptions,
+  MutationKind,
   MutationOptions as CoreMutationOptions,
+  QueryKind,
   QueryOptions as CoreQueryOptions,
 } from '@callsheet/core';
 import type {
@@ -32,17 +34,19 @@ type UnsupportedMutationDefinitionOptionKeys =
   | '_defaulted'
   | 'onSuccess';
 
-export type QueryDefinitionOptions<TCallInput = unknown, TCallOutput = unknown> =
-  CoreQueryOptions<TCallInput> &
-    Omit<
-      TanStackUndefinedInitialDataOptions<
-        TCallOutput,
-        DefaultError,
-        TCallOutput,
-        QueryKey
-      >,
-      UnsupportedQueryDefinitionOptionKeys
-    >;
+export type QueryDefinitionOptions<
+  TCallInput = unknown,
+  TCallOutput = unknown,
+> = CoreQueryOptions<TCallInput> &
+  Omit<
+    TanStackUndefinedInitialDataOptions<
+      TCallOutput,
+      DefaultError,
+      TCallOutput,
+      QueryKey
+    >,
+    UnsupportedQueryDefinitionOptionKeys
+  >;
 
 export type MutationDefinitionOptions<
   TCallInput = unknown,
@@ -50,12 +54,7 @@ export type MutationDefinitionOptions<
   TOnMutateResult = unknown,
 > = CoreMutationOptions<TCallInput, TCallOutput> &
   Omit<
-    UseMutationOptions<
-      TCallOutput,
-      DefaultError,
-      TCallInput,
-      TOnMutateResult
-    >,
+    UseMutationOptions<TCallOutput, DefaultError, TCallInput, TOnMutateResult>,
     UnsupportedMutationDefinitionOptionKeys
   >;
 

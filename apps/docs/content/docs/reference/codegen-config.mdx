@@ -12,21 +12,27 @@ import { defineConfig } from '@callsheet/codegen';
 
 export default defineConfig({
   sources: {
-    graphql: [/* ... */],
-    tsRest: [/* ... */],
+    graphql: [
+      /* ... */
+    ],
+    tsRest: [
+      /* ... */
+    ],
   },
   output: {
     file: './src/generated/calls.ts',
   },
-  overrides: [/* ... */],
+  overrides: [
+    /* ... */
+  ],
 });
 ```
 
-| Field | Required | Description |
-| --- | --- | --- |
-| `sources` | Yes | Where Callsheet discovers typed operations |
-| `output` | Yes | Where the generated module is written |
-| `overrides` | No | Override the shape of generated entries |
+| Field       | Required | Description                                |
+| ----------- | -------- | ------------------------------------------ |
+| `sources`   | Yes      | Where Callsheet discovers typed operations |
+| `output`    | Yes      | Where the generated module is written      |
+| `overrides` | No       | Override the shape of generated entries    |
 
 ## sources.graphql
 
@@ -42,14 +48,14 @@ graphql: [
 ],
 ```
 
-| Field | Required | Description |
-| --- | --- | --- |
-| `rootDir` | Yes | Root directory for entry / namespace resolution |
-| `tsconfigFile` | Yes | TypeScript config used for module resolution and exports |
-| `entries` | Yes | File paths or glob patterns relative to `rootDir` |
-| `exclude` | No | Glob patterns relative to `rootDir` to exclude from entry matches |
-| `exportSuffix` | No | Suffix used to identify GraphQL document exports. Defaults to `Document` |
-| `pathPrefix` | No | Prefix added to all discovered entries from this source |
+| Field          | Required | Description                                                              |
+| -------------- | -------- | ------------------------------------------------------------------------ |
+| `rootDir`      | Yes      | Root directory for entry / namespace resolution                          |
+| `tsconfigFile` | Yes      | TypeScript config used for module resolution and exports                 |
+| `entries`      | Yes      | File paths or glob patterns relative to `rootDir`                        |
+| `exclude`      | No       | Glob patterns relative to `rootDir` to exclude from entry matches        |
+| `exportSuffix` | No       | Suffix used to identify GraphQL document exports. Defaults to `Document` |
+| `pathPrefix`   | No       | Prefix added to all discovered entries from this source                  |
 
 Callsheet `entries` can be specific files or globs like `**/*.ts`. Exports matching the `exportSuffix` are treated as GraphQL documents.
 
@@ -67,11 +73,11 @@ tsRest: [
 ],
 ```
 
-| Field | Required | Description |
-| --- | --- | --- |
-| `importFrom` | Yes | Path to the module that exports the contract |
-| `exportName` | Yes | Name of the contract export in that module |
-| `pathPrefix` | No | Prefix added to all discovered routes from this source |
+| Field        | Required | Description                                            |
+| ------------ | -------- | ------------------------------------------------------ |
+| `importFrom` | Yes      | Path to the module that exports the contract           |
+| `exportName` | Yes      | Name of the contract export in that module             |
+| `pathPrefix` | No       | Prefix added to all discovered routes from this source |
 
 Callsheet walks the contract and infers whether each route is a query or mutation based on the ts-rest route definition.
 
@@ -87,11 +93,11 @@ output: {
 },
 ```
 
-| Field | Required | Description |
-| --- | --- | --- |
-| `file` | Yes | Output file path for the generated module |
-| `exportName` | No | Name of the exported calls object. Defaults to `calls` |
-| `importFrom` | No | Package the generated module imports Callsheet builders from. Defaults to `@callsheet/react-query` |
+| Field        | Required | Description                                                                                        |
+| ------------ | -------- | -------------------------------------------------------------------------------------------------- |
+| `file`       | Yes      | Output file path for the generated module                                                          |
+| `exportName` | No       | Name of the exported calls object. Defaults to `calls`                                             |
+| `importFrom` | No       | Package the generated module imports Callsheet builders from. Defaults to `@callsheet/react-query` |
 
 ## overrides
 
@@ -111,13 +117,13 @@ overrides: [
 ],
 ```
 
-| Field | Required | Description |
-| --- | --- | --- |
-| `path` | Yes | The generated path to target |
-| `as` | No | Move the entry to a different path in the final tree |
-| `kind` | No | Force `query` or `mutation` when discovery can't infer it |
-| `options` | No | Import call options (like `family` or `invalidates`) from another module |
-| `entry` | No | Narrow the override to a specific source entry when multiple entries share the same path |
+| Field     | Required | Description                                                                              |
+| --------- | -------- | ---------------------------------------------------------------------------------------- |
+| `path`    | Yes      | The generated path to target                                                             |
+| `as`      | No       | Move the entry to a different path in the final tree                                     |
+| `kind`    | No       | Force `query` or `mutation` when discovery can't infer it                                |
+| `options` | No       | Import call options (like `family` or `invalidates`) from another module                 |
+| `entry`   | No       | Narrow the override to a specific source entry when multiple entries share the same path |
 
 `options` takes an object with `from` (module path) and `name` (export name). The referenced module should export a call options object that gets passed as the second argument to the builder.
 
@@ -139,10 +145,10 @@ pnpm callsheet-codegen --config callsheet.config.ts
 
 If the config file is named `callsheet.config.ts` and lives at the project root, the `--config` flag is optional.
 
-| Flag | Description |
-| --- | --- |
+| Flag                  | Description             |
+| --------------------- | ----------------------- |
 | `-c, --config <path>` | Path to the config file |
-| `-h, --help` | Show help output |
+| `-h, --help`          | Show help output        |
 
 ## Related Docs
 

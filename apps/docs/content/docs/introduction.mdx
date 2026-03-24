@@ -13,14 +13,16 @@ showHeader: false
   <div>
     <h1 className="m-0 text-4xl font-semibold tracking-tight">Callsheet</h1>
     <p className="mt-3 text-lg text-fd-muted-foreground">
-      {'A single definition for your API calls that your whole frontend can build on.'}
+      {
+        'A single definition for your API calls that your whole frontend can build on.'
+      }
     </p>
   </div>
 </div>
 
 Data-fetching libraries give you great building blocks but leave it up to you to decide how operations should be organized. Callsheet provides one shared place for your operations, defaults, and related behaviors, built on the APIs you already use.
 
-Callsheet is easiest to see in code. Here is the same workflow in React Query with and *without* Callsheet:
+Callsheet is easiest to see in code. Here is the same workflow in React Query with and _without_ Callsheet:
 
 <Tabs items={['Without Callsheet', 'With Callsheet']}>
   <Tab value="Without Callsheet">
@@ -57,6 +59,7 @@ Callsheet is easiest to see in code. Here is the same workflow in React Query wi
       });
     }
     ```
+
   </Tab>
 
   <Tab value="With Callsheet">
@@ -96,6 +99,7 @@ Callsheet is easiest to see in code. Here is the same workflow in React Query wi
 
     const updateFilm = useMutation(calls.films.update);
     ```
+
   </Tab>
 </Tabs>
 

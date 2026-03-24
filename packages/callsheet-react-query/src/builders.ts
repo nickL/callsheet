@@ -5,6 +5,11 @@ import {
 } from '@callsheet/core';
 
 import type {
+  DefinitionOptionsForKind,
+  MutationDefinitionOptions,
+  QueryDefinitionOptions,
+} from './definition-options';
+import type {
   Call,
   CallSourceInputOf,
   CallSourceKindOf,
@@ -21,34 +26,7 @@ import type {
   TsRestRouteOutput,
 } from '@callsheet/core/ts-rest';
 
-import type {
-  DefinitionOptionsForKind,
-  MutationDefinitionOptions,
-  QueryDefinitionOptions,
-} from './definition-options';
-
-type TsRestCall<TRoute extends TsRestRoute> =
-  CallSourceKindOf<TRoute> extends QueryKind
-    ? QueryCall<TsRestRouteInput<TRoute>, TsRestRouteOutput<TRoute>, TRoute>
-    : MutationCall<
-        TsRestRouteInput<TRoute>,
-        TsRestRouteOutput<TRoute>,
-        TRoute
-      >;
-
-type TsRestQueryCall<TRoute extends TsRestRoute> = QueryCall<
-  TsRestRouteInput<TRoute>,
-  TsRestRouteOutput<TRoute>,
-  TRoute
->;
-
-type TsRestMutationCall<TRoute extends TsRestRoute> = MutationCall<
-  TsRestRouteInput<TRoute>,
-  TsRestRouteOutput<TRoute>,
-  TRoute
->;
-
-type CallBuilder = {
+interface CallBuilder {
   <TRoute extends TsRestRoute>(
     source: TRoute,
     options?: DefinitionOptionsForKind<
@@ -70,9 +48,26 @@ type CallBuilder = {
     CallSourceOutputOf<TSource>,
     TSource
   >;
-};
+}
 
-type QueryBuilder = {
+type TsRestCall<TRoute extends TsRestRoute> =
+  CallSourceKindOf<TRoute> extends QueryKind
+    ? QueryCall<TsRestRouteInput<TRoute>, TsRestRouteOutput<TRoute>, TRoute>
+    : MutationCall<TsRestRouteInput<TRoute>, TsRestRouteOutput<TRoute>, TRoute>;
+
+type TsRestQueryCall<TRoute extends TsRestRoute> = QueryCall<
+  TsRestRouteInput<TRoute>,
+  TsRestRouteOutput<TRoute>,
+  TRoute
+>;
+
+type TsRestMutationCall<TRoute extends TsRestRoute> = MutationCall<
+  TsRestRouteInput<TRoute>,
+  TsRestRouteOutput<TRoute>,
+  TRoute
+>;
+
+interface QueryBuilder {
   <TCallInput = unknown, TCallOutput = unknown>(
     options?: QueryDefinitionOptions<TCallInput, TCallOutput>,
   ): QueryCall<TCallInput, TCallOutput, undefined>;
@@ -94,9 +89,9 @@ type QueryBuilder = {
     CallSourceOutputOf<TSource>,
     TSource
   >;
-};
+}
 
-type MutationBuilder = {
+interface MutationBuilder {
   <TCallInput = unknown, TCallOutput = unknown, TOnMutateResult = unknown>(
     options?: MutationDefinitionOptions<
       TCallInput,
@@ -124,7 +119,7 @@ type MutationBuilder = {
     CallSourceOutputOf<TSource>,
     TSource
   >;
-};
+}
 
 export const call = ((source: unknown, options?: unknown) =>
   baseCall(source as never, options as never)) as CallBuilder;

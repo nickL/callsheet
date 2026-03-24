@@ -19,6 +19,7 @@ export const calls = defineCalls({
   },
 });
 ```
+
 That's really all you need. Your GraphQL documents are now part of your shared Callsheet module.
 
 ## Typed REST
@@ -38,6 +39,7 @@ export const calls = defineCalls({
   },
 });
 ```
+
 Still the same shared call surface, the only difference is the typed source you are starting from.
 
 ## Use calls in React Query
@@ -74,7 +76,6 @@ To learn more about the shared call surface, read [Calls](/core-concepts/calls).
 ## When Manual Setup is a good fit
 
 Start with manual setup when you want to try Callsheet without adding generation, or when you want to roll it out gradually. Generated calls are usually the better long term path, but manual setup is an easy way to evaluate Callsheet with your existing typed sources.
-
 
 ## Related Docs
 

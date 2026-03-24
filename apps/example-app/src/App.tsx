@@ -76,7 +76,8 @@ const execute = ((request: ExampleRequest) => {
   }
 
   if (matchesCall(request, calls.films.byId)) {
-    const filmId = request.input.id;
+    const input = request.input as FilmByIdQueryVariables;
+    const filmId = input.id;
     const film: FilmByIdQuery = {
       film: {
         id: filmId,
@@ -129,14 +130,14 @@ const adapter = createReactQueryAdapter({
 function FeaturedFilmsSection() {
   const featuredFilms = useQuery(
     queryOptions(calls.films.featured, {
-      select: (data) => data.films,
+      select: (data: FeaturedFilmsQuery) => data.films,
       staleTime: 30_000,
     }),
   );
   const wallE = useQuery(
     queryOptions(calls.films.byId, {
       input: { id: 'wall-e' },
-      select: (data) => data.film,
+      select: (data: FilmByIdQuery) => data.film,
     }),
   );
   const featuredCount = useQuery(
@@ -196,7 +197,7 @@ function FeaturedFilmsSection() {
         Refresh featured films
       </button>
       <ul>
-        {featuredFilms.data.map((filmTitle) => (
+        {featuredFilms.data.map((filmTitle: string) => (
           <li key={filmTitle}>{filmTitle}</li>
         ))}
       </ul>

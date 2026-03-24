@@ -29,7 +29,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${bodyFont.variable} ${monoFont.variable} flex min-h-screen flex-col`}>
+      <body
+        className={`${bodyFont.variable} ${monoFont.variable} flex min-h-screen flex-col`}
+      >
         <RootProvider
           search={{
             enabled: false,

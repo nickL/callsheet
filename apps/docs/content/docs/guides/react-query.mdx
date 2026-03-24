@@ -46,6 +46,7 @@ const film = useQuery(
 ```
 
 In this example:
+
 - `retry: 0` overrides the shared retry default
 - `select` stays local because it shapes the result for this component
 
@@ -96,7 +97,6 @@ You can do much more with invalidation for call families, including only invalid
 In some cases, one screen or component may need additional invalidation that should not become part of the shared convention for the call. In those cases, you can still use React Query's `invalidateQueries` locally.
 
 This does not replace the mutation's shared invalidation. It adds to it. Use this when one component needs extra refresh behavior that should not become part of the shared convention for the call.
-
 
 ## Rule of thumb
 

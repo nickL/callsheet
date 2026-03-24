@@ -8,7 +8,7 @@ Every call needs an identity in Callsheet and identity is split into two layers:
 - **`family`** identifies the related data a call belongs to
 - **`key`** provides exact identity within a family
 
-These two layers help determine how calls are organized, how related data is grouped, and how invalidations refresh data.  
+These two layers help determine how calls are organized, how related data is grouped, and how invalidations refresh data.
 
 ## The Default Call Family
 
@@ -23,7 +23,7 @@ export const calls = defineCalls({
 });
 ```
 
-In this example, each call gets one family by default, and that family is based on the full call path: 
+In this example, each call gets one family by default, and that family is based on the full call path:
 
 - `calls.films.list` -> `['films', 'list']`
 - `calls.films.byId` -> `['films', 'byId']`
@@ -64,11 +64,11 @@ Defining `family` explicitly is useful when it makes the data model clearer than
 
 ## Using Call `key` for exact cache identity
 
-A call's family helps Callsheet group related data, but you may want to have more exact detail about the call *within* a family.
+A call's family helps Callsheet group related data, but you may want to have more exact detail about the call _within_ a family.
 
-For example, many different film detail queries may all belong to the same detail family, but they shouldn't share one cache entry. 
+For example, many different film detail queries may all belong to the same detail family, but they shouldn't share one cache entry.
 
-The `key` option is used to give each call an exact identity.  
+The `key` option is used to give each call an exact identity.
 
 ```ts title="src/calls.ts"
 export const calls = defineCalls({
@@ -89,13 +89,13 @@ So given a call with an id of `"wall-e"`, the query key would be:
 
 ## Call Family Invalidation
 
-Callsheet uses families to make it easier to organize how related data is refreshed. 
+Callsheet uses families to make it easier to organize how related data is refreshed.
 
 For example in React Query, after a mutation succeeds, the app often needs to refresh related reads. If a mutation updates a film, the app needs to refresh:
 
- - **film lists**
- - **film detail queries**
- - **other queries that belong to the same related data**
+- **film lists**
+- **film detail queries**
+- **other queries that belong to the same related data**
 
 Callsheet solves this by targeting the families you've already defined and organized.
 
@@ -140,10 +140,9 @@ That means any queries in those families are treated as stale. In this example, 
 
 Callsheet lets you declare invalidation in terms of families. Adapters like React Query perform the actual query invalidation under the hood.
 
-
 ### Dynamic invalidation
 
-After a mutation completes, you may need to refresh data based on the *result* of the mutation. If this is the case, invalidating families can be dynamic based on the mutation `input` or `output`.
+After a mutation completes, you may need to refresh data based on the _result_ of the mutation. If this is the case, invalidating families can be dynamic based on the mutation `input` or `output`.
 
 Consider the following example:
 
@@ -173,6 +172,7 @@ In this example, the `list` family is only invalidated when the film came from a
 This is useful when the mutation result determines what changed or it should only affect some parts of your app based on certain conditions.
 
 ### Component-level Invalidation
+
 Your call definitions and families define the shared convention for invalidation. If a component still needs additional invalidation, you can still add it at the component level.
 
 ## Finally, here's how to think about Call Families & Identity [!toc]

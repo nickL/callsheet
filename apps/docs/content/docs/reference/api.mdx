@@ -25,7 +25,10 @@ export const calls = defineCalls({
       staleTime: 30_000,
     }),
     update: mutation(UpdateFilmDocument, {
-      invalidates: [['films', 'list'], ['films', 'detail']],
+      invalidates: [
+        ['films', 'list'],
+        ['films', 'detail'],
+      ],
     }),
   },
 });
@@ -37,11 +40,11 @@ Defines a query call. Can take a typed source (GraphQL document, ts-rest route) 
 
 ```ts
 // From a typed source
-query(FilmByIdDocument)
-query(FilmByIdDocument, { family: ['films', 'detail'] })
+query(FilmByIdDocument);
+query(FilmByIdDocument, { family: ['films', 'detail'] });
 
 // Manual (no source)
-query<MyInput, MyOutput>({ staleTime: 30_000 })
+query<MyInput, MyOutput>({ staleTime: 30_000 });
 ```
 
 ### `mutation`
@@ -50,11 +53,11 @@ Defines a mutation call. Same signature pattern as `query`.
 
 ```ts
 // From a typed source
-mutation(UpdateFilmDocument)
-mutation(UpdateFilmDocument, { invalidates: [['films', 'list']] })
+mutation(UpdateFilmDocument);
+mutation(UpdateFilmDocument, { invalidates: [['films', 'list']] });
 
 // Manual (no source)
-mutation<MyInput, MyOutput>()
+mutation<MyInput, MyOutput>();
 ```
 
 ### `call`
@@ -62,8 +65,8 @@ mutation<MyInput, MyOutput>()
 Defines a call and infers whether it is a query or mutation from the source. Useful when the source already carries `kind` information.
 
 ```ts
-call(FilmByIdDocument)  // inferred as query
-call(contract.films.update)  // inferred as mutation
+call(FilmByIdDocument); // inferred as query
+call(contract.films.update); // inferred as mutation
 ```
 
 ## Using Calls in React Query
@@ -103,7 +106,9 @@ Callsheet's `useMutation` hook. Takes a mutation call and optional React Query m
 import { useMutation } from '@callsheet/react-query';
 
 const updateFilm = useMutation(calls.films.update, {
-  onSuccess: () => { /* component-level callback */ },
+  onSuccess: () => {
+    /* component-level callback */
+  },
 });
 ```
 
@@ -120,6 +125,7 @@ const adapter = createReactQueryAdapter({
   },
 });
 ```
+
 The adapter is passed to `CallsheetProvider`.
 
 ### `CallsheetProvider`
@@ -131,7 +137,7 @@ import { CallsheetProvider } from '@callsheet/react-query';
 
 <CallsheetProvider adapter={adapter}>
   <App />
-</CallsheetProvider>
+</CallsheetProvider>;
 ```
 
 ## Code Generation
@@ -144,7 +150,9 @@ From `@callsheet/codegen`. Defines the build-time config for generating a calls 
 import { defineConfig } from '@callsheet/codegen';
 
 export default defineConfig({
-  sources: { /* ... */ },
+  sources: {
+    /* ... */
+  },
   output: { file: './src/generated/calls.ts' },
 });
 ```
@@ -164,9 +172,9 @@ The main `query`, `mutation`, and `call` exports in `@callsheet/react-query` als
 ```ts
 import { query, mutation, call } from '@callsheet/ts-rest';
 
-query(contract.films.byId)
-mutation(contract.films.update, { invalidates: [['films', 'list']] })
-call(contract.films.byId)
+query(contract.films.byId);
+mutation(contract.films.update, { invalidates: [['films', 'list']] });
+call(contract.films.byId);
 ```
 
 For more on when to use these, see [Using Callsheet with ts-rest](/guides/ts-rest).

@@ -3,21 +3,13 @@
   "compilerOptions": {
     "baseUrl": ".",
     "jsx": "preserve",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "es2022"
-    ],
+    "lib": ["dom", "dom.iterable", "es2022"],
     "module": "esnext",
     "moduleResolution": "bundler",
     "noEmit": true,
     "paths": {
-      "fumadocs-mdx:collections/*": [
-        ".source/*"
-      ],
-      "@/*": [
-        "./*"
-      ]
+      "fumadocs-mdx:collections/*": [".source/*"],
+      "@/*": ["./*"]
     },
     "plugins": [
       {
@@ -35,7 +27,5 @@
     ".next/types/**/*.ts",
     ".source/**/*.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }
