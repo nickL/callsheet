@@ -83,7 +83,7 @@ import { queryOptions } from '@callsheet/react-query';
 import { calls } from './generated/calls';
 
 const film = useQuery(
-  queryOptions(calls.films.byId, {
+  queryOptions(calls.filmById, {
     input: { id: 'wall-e' },
     select: (data) => data.film,
   }),

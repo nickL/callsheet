@@ -1,6 +1,20 @@
 {
   "name": "@callsheet/react-query",
   "version": "0.0.1",
+  "description": "A single definition for your API calls that your entire app can build on.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nickL/callsheet.git",
+    "directory": "packages/callsheet-react-query"
+  },
+  "license": "MIT",
+  "keywords": [
+    "callsheet",
+    "react-query",
+    "tanstack-query",
+    "cache",
+    "typescript"
+  ],
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

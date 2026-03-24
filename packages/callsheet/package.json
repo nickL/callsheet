@@ -1,6 +1,20 @@
 {
   "name": "@callsheet/core",
   "version": "0.0.1",
+  "description": "Core types and primitives for Callsheet.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nickL/callsheet.git",
+    "directory": "packages/callsheet"
+  },
+  "license": "MIT",
+  "keywords": [
+    "callsheet",
+    "typed-operations",
+    "api-client",
+    "cache-invalidation",
+    "typescript"
+  ],
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

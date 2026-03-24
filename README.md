@@ -3,7 +3,7 @@
   <br />
   <h1 align="center">Callsheet</h1>
   <strong>
-    A single definition for your React Query API calls that your entire frontend can build on.
+    A single definition for your React Query API calls that your entire app can build on.
   </strong>
   <br />
   <br />

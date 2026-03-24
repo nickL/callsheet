@@ -1,6 +1,20 @@
 {
   "name": "@callsheet/ts-rest",
   "version": "0.0.1",
+  "description": "ts-rest wrappers for building Callsheet call definitions.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nickL/callsheet.git",
+    "directory": "packages/callsheet-ts-rest"
+  },
+  "license": "MIT",
+  "keywords": [
+    "callsheet",
+    "ts-rest",
+    "typed-rest",
+    "api-client",
+    "typescript"
+  ],
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
