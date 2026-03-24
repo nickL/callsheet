@@ -44,13 +44,13 @@ export const filmKeys = {
 
 export const featuredFilmsOptions = queryOptions({
   queryKey: filmKeys.list(),
-  queryFn: () => graphqlClient.request(FeaturedFilmsDocument),
+  queryFn: () => filmApi.featured(),
 });
 
 export const filmByIdOptions = (id: string) =>
   queryOptions({
     queryKey: filmKeys.detail(id),
-    queryFn: () => graphqlClient.request(FilmByIdDocument, { id }),
+    queryFn: () => filmApi.byId({ id }),
     staleTime: 30_000,
   });
 
@@ -58,8 +58,7 @@ export function useUpdateFilm() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (input: UpdateFilmMutationVariables) =>
-      graphqlClient.request(UpdateFilmDocument, input),
+    mutationFn: (input: { id: string; title: string }) => filmApi.update(input),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: filmKeys.list() });
       queryClient.invalidateQueries({
@@ -77,14 +76,14 @@ With Callsheet:
 ```ts
 export const calls = defineCalls({
   films: {
-    featured: query(FeaturedFilmsDocument, {
+    featured: query({
       family: ['films', 'list'],
     }),
-    byId: query(FilmByIdDocument, {
+    byId: query<{ id: string }>({
       family: ['films', 'detail'],
       staleTime: 30_000,
     }),
-    update: mutation(UpdateFilmDocument, {
+    update: mutation<{ id: string; title: string }>({
       invalidates: [
         ['films', 'list'],
         ['films', 'detail'],
@@ -99,19 +98,14 @@ export const calls = defineCalls({
 ```ts
 const featuredFilms = useQuery(queryOptions(calls.films.featured));
 
-const film = useQuery(
-  queryOptions(calls.films.byId, {
-    input: { id },
-    select: (data) => data.film,
-  }),
-);
+const film = useQuery(queryOptions(calls.films.byId, { input: { id } }));
 
 const updateFilm = useMutation(calls.films.update);
 ```
 
-Components still use normal React Query APIs, but they now build on a shared call model with conventions organized in one place.
+Components still use normal React Query APIs, but they now build on a shared call definition with conventions organized in one place.
 
-Callsheet can build from generated sources like GraphQL Code Generator and `ts-rest`, or from calls you define by hand. In either case, the result is the same shared call surface.
+Callsheet works with any typed source: GraphQL documents, REST contracts, or calls you define by hand. The result is the same shared structure.
 
 ## Current Support
 
@@ -123,7 +117,7 @@ Callsheet can build from generated sources like GraphQL Code Generator and `ts-r
 ## Roadmap
 
 - Infinite query support for the React Query adapter
-- Additional adapters, starting with `urql` and Apollo
+- Additional adapters, starting with `swr`, `urql`, and Apollo
 - Deeper codegen and CLI ergonomics
 
 See the full roadmap: [Roadmap](https://callsheet.nlewis.dev/project-status/roadmap)

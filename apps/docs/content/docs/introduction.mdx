@@ -34,13 +34,13 @@ Callsheet is easiest to see in code. Here is the same workflow in React Query wi
 
     export const featuredFilmsOptions = queryOptions({
       queryKey: filmKeys.list(),
-      queryFn: () => graphqlClient.request(FeaturedFilmsDocument),
+      queryFn: () => filmApi.featured(),
     });
 
     export const filmByIdOptions = (id: string) =>
       queryOptions({
         queryKey: filmKeys.detail(id),
-        queryFn: () => graphqlClient.request(FilmByIdDocument, { id }),
+        queryFn: () => filmApi.byId({ id }),
         staleTime: 30_000,
       });
 
@@ -48,8 +48,8 @@ Callsheet is easiest to see in code. Here is the same workflow in React Query wi
       const queryClient = useQueryClient();
 
       return useMutation({
-        mutationFn: (input: UpdateFilmMutationVariables) =>
-          graphqlClient.request(UpdateFilmDocument, input),
+        mutationFn: (input: { id: string; title: string }) =>
+          filmApi.update(input),
         onSuccess: (_, variables) => {
           queryClient.invalidateQueries({ queryKey: filmKeys.list() });
           queryClient.invalidateQueries({
@@ -63,19 +63,17 @@ Callsheet is easiest to see in code. Here is the same workflow in React Query wi
   </Tab>
 
   <Tab value="With Callsheet">
-    **`filmCalls.ts`**
-
-    ```ts
+    ```ts title="filmCalls.ts"
     export const calls = defineCalls({
       films: {
-        featured: query(FeaturedFilmsDocument, {
+        featured: query({
           family: ['films', 'list'],
         }),
-        byId: query(FilmByIdDocument, {
+        byId: query<{ id: string }>({
           family: ['films', 'detail'],
           staleTime: 30_000,
         }),
-        update: mutation(UpdateFilmDocument, {
+        update: mutation<{ id: string; title: string }>({
           invalidates: [
             ['films', 'list'],
             ['films', 'detail'],
@@ -85,17 +83,10 @@ Callsheet is easiest to see in code. Here is the same workflow in React Query wi
     });
     ```
 
-    **`FilmPage.tsx`**
-
-    ```ts
+    ```ts title="FilmPage.tsx"
     const featuredFilms = useQuery(queryOptions(calls.films.featured));
 
-    const film = useQuery(
-      queryOptions(calls.films.byId, {
-        input: { id },
-        select: (data) => data.film,
-      }),
-    );
+    const film = useQuery(queryOptions(calls.films.byId, { input: { id } }));
 
     const updateFilm = useMutation(calls.films.update);
     ```
@@ -103,10 +94,10 @@ Callsheet is easiest to see in code. Here is the same workflow in React Query wi
   </Tab>
 </Tabs>
 
-Components still use normal React Query APIs, but they now build on a shared call model with conventions organized in one place.
+Components still use normal React Query APIs, but they now build on a shared call definition with conventions organized in one place.
 
-Callsheet can build from generated sources like GraphQL Code Generator and `ts-rest`, or from calls you define by hand. In either case, the result is the same shared call surface.
+Callsheet works with any typed source: GraphQL documents, REST contracts, or calls you define by hand. The result is the same shared structure.
 
 ## Get Started
 
-If you want to get Callsheet running, start with [Quickstart](./getting-started/quickstart). It will help you choose the setup path that fits your app.
+If you want to get Callsheet running, head to [Quickstart](./getting-started/quickstart) and choose the setup path that best fits your app.
