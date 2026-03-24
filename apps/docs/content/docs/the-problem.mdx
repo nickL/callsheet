@@ -1,0 +1,42 @@
+---
+title: The Problem
+description: Why typed operations alone are not enough, and the deeper frontend problem Callsheet solves.
+---
+
+In most apps, data fetching starts out simple. You define your queries, maybe a handful of mutations, and keep them close to where they're used.
+
+If you have typed operations that helps a lot too. The requests are well defined and your editor helps keep you organized. You keep hammering out features and moving along. At this point, things are usually still manageable.
+
+**The deeper problems start to show up later.**
+
+## What Drifts
+
+As an app grows, operations stop being isolated. They get reused in multiple places, reads and writes start depending on each other, and shared defaults matter more. The number of requests is not the problem. The pain is that the frontend still does not have one shared way to organize them.
+
+Typed operations help because they make requests safer to define and easier to use. But they do not automatically give you a convention for how those operations should be organized. You can have typed GraphQL documents, typed REST contracts, typed SDK calls, and your own authored requests all wired into your data-fetching library and still end up with:
+
+- **Operations scattered across the codebase with no single place to find them**
+- **Shared defaults repeated in multiple helpers**
+- **Related reads and writes modeled separately**
+- **Invalidation logic spread across unrelated mutation handlers**
+- **Both generated and your own authored operations feeling like two different systems**
+
+None of these are catastrophic on their own. But together they create frontend drift. Libraries don't close this gap either. They give you great building blocks like caching and data pipelines, but how operations should be organized across the rest of your app is still up to you and your team.
+
+The missing piece is a shared model that ties everything together.
+
+## What Callsheet Adds
+
+Callsheet gives your frontend one shared surface to organize operations, defaults, and the behavior around them. Instead of conventions emerging on the fly, they're modeled explicitly:
+
+- **All operations, whether generated or hand-authored, live in one typed structure**
+- **Shared defaults and related behavior attach directly to calls instead of scattered helpers**
+- **Reads and writes that belong together are defined together**
+
+Callsheet does not replace your data-fetching library. It sits in front of it and provides the organizational layer that those libraries leave to you.
+
+## Related Docs
+
+To get started, head to [Quickstart](./getting-started/quickstart).
+
+To learn more about how Callsheet works, read [Calls](./core-concepts/calls) and [Call Family and Identity](./core-concepts/call-family-and-identity).

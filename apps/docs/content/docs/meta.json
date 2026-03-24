@@ -1,0 +1,11 @@
+{
+  "pages": [
+    "introduction",
+    "the-problem",
+    "getting-started",
+    "core-concepts",
+    "guides",
+    "reference",
+    "project-status"
+  ]
+}

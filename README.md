@@ -1,10 +1,15 @@
-<h1 align="center">Callsheet</h1>
+<div align="center">
+  <img src="apps/docs/public/brand/callsheet-logo.svg" alt="Callsheet" width="120" />
+  <br />
+  <h1 align="center">Callsheet</h1>
+  <strong>
+    A single definition for your React Query API calls that your entire frontend can build on.
+  </strong>
+  <br />
+  <br />
+</div>
 
-<p align="center">
-  Standardize typed operations in React Query.
-</p>
-
-Callsheet helps React Query apps move from scattered request patterns to a shared, type-safe call catalog. It helps you establish conventions for consistent naming, shared defaults, and cache behaviors.
+React Query gives you great building blocks but it's up to you to decide how operations should be organized. Callsheet provides one shared place for your operations, defaults, and related behaviors, built on the APIs you already use.
 
 ```sh
 pnpm add @callsheet/react-query @tanstack/react-query
@@ -15,33 +20,26 @@ Callsheet builds from typed operations. It can also generate calls from your exi
 
 - Use `@callsheet/react-query` to author calls.
 - Add `@callsheet/codegen` to auto-generate calls from [GraphQL Code Generator](https://github.com/dotansimha/graphql-code-generator) output.
-- Add `@callsheet/ts-rest` when auto-generating calls from [ts-rest](https://github.com/ts-rest/ts-rest) contracts.
+- Add `@callsheet/ts-rest` for [ts-rest](https://github.com/ts-rest/ts-rest) support.
 
 ## Docs
 
 - [Docs](https://callsheet.nlewis.dev)
 - [Quickstart](https://callsheet.nlewis.dev/getting-started/quickstart)
-- [Generated Calls with GraphQL Code Generator](https://callsheet.nlewis.dev/getting-started/generated-calls-with-graphql-codegen)
-- [Manual adoption](https://callsheet.nlewis.dev/getting-started/manual-adoption)
+- [Using Callsheet with GraphQL](https://callsheet.nlewis.dev/getting-started/using-callsheet-with-graphql)
+- [Manual Setup](https://callsheet.nlewis.dev/getting-started/manual-setup)
+- [Generating Calls from ts-rest](https://callsheet.nlewis.dev/guides/ts-rest)
 
-## But, why do I need this?
+## What this looks like in code
 
-React Query already gives you good primitives like `queryOptions(...)`, custom hooks, and key factories. But it gets tricky later, as your application grows, and reads, writes, cache identity, and invalidation end up split across several places.
+Callsheet is easiest to see in code. Here is the same workflow in React Query with and without Callsheet:
 
-Callsheet gives your operations one typed place to live, and makes it easier to organize shared behaviors around related requests. It helps you one consistent workflow to:
-
-- Discover and manage operations through one shared call surface instead of scattered local definitions.
-- Share policy and defaults without giving up local control in components.
-- Standardize cache behaviors across all your typed calls.
-
-### Here's a working example:
-
-Before:
+Without Callsheet:
 
 ```ts
 export const filmKeys = {
-  list: () => ['films', 'list'] as const,
-  detail: (id: string) => ['films', 'detail', id] as const,
+  list: () => ['films', 'list'],
+  detail: (id: string) => ['films', 'detail', id],
 };
 
 export const featuredFilmsOptions = queryOptions({
@@ -72,28 +70,28 @@ export function useUpdateFilm() {
 }
 ```
 
-After:
+With Callsheet:
 
-`calls.ts`
+`filmCalls.ts`
 
 ```ts
 export const calls = defineCalls({
   films: {
     featured: query(FeaturedFilmsDocument, {
-      scope: ['films', 'list'] as const,
+      family: ['films', 'list'],
     }),
     byId: query(FilmByIdDocument, {
-      scope: ['films', 'detail'] as const,
+      family: ['films', 'detail'],
       staleTime: 30_000,
     }),
     update: mutation(UpdateFilmDocument, {
       invalidates: [
         ['films', 'list'],
         ['films', 'detail'],
-      ] as const,
+      ],
     }),
   },
-} as const);
+});
 ```
 
 `FilmPage.tsx`
@@ -111,6 +109,10 @@ const film = useQuery(
 const updateFilm = useMutation(calls.films.update);
 ```
 
+Components still use normal React Query APIs, but they now build on a shared call model with conventions organized in one place.
+
+Callsheet can build from generated sources like GraphQL Code Generator and `ts-rest`, or from calls you define by hand. In either case, the result is the same shared call surface.
+
 ## Current Support
 
 - React Query runtime support via [TanStack Query](https://github.com/TanStack/query)
@@ -120,9 +122,11 @@ const updateFilm = useMutation(calls.films.update);
 
 ## Roadmap
 
-- Additional adapters, including `urql`
-- Additional frameworks, including Svelte, Vue, Angular, and Preact
-- Broader typed REST discovery beyond `ts-rest`
+- Infinite query support for the React Query adapter
+- Additional adapters, starting with `urql` and Apollo
+- Deeper codegen and CLI ergonomics
+
+See the full roadmap: [Roadmap](https://callsheet.nlewis.dev/project-status/roadmap)
 
 ## License
 

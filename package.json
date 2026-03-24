@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "pnpm -r --if-present build",
+    "dev:docs": "pnpm --filter @callsheet/docs dev",
     "build:packages": "pnpm --filter @callsheet/core build && pnpm --filter @callsheet/react-query build && pnpm --filter @callsheet/ts-rest build && pnpm --filter @callsheet/codegen build",
     "dev:example": "pnpm --filter @callsheet/example-app dev",
     "format": "prettier --write .",

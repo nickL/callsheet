@@ -1,0 +1,108 @@
+---
+title: Introduction
+description: A single definition for your API calls that your whole frontend can build on.
+showHeader: false
+---
+
+<div className="not-prose mb-8 flex items-start gap-5">
+  <img
+    src="/brand/callsheet-logo.svg"
+    alt="Callsheet logo"
+    className="h-auto w-28 shrink-0"
+  />
+  <div>
+    <h1 className="m-0 text-4xl font-semibold tracking-tight">Callsheet</h1>
+    <p className="mt-3 text-lg text-fd-muted-foreground">
+      {'A single definition for your API calls that your whole frontend can build on.'}
+    </p>
+  </div>
+</div>
+
+Data-fetching libraries give you great building blocks but leave it up to you to decide how operations should be organized. Callsheet provides one shared place for your operations, defaults, and related behaviors, built on the APIs you already use.
+
+Callsheet is easiest to see in code. Here is the same workflow in React Query with and *without* Callsheet:
+
+<Tabs items={['Without Callsheet', 'With Callsheet']}>
+  <Tab value="Without Callsheet">
+    ```ts
+    export const filmKeys = {
+      list: () => ['films', 'list'],
+      detail: (id: string) => ['films', 'detail', id],
+    };
+
+    export const featuredFilmsOptions = queryOptions({
+      queryKey: filmKeys.list(),
+      queryFn: () => graphqlClient.request(FeaturedFilmsDocument),
+    });
+
+    export const filmByIdOptions = (id: string) =>
+      queryOptions({
+        queryKey: filmKeys.detail(id),
+        queryFn: () => graphqlClient.request(FilmByIdDocument, { id }),
+        staleTime: 30_000,
+      });
+
+    export function useUpdateFilm() {
+      const queryClient = useQueryClient();
+
+      return useMutation({
+        mutationFn: (input: UpdateFilmMutationVariables) =>
+          graphqlClient.request(UpdateFilmDocument, input),
+        onSuccess: (_, variables) => {
+          queryClient.invalidateQueries({ queryKey: filmKeys.list() });
+          queryClient.invalidateQueries({
+            queryKey: filmKeys.detail(variables.id),
+          });
+        },
+      });
+    }
+    ```
+  </Tab>
+
+  <Tab value="With Callsheet">
+    **`filmCalls.ts`**
+
+    ```ts
+    export const calls = defineCalls({
+      films: {
+        featured: query(FeaturedFilmsDocument, {
+          family: ['films', 'list'],
+        }),
+        byId: query(FilmByIdDocument, {
+          family: ['films', 'detail'],
+          staleTime: 30_000,
+        }),
+        update: mutation(UpdateFilmDocument, {
+          invalidates: [
+            ['films', 'list'],
+            ['films', 'detail'],
+          ],
+        }),
+      },
+    });
+    ```
+
+    **`FilmPage.tsx`**
+
+    ```ts
+    const featuredFilms = useQuery(queryOptions(calls.films.featured));
+
+    const film = useQuery(
+      queryOptions(calls.films.byId, {
+        input: { id },
+        select: (data) => data.film,
+      }),
+    );
+
+    const updateFilm = useMutation(calls.films.update);
+    ```
+  </Tab>
+</Tabs>
+
+Components still use normal React Query APIs, but they now build on a shared call model with conventions organized in one place.
+
+Callsheet can build from generated sources like GraphQL Code Generator and `ts-rest`, or from calls you define by hand. In either case, the result is the same shared call surface.
+
+## Get Started
+
+If you want to get Callsheet running, start with [Quickstart](./getting-started/quickstart). It will help you choose the setup path that fits your app.

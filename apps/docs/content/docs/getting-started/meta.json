@@ -1,0 +1,9 @@
+{
+  "title": "Getting Started",
+  "pages": [
+    "installation",
+    "quickstart",
+    "using-callsheet-with-graphql",
+    "manual-setup"
+  ]
+}

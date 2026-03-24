@@ -1,0 +1,44 @@
+---
+title: Roadmap
+description: Current support and what's coming next.
+---
+
+## Supported
+
+**Core call model**
+
+`defineCalls`, `query`, `mutation`, and `call` for building a typed call tree. Calls support `family` for grouping, `key` for identity, and `invalidates` for refreshing related data.
+
+**React Query adapter**
+
+`queryOptions`, `useQuery`, `useMutation`, `createReactQueryAdapter`, and `CallsheetProvider`. Built against React Query v5.
+
+**Generated workflows**
+
+Codegen from typed GraphQL documents and `ts-rest` contracts. Both produce the same call surface as manual calls.
+
+**Manual workflows**
+
+Hand-authored calls and manual `ts-rest` wrappers.
+
+**Mixed-source apps**
+
+GraphQL, `ts-rest`, and manual calls can all live in one call tree.
+
+## Current Focus
+
+- Infinite query support for the React Query adapter
+- Hardening generated workflows for GraphQL and `ts-rest`
+- Exploring additional adapter support, starting with `urql` and Apollo
+- Improving docs
+
+## Not Supported Yet
+
+- **Infinite queries** are not part of the current React Query adapter
+- **GraphQL subscriptions** are not supported
+- **Additional adapters beyond React Query** are not available yet
+- **Codegen CLI ergonomics** are intentionally minimal right now
+
+## Later
+- Additional adapter support beyond React Query
+- Deeper codegen and CLI ergonomics

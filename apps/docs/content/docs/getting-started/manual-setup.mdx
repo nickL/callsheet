@@ -1,0 +1,83 @@
+---
+title: Manual Setup
+description: Define calls by hand, without code generation.
+---
+
+Callsheet works best with code generation, but you can still define calls manully. Use this guide to learn how to add GraphQL documents and typed REST sources to Callsheet.
+
+## GraphQL
+
+If you have typed GraphQL documents, just wrap them with `defineCalls`:
+
+```ts title="src/calls.ts"
+import { defineCalls, query } from '@callsheet/react-query';
+import { FilmByIdDocument } from './graphql/film-by-id';
+
+export const calls = defineCalls({
+  films: {
+    byId: query(FilmByIdDocument),
+  },
+});
+```
+That's really all you need. Your GraphQL documents are now part of your shared Callsheet module.
+
+## Typed REST
+
+The same idea works for typed REST sources too:
+
+```ts title="src/calls.ts"
+import { defineCalls } from '@callsheet/react-query';
+import { query as tsRestQuery } from '@callsheet/ts-rest';
+import { contract } from './rest/contract';
+
+export const calls = defineCalls({
+  rest: {
+    films: {
+      byId: tsRestQuery(contract.films.byId),
+    },
+  },
+});
+```
+Still the same shared call surface, the only difference is the typed source you are starting from.
+
+## Use calls in React Query
+
+Once defined, use those calls through the React Query APIs you already know:
+
+```ts title="src/FilmPage.tsx"
+import { queryOptions } from '@callsheet/react-query';
+
+const film = useQuery(
+  queryOptions(calls.films.byId, {
+    input: { id: 'wall-e' },
+    select: (data) => data.film,
+  }),
+);
+
+// Same idea for typed REST sources
+const filmFromRest = useQuery(
+  queryOptions(calls.rest.films.byId, {
+    input: {
+      params: {
+        id: 'soul',
+      },
+    },
+    select: (data) => data.film,
+  }),
+);
+```
+
+This is the benefit of Callsheet: instead of consuming sources from across your app, you start to gather them into one shared call surface.
+
+To learn more about the shared call surface, read [Calls](/core-concepts/calls). If you want to add shared defaults and invalidation, read [Using Callsheet with React Query](/guides/react-query).
+
+## When Manual Setup is a good fit
+
+Start with manual setup when you want to try Callsheet without adding generation, or when you want to roll it out gradually. Generated calls are usually the better long term path, but manual setup is an easy way to evaluate Callsheet with your existing typed sources.
+
+
+## Related Docs
+
+If you want to understand the call model itself, go to [Calls](/core-concepts/calls).
+
+If you are working from `ts-rest`, go to the [`ts-rest` guide](/guides/ts-rest).

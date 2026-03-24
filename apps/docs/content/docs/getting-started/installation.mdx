@@ -1,0 +1,87 @@
+---
+title: Installation
+description: Install the packages you need for your setup.
+---
+
+## Installation for React Query
+
+Callsheet currently supports React Query v5. To get started, install **@callsheet/react-query**:
+
+<Tabs items={['pnpm', 'npm', 'yarn']} groupId="package-manager" persist>
+  <Tab value="pnpm">
+    ```sh
+    pnpm add @callsheet/react-query @tanstack/react-query
+    ```
+  </Tab>
+
+  <Tab value="npm">
+    ```sh
+    npm install @callsheet/react-query @tanstack/react-query
+    ```
+  </Tab>
+
+  <Tab value="yarn">
+    ```sh
+    yarn add @callsheet/react-query @tanstack/react-query
+    ```
+  </Tab>
+</Tabs>
+
+## Adding Code Generation
+
+If you use code generation, Callsheet can automatically build from your generated typed requests. Install `@callsheet/codegen` to do so:
+
+<Tabs items={['pnpm', 'npm', 'yarn']} groupId="package-manager" persist>
+  <Tab value="pnpm">
+    ```sh
+    pnpm add -D @callsheet/codegen
+    ```
+  </Tab>
+
+  <Tab value="npm">
+    ```sh
+    npm add -D @callsheet/codegen
+    ```
+  </Tab>
+
+  <Tab value="yarn">
+    ```sh
+    yarn add @callsheet/codegen -D
+    ```
+  </Tab>
+</Tabs>
+
+<u>**For GraphQL**</u>
+
+For GraphQL apps it's pretty simple:
+
+1. Generate typed documents with GraphQL Code Generator
+2. Point Callsheet codegen at that output
+3. Callsheet will auto-generate a call module with all of your existing requests
+
+For more details on GraphQL codegen, read [Using Callsheet with GraphQL](/getting-started/using-callsheet-with-graphql).
+
+<u>**For ts-rest**</u>
+
+If you want Callsheet to auto-generate calls from `ts-rest` contracts, add `@ts-rest/core` in addition to `@callsheet/codegen`:
+
+```sh
+pnpm add @ts-rest/core
+```
+
+For more on codegen for `ts-rest`, read the [TS-Rest Guide](/guides/ts-rest).
+
+## Callsheet Packages
+
+- `@callsheet/react-query` <br/>
+   For defining and using calls in React Query
+- `@callsheet/codegen` <br/>
+   Generates Callsheets automatically from typed sources like GraphQL Code Generator output and `ts-rest` contracts.
+- `@callsheet/ts-rest` <br/> 
+   Adds the typed REST source adapter for `ts-rest`.
+
+## Next Steps
+
+If you want the fastest end-to-end path, go to [Quickstart](/getting-started/quickstart).
+
+If you want a deeper package breakdown, go to [Packages and Imports](/reference/packages-and-imports).

@@ -1,0 +1,8 @@
+{
+  "title": "Guides",
+  "pages": [
+    "react-query",
+    "ts-rest",
+    "mixed-backends"
+  ]
+}

@@ -1,0 +1,129 @@
+---
+title: Using Callsheet with GraphQL
+description: Use Callsheet with GraphQL documents, with or without code generation.
+---
+
+Callsheet works great with manually typed GraphQL documents, but it shines when you point it at generated documents from [GraphQL Code Generator](https://github.com/dotansimha/graphql-code-generator). 
+
+With generated documents, the workflow is pretty simple:
+
+<Steps>
+  <Step>
+      Point Callsheet at your generated documents
+  </Step>
+  <Step>
+      Generate your Callsheet
+  </Step>
+  <Step>
+     Use your calls in React Query.
+  </Step>
+</Steps>
+
+### Walkthrough[!toc]
+
+First, if you haven't already install **@callsheet/react-query** and **@callsheet/codegen**:
+
+<Tabs items={['pnpm', 'npm', 'yarn']} groupId="package-manager" persist>
+  <Tab value="pnpm">
+    ```sh
+    pnpm add @callsheet/react-query
+    pnpm add -D @callsheet/codegen
+    ```
+  </Tab>
+
+  <Tab value="npm">
+    ```sh
+    npm add @callsheet/react-query
+    npm add -D @callsheet/codegen
+    ```
+  </Tab>
+
+  <Tab value="yarn">
+    ```sh
+    yarn add @callsheet/react-query 
+    yarn add @callsheet/codegen -D
+    ```
+  </Tab>
+</Tabs>
+
+
+### Add generated documents
+
+If you haven't already [set up GraphQL Code Generator, do that first](https://the-guild.dev/graphql/codegen/docs/getting-started/installation) so it can generate the typed GraphQL documents Callsheet will read from.
+
+Next, configure Callsheet to read from your generated documents:
+
+```ts title="callsheet.config.ts"
+import { defineConfig } from '@callsheet/codegen';
+
+export default defineConfig({
+  sources: {
+    graphql: [
+      {
+        rootDir: './src/graphql',
+        tsconfigFile: './tsconfig.json',
+        entries: ['generated.ts'],
+      },
+    ],
+  },
+  output: {
+    file: './src/generated/calls.ts',
+  },
+});
+```
+
+### Build Callsheet
+
+Then build Callsheet from your generated docs. It creates a `calls` module you can import and use.
+
+```sh
+pnpm callsheet-codegen --config callsheet.config.ts
+```
+
+<Callout title="Output">
+  This generates `src/generated/calls.ts`.
+</Callout>
+
+If you need to, you can change the output location in `callsheet.config.ts`.
+
+
+### Use generated calls
+
+Once generated, you can import the `calls` module and use it with the React Query APIs you already know.
+
+
+```ts title="src/FilmPage.tsx"
+import { queryOptions } from '@callsheet/react-query';
+import { calls } from './generated/calls';
+
+const film = useQuery(
+  queryOptions(calls.films.byId, {
+    input: { id: 'wall-e' },
+    select: (data) => data.film,
+  }),
+);
+```
+Read more about the shared call surface in [Calls](/core-concepts/calls).
+
+
+## Without GraphQL Code Generator
+
+If you are not using GraphQL Code Generator, Callsheet still works with your typed GraphQL documents. Just define your Callsheet yourself instead of auto-generating it.
+
+```ts title="src/calls.ts"
+import { defineCalls, query } from '@callsheet/react-query';
+import { FilmByIdDocument } from './graphql/film-by-id';
+
+export const calls = defineCalls({
+  films: {
+    byId: query(FilmByIdDocument),
+  },
+});
+```
+
+In either setup, generated or manual, Callsheet gives you one shared call surface to use across your React Query app. Learn more in [Calls](/core-concepts/calls), [Using Callsheet with React Query](/guides/react-query), and [Call Family and Identity](/core-concepts/call-family-and-identity).
+
+
+## Related Docs
+
+If you want a deeper breakdown of the available codegen settings, go to [Codegen Config](/reference/codegen-config).

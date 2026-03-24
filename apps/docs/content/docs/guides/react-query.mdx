@@ -1,0 +1,105 @@
+---
+title: Using Callsheet with React Query
+description: Shared defaults, local overrides, and invalidation with the React Query adapter.
+---
+
+As a React Query app grows and operations get used in multiple places, shared conventions and behavior start to matter a lot more. The challenge becomes deciding where those defaults should live.
+
+This guide walks through how to use call definitions to apply shared conventions while still keeping component-level behavior.
+
+## Applying Shared Behaviors via Call Definitions
+
+In React Query, you define behaviors for your API calls via [`queryOptions`](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery), things like `staleTime`, `gcTime`, `retry` and others.
+
+A good rule of thumb is if behavior should follow calls wherever they're used, define it once. Here's how you would do this in Callsheet:
+
+```ts title="src/calls.ts"
+export const calls = defineCalls({
+  films: {
+    byId: query(FilmByIdDocument, {
+      family: ['films', 'detail'],
+      staleTime: 30_000,
+      retry: 1,
+    }),
+  },
+});
+```
+
+For this `films.byId` call, these defaults apply anywhere `calls.films.byId` is used, unless a component overrides them locally.
+
+This is a good fit for options like `staleTime`, `retry`, and refetch behavior, because they're not really component-level decisions. They describe how the app generally should behave wherever the call is used.
+
+The `family` option identifies the related data a call belongs to. Callsheet uses it to group related calls, build cache identity, and drive invalidation. For more information on call families, read [Call Family and Identity](../core-concepts/call-family-and-identity).
+
+## Local / Component-level Overrides
+
+In your components, you can still override defaults for specific cases, using the normal React Query `queryOptions` you're familiar with:
+
+```ts title="src/FilmPage.tsx"
+const film = useQuery(
+  queryOptions(calls.films.byId, {
+    input: { id: 'wall-e' },
+    retry: 0,
+    select: (data) => data.film,
+  }),
+);
+```
+
+In this example:
+- `retry: 0` overrides the shared retry default
+- `select` stays local because it shapes the result for this component
+
+This split is what Callsheet helps make clearer:
+
+- **Shared operation-level conventions live on the call**
+- **Usage-specific composition stays with the component**
+
+For example, query options like `enabled`, `initialData`, `placeholderData`, remain component-level where they belong. They describe how one component needs to consume a call, not how a call should behave everywhere.
+
+Local mutation callbacks like `onSuccess`, `onError`, and `onSettled` usually belong here too. They often drive behavior that is specific to one usage after a call completes, like showing a toast, closing a dialog, or navigating.
+
+## Applying Shared Invalidation
+
+Mutations often need shared follow-up behavior too, especially around invalidation.
+
+For example, if a mutation should always refresh related reads after success, that rule should be applied when the mutation is defined, instead of being repeated in every local `onSuccess` handler.
+
+When defining a mutation in Callsheet, the `invalidates` option lets you declare the families that should be invalidated after a mutation completes:
+
+```ts title="src/calls.ts"
+export const calls = defineCalls({
+  films: {
+    list: query(FilmsDocument, {
+      family: ['films', 'list'],
+    }),
+    byId: query(FilmByIdDocument, {
+      family: ['films', 'detail'],
+    }),
+    update: mutation(UpdateFilmDocument, {
+      invalidates: [
+        ['films', 'list'],
+        ['films', 'detail'],
+      ],
+    }),
+  },
+});
+```
+
+In this example, when the `films.update` mutation completes, it invalidates the `films.list` and `films.detail` families. Since Callsheet helps you organize related definitions together, this is much easier to read and reason about.
+
+The `invalidates` option targets families, not hand-written query keys. That means invalidation is based on the families you define once, instead of a separate set of query keys to keep in sync.
+
+You can do much more with invalidation for call families, including only invalidating specific families based on the mutation result. For more advanced usage, read the guide on [Call Family and Identity](../core-concepts/call-family-and-identity).
+
+### Adding extra invalidation locally
+
+In some cases, one screen or component may need additional invalidation that should not become part of the shared convention for the call. In those cases, you can still use React Query's `invalidateQueries` locally.
+
+This does not replace the mutation's shared invalidation. It adds to it. Use this when one component needs extra refresh behavior that should not become part of the shared convention for the call.
+
+
+## Rule of thumb
+
+If a behavior should apply anywhere a call is used, it probably belongs on the call definition.
+
+If a behavior is tied to one specific component or a callback that is meant to sequence UI, keep it local.

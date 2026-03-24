@@ -1,0 +1,75 @@
+---
+title: Packages and Imports
+description: What each Callsheet package does and when to use it.
+---
+
+Callsheet is composable so you can use just the parts you need, and none of what you don't. 
+
+## Start here
+
+For most React Query apps:
+
+- install `@callsheet/react-query`
+- add `@callsheet/codegen` if you want to generate a `calls` module from typed sources
+- add `@callsheet/ts-rest` only if you are manually wrapping `ts-rest` routes
+
+---
+
+## Package Reference
+
+### @callsheet/react-query
+
+This is the main package for React Query apps. It provides everything you need to define calls and use them in components.
+
+**Install as a runtime dependency.**
+
+```ts
+import {
+  defineCalls,
+  query,
+  mutation,
+  queryOptions,
+  useMutation,
+} from '@callsheet/react-query';
+```
+
+It's a thin wrapper around React Query that helps Callsheet organize calls. It includes call builders (`query`, `mutation`), React Query helpers (`queryOptions`, `useMutation`), and the adapter that connects Callsheet.
+
+
+### @callsheet/codegen
+
+Callsheet build-time package for generating a `calls` module from typed sources like GraphQL documents and ts-rest contracts.
+
+**Install as a dev dependency.**  You don't need to import this package in your app components.
+
+```ts title="callsheet.config.ts"
+import { defineConfig } from '@callsheet/codegen';
+
+export default defineConfig({
+  sources: { /* ... */ },
+  output: { file: './src/generated/calls.ts' },
+});
+```
+For the full config reference, see [Codegen Config](/reference/codegen-config).
+
+### @callsheet/ts-rest
+
+You need this package when you are wrapping `ts-rest` routes by hand in a `defineCalls` block. 
+
+```ts title="src/calls.ts"
+import { query, mutation } from '@callsheet/ts-rest';
+```
+
+If you are using code generation to automatically build calls from a `ts-rest` contract, `@callsheet/codegen` handles the wiring for you. In that setup you do not need `@callsheet/ts-rest` unless you are also wrapping routes manually.
+
+**Install as a runtime dependency, only if you use `ts-rest`.**
+
+For more on the ts-rest workflow, see [Using Callsheet with ts-rest](/guides/ts-rest).
+
+## Related Docs
+
+- [Installation](/getting-started/installation) for setup instructions
+- [Using Callsheet with React Query](/guides/react-query) for the React Query workflow
+- [Using Callsheet with GraphQL](/getting-started/using-callsheet-with-graphql) for GraphQL setup
+- [Using Callsheet with ts-rest](/guides/ts-rest) for ts-rest setup
+- [Codegen Config](/reference/codegen-config) for the full config reference

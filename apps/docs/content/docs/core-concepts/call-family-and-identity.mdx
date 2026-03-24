@@ -1,0 +1,184 @@
+---
+title: Call Family and Identity
+description: How Callsheet groups related operations and decides what to invalidate.
+---
+
+Every call needs an identity in Callsheet and identity is split into two layers:
+
+- **`family`** identifies the related data a call belongs to
+- **`key`** provides exact identity within a family
+
+These two layers help determine how calls are organized, how related data is grouped, and how invalidations refresh data.  
+
+## The Default Call Family
+
+When you define calls, Callsheet gives each call a default family based on where it lives in the call tree. For example, consider this call definition:
+
+```ts title="src/calls.ts"
+export const calls = defineCalls({
+  films: {
+    list: query(FilmsDocument),
+    byId: query(FilmByIdDocument),
+  },
+});
+```
+
+In this example, each call gets one family by default, and that family is based on the full call path: 
+
+- `calls.films.list` -> `['films', 'list']`
+- `calls.films.byId` -> `['films', 'byId']`
+
+**For most apps, these path-based families are enough.**
+
+If your call definitions reflect how your app should think about its data, you don't need to add anything else. The shape of the call definitions gives Callsheet all it needs to work with.
+
+## When to override `family`
+
+You can use the `family` option to explicitly define the family for a call.
+
+For example, maybe your call definitions are organized how the app is structured, but the data still belongs to a different family:
+
+```ts title="src/calls.ts"
+export const calls = defineCalls({
+  films: {
+    list: query(FilmsDocument),
+    byId: query(FilmByIdDocument, {
+      family: ['films', 'detail'],
+    }),
+  },
+  homepage: {
+    featuredFilms: query(FeaturedFilmsDocument, {
+      family: ['films', 'list'],
+    }),
+  },
+});
+```
+
+Two interesting things are happening here:
+
+1. `films.byId`: Its family is defined as `detail` because the operation name `byId` is not the clearest description of the related data.
+
+2. `homepage.featuredFilms` also uses an explicit family because even though the call lives under `homepage`, the data still belongs with the broader film list family.
+
+Defining `family` explicitly is useful when it makes the data model clearer than the call definitions alone.
+
+## Using Call `key` for exact cache identity
+
+A call's family helps Callsheet group related data, but you may want to have more exact detail about the call *within* a family.
+
+For example, many different film detail queries may all belong to the same detail family, but they shouldn't share one cache entry. 
+
+The `key` option is used to give each call an exact identity.  
+
+```ts title="src/calls.ts"
+export const calls = defineCalls({
+  films: {
+    byId: query(FilmByIdDocument, {
+      family: ['films', 'detail'],
+      key: ({ input }) => [input.id],
+    }),
+  },
+});
+```
+
+In this example, the `family` is set to `['films', 'detail']`. The `key` uses the call's `input.id` to define which exact film detail cache entry.
+
+So given a call with an id of `"wall-e"`, the query key would be:
+
+`['callsheet', 'films', 'detail', { key: ['wall-e'] }]`
+
+## Call Family Invalidation
+
+Callsheet uses families to make it easier to organize how related data is refreshed. 
+
+For example in React Query, after a mutation succeeds, the app often needs to refresh related reads. If a mutation updates a film, the app needs to refresh:
+
+ - **film lists**
+ - **film detail queries**
+ - **other queries that belong to the same related data**
+
+Callsheet solves this by targeting the families you've already defined and organized.
+
+### Static invalidation
+
+When the same related data should always be refreshed, invalidation can be static:
+
+```ts title="src/calls.ts"
+export const calls = defineCalls({
+  films: {
+    list: query(FilmsDocument),
+    byId: query(FilmByIdDocument, {
+      family: ['films', 'detail'],
+      key: ({ input }) => [input.id],
+    }),
+    update: mutation(UpdateFilmDocument, {
+      invalidates: [
+        ['films', 'list'],
+        ['films', 'featured'],
+      ],
+    }),
+  },
+  homepage: {
+    featuredFilms: query(FeaturedFilmsDocument, {
+      family: ['films', 'featured'],
+    }),
+  },
+});
+```
+
+When `films.update` completes, it invalidates:
+
+- the `['films', 'list']` family
+- the `['films', 'featured']` family
+
+That means any queries in those families are treated as stale. In this example, that includes:
+
+- `calls.films.list`
+- `calls.homepage.featuredFilms`
+
+**That does not mean every query automatically refetches immediately**. Active queries may refetch, and inactive ones are marked stale until they are used again.
+
+Callsheet lets you declare invalidation in terms of families. Adapters like React Query perform the actual query invalidation under the hood.
+
+
+### Dynamic invalidation
+
+After a mutation completes, you may need to refresh data based on the *result* of the mutation. If this is the case, invalidating families can be dynamic based on the mutation `input` or `output`.
+
+Consider the following example:
+
+```ts title="src/calls.ts"
+export const calls = defineCalls({
+  films: {
+    moveToArchive: mutation(MoveFilmToArchiveDocument, {
+      invalidates: ({ input, output }) =>
+        input.fromList && output.moveFilmToArchive.archived
+          ? [
+              ['films', 'list'],
+              ['films', 'archive'],
+            ]
+          : [
+              ['films', 'archive'],
+              ['films', 'detail'],
+            ],
+    }),
+  },
+});
+```
+
+This invalidation is still family-based. The difference is that the mutation decides which families to invalidate based on what actually happened.
+
+In this example, the `list` family is only invalidated when the film came from a list and was successfully archived. Otherwise, only the `archive` and `detail` families are invalidated.
+
+This is useful when the mutation result determines what changed or it should only affect some parts of your app based on certain conditions.
+
+### Component-level Invalidation
+Your call definitions and families define the shared convention for invalidation. If a component still needs additional invalidation, you can still add it at the component level.
+
+## Finally, here's how to think about Call Families & Identity [!toc]
+
+1. **Start with the default family from `defineCalls(...)`**
+2. **Add explicit `family` when the definition and the data it's tied to should differ**
+3. **Add `key` when one family needs even more exact identity**
+
+Most calls only need the first step. The other two exist so your Callsheet stays organized if your app grows more complex.

@@ -1,0 +1,104 @@
+---
+title: Calls
+description: What calls are, how to define them, and how they connect to your data-fetching library.
+---
+
+A call is the basic unit of organization in Callsheet. It represents an API operation, like a query or a mutation.
+
+Callsheet gives those operations a consistent shape, so you can organize them, add shared defaults, and keep related behavior together.
+
+## How to think about Calls
+
+On the surface, calls can look like extra indirection.
+
+You could leave queries in one shared helper, mutations in another, and invalidation rules somewhere else. That works for a while, but related pieces tend to drift apart as an app grows. Calls give the app a clearer model for things like:
+
+- **What operations exist?**
+- **Which reads and writes belong together?**
+- **Where do shared defaults live?**
+- **Where should cache invalidation rules be defined?**
+
+## The Shared Call Surface
+
+With a shared call surface, the rest of your app can reference calls through one consistent shape instead of a mix of helpers, hooks, and request files.
+
+You use `defineCalls(...)` to create that shape:
+
+```ts title="src/calls.ts"
+export const calls = defineCalls({
+  films: {
+    featured: query(FeaturedFilmsDocument),
+    byId: query(FilmByIdDocument),
+    update: mutation(UpdateFilmDocument),
+  },
+});
+```
+
+Once defined, the rest of your app can reference calls like this:
+
+```ts
+calls.films.featured
+calls.films.byId
+calls.films.update
+```
+
+This shared shape makes it easier to discover operations, group related reads and writes, and keep conventions in one place.
+
+<Callout title="Note">
+  You do not have to define every call in one file. You can organize call
+  definitions in a way that fits your app and still export one `calls` object
+  for the rest of your app.
+</Callout>
+
+## Adding Conventions to Calls
+
+Call definitions can also hold related reads, writes, and conventions together. That keeps behavior that would otherwise be split across helpers, hooks, and local conventions in one place:
+
+```ts title="src/calls.ts"
+export const calls = defineCalls({
+  films: {
+    byId: query(FilmByIdDocument, {
+      family: ['films', 'detail'],
+      staleTime: 30_000,
+    }),
+    update: mutation(UpdateFilmDocument, {
+      invalidates: [
+        ['films', 'list'],
+        ['films', 'detail'],
+      ],
+    }),
+  },
+});
+```
+
+These definitions let you establish conventions around things like:
+
+- **What family a call belongs to**: Which related data should this call be grouped with?
+- **What it invalidates after a write**: What related calls should be invalidated?
+- **What cache-related defaults it should use**: What shared defaults should the call inherit?
+
+Instead of spreading those decisions across helpers and hooks, you can keep them close to the operations they belong to.
+
+<Callout title="Note">
+  Invalidation can be static or dynamic based on the mutation input and output.
+  Read more in [Using Callsheet with React Query](/guides/react-query#applying-shared-invalidation) and
+  [Call Family and Identity](/core-concepts/call-family-and-identity#call-family-invalidation).
+</Callout>
+
+## Components still use React Query [!toc]
+
+Usage in components stays familiar:
+
+```ts title="src/FilmPage.tsx"
+const film = useQuery(
+  queryOptions(calls.films.byId, {
+    input: { id: 'wall-e' },
+    select: (data) => data.film,
+    ...reactQueryOptions,
+  }),
+);
+
+const updateFilm = useMutation(calls.films.update);
+```
+
+Calls do not replace how you compose with React Query. They give React Query a cleaner model to build from.
