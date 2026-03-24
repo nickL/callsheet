@@ -1,8 +1,9 @@
 import { RootProvider } from 'fumadocs-ui/provider/next';
 import { IBM_Plex_Sans, JetBrains_Mono } from 'next/font/google';
 
-import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+
+import { sharedMetadata } from '../lib/metadata';
 
 import './global.css';
 
@@ -18,13 +19,7 @@ const monoFont = JetBrains_Mono({
   variable: '--font-mono',
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: 'Callsheet Docs',
-    template: '%s | Callsheet Docs',
-  },
-  description: '',
-};
+export const metadata = sharedMetadata;
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
