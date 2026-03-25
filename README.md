@@ -1,17 +1,16 @@
 <div align="center">
-  <img src="apps/docs/public/brand/callsheet-logo.svg" alt="Callsheet" width="120" />
-  <br />
-  <h1 align="center">Callsheet</h1>
-  <strong>
-    A single definition for your React Query API calls that your entire app can build on.
-  </strong>
-  <br />
-  <br />
+
+<img width="1280" height="240" alt="Image" src="https://github.com/user-attachments/assets/b7c53296-c7ee-4134-9492-53616f2ad59c" />
+
+  <h1>Callsheet</h1> 
+
+  <p>
+    React Query gives you great building blocks but it's up to you to decide how operations should be organized.
+    <br/>
+    <strong> Callsheet provides one shared place for your operations, defaults, and related behaviors, built on the APIs you already use.</strong>
+  </p>
+<hr/>
 </div>
-
-## Why
-
-React Query gives you great building blocks but it's up to you to decide how operations should be organized. Callsheet provides one shared place for your operations, defaults, and related behaviors, built on the APIs you already use.
 
 ## Docs
 
