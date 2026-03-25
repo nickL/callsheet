@@ -2,7 +2,7 @@
 
 <img width="1280" height="240" alt="Image" src="https://github.com/user-attachments/assets/b7c53296-c7ee-4134-9492-53616f2ad59c" />
 
-  <h1>Callsheet</h1> 
+  <h1>Callsheet</h1>
 
   <p align="left">
     React Query gives you great building blocks but it's up to you to decide how operations should be organized.
@@ -23,11 +23,13 @@
 ## Install
 
 ### With pnpm
+
 ```sh
 pnpm add @callsheet/react-query @tanstack/react-query
 ```
 
 ### With npm
+
 ```sh
 npm install @callsheet/react-query @tanstack/react-query
 ```
@@ -37,7 +39,6 @@ Callsheet builds from typed operations. It can also generate calls from your exi
 - Use `@callsheet/react-query` to define calls.
 - Add `@callsheet/codegen` to auto-generate calls from [GraphQL Code Generator](https://github.com/dotansimha/graphql-code-generator) output.
 - Add `@callsheet/ts-rest` for [ts-rest](https://github.com/ts-rest/ts-rest) support.
-
 
 ## Example
 
@@ -119,7 +120,7 @@ Callsheet works with any typed source: GraphQL documents, REST contracts, or cal
 ## Current Support
 
 - React Query: [TanStack Query](https://github.com/TanStack/query)
-- GraphQL generation:  [GraphQL Code Generator](https://github.com/dotansimha/graphql-code-generator)
+- GraphQL generation: [GraphQL Code Generator](https://github.com/dotansimha/graphql-code-generator)
 - Typed REST generation: [ts-rest](https://github.com/ts-rest/ts-rest)
 - Manual integration for custom typed operations
 

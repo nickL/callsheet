@@ -1,9 +1,9 @@
 import { RootProvider } from 'fumadocs-ui/provider/next';
 import { IBM_Plex_Sans, JetBrains_Mono } from 'next/font/google';
 
-import type { ReactNode } from 'react';
-
 import { sharedMetadata } from '../lib/metadata';
+
+import type { ReactNode } from 'react';
 
 import './global.css';
 

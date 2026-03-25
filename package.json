@@ -17,6 +17,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings=0 && prettier --check .",
+    "release:check": "pnpm typecheck && pnpm lint && pnpm test",
     "release:prepare": "./scripts/release/prepare",
     "release:publish": "./scripts/release/publish",
     "test": "pnpm run test:workspace && pnpm run check:example-generated && pnpm run build:packages && pnpm run test:types",

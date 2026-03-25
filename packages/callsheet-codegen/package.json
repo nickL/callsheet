@@ -1,6 +1,6 @@
 {
   "name": "@callsheet/codegen",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Generate Callsheet modules from typed GraphQL and ts-rest sources.",
   "repository": {
     "type": "git",
@@ -54,8 +54,8 @@
     "typescript": "^5.9.3"
   },
   "peerDependencies": {
-    "@callsheet/react-query": "^0.0.1",
-    "@callsheet/ts-rest": "^0.0.1",
+    "@callsheet/react-query": "^0.1.0",
+    "@callsheet/ts-rest": "^0.1.0",
     "@ts-rest/core": "^3.52.1",
     "typescript": ">=5"
   },

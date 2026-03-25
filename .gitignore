@@ -42,3 +42,4 @@ yarn-error.log*
 .svelte-kit
 .vinxi
 apps/docs/.source/
+apps/docs/next-env.d.ts

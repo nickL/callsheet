@@ -1,6 +1,6 @@
 {
   "name": "@callsheet/react-query",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A single definition for your API calls that your entire app can build on.",
   "repository": {
     "type": "git",
