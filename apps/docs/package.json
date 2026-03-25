@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "source": "fumadocs-mdx source.config.ts .source",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "pnpm run source && tsc --noEmit"
   },
   "dependencies": {
     "@types/mdx": "^2.0.13",
