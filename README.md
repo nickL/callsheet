@@ -4,7 +4,7 @@
 
   <h1>Callsheet</h1> 
 
-  <p>
+  <p align="left">
     React Query gives you great building blocks but it's up to you to decide how operations should be organized.
     <br/>
     <strong> Callsheet provides one shared place for your operations, defaults, and related behaviors, built on the APIs you already use.</strong>
