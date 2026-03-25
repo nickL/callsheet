@@ -9,18 +9,9 @@
   <br />
 </div>
 
+## Why
+
 React Query gives you great building blocks but it's up to you to decide how operations should be organized. Callsheet provides one shared place for your operations, defaults, and related behaviors, built on the APIs you already use.
-
-```sh
-pnpm add @callsheet/react-query @tanstack/react-query
-pnpm add -D @callsheet/codegen
-```
-
-Callsheet builds from typed operations. It can also generate calls from your existing GraphQL and typed REST sources.
-
-- Use `@callsheet/react-query` to author calls.
-- Add `@callsheet/codegen` to auto-generate calls from [GraphQL Code Generator](https://github.com/dotansimha/graphql-code-generator) output.
-- Add `@callsheet/ts-rest` for [ts-rest](https://github.com/ts-rest/ts-rest) support.
 
 ## Docs
 
@@ -30,7 +21,26 @@ Callsheet builds from typed operations. It can also generate calls from your exi
 - [Manual Setup](https://callsheet.nlewis.dev/getting-started/manual-setup)
 - [Generating Calls from ts-rest](https://callsheet.nlewis.dev/guides/ts-rest)
 
-## What this looks like in code
+## Install
+
+### With pnpm
+```sh
+pnpm add @callsheet/react-query @tanstack/react-query
+```
+
+### With npm
+```sh
+npm install @callsheet/react-query @tanstack/react-query
+```
+
+Callsheet builds from typed operations. It can also generate calls from your existing GraphQL and typed REST sources.
+
+- Use `@callsheet/react-query` to define calls.
+- Add `@callsheet/codegen` to auto-generate calls from [GraphQL Code Generator](https://github.com/dotansimha/graphql-code-generator) output.
+- Add `@callsheet/ts-rest` for [ts-rest](https://github.com/ts-rest/ts-rest) support.
+
+
+## Example
 
 Callsheet is easiest to see in code. Here is the same workflow in React Query with and without Callsheet:
 
@@ -109,16 +119,15 @@ Callsheet works with any typed source: GraphQL documents, REST contracts, or cal
 
 ## Current Support
 
-- React Query runtime support via [TanStack Query](https://github.com/TanStack/query)
-- GraphQL generation via [GraphQL Code Generator](https://github.com/dotansimha/graphql-code-generator)
-- Typed REST generation via [ts-rest](https://github.com/ts-rest/ts-rest)
+- React Query: [TanStack Query](https://github.com/TanStack/query)
+- GraphQL generation:  [GraphQL Code Generator](https://github.com/dotansimha/graphql-code-generator)
+- Typed REST generation: [ts-rest](https://github.com/ts-rest/ts-rest)
 - Manual integration for custom typed operations
 
 ## Roadmap
 
 - Infinite query support for the React Query adapter
 - Additional adapters, starting with `swr`, `urql`, and Apollo
-- Deeper codegen and CLI ergonomics
 
 See the full roadmap: [Roadmap](https://callsheet.nlewis.dev/project-status/roadmap)
 

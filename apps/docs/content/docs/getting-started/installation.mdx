@@ -14,9 +14,13 @@ Callsheet currently supports React Query v5. To get started, install **@callshee
     ```
   </Tab>
 
-<Tab value="npm">
-  ```sh npm install @callsheet/react-query @tanstack/react-query ```
-</Tab>
+  <Tab value="npm">
+
+    ```sh
+    npm install @callsheet/react-query @tanstack/react-query
+    ```
+
+  </Tab>
 
   <Tab value="yarn">
     ```sh
@@ -36,7 +40,13 @@ If you use code generation, Callsheet can automatically build from your generate
     ```
   </Tab>
 
-<Tab value="npm">```sh npm add -D @callsheet/codegen ```</Tab>
+  <Tab value="npm">
+
+    ```sh
+    npm install -D @callsheet/codegen
+    ```
+
+  </Tab>
 
   <Tab value="yarn">
     ```sh
@@ -59,9 +69,27 @@ For more details on GraphQL codegen, read [Using Callsheet with GraphQL](/gettin
 
 If you want Callsheet to auto-generate calls from `ts-rest` contracts, add `@ts-rest/core` in addition to `@callsheet/codegen`:
 
-```sh
-pnpm add @ts-rest/core
-```
+<Tabs items={['pnpm', 'npm', 'yarn']} groupId="package-manager" persist>
+  <Tab value="pnpm">
+    ```sh
+    pnpm add @ts-rest/core
+    ```
+  </Tab>
+
+  <Tab value="npm">
+
+    ```sh
+    npm install @ts-rest/core
+    ```
+
+  </Tab>
+
+  <Tab value="yarn">
+    ```sh
+    yarn add @ts-rest/core
+    ```
+  </Tab>
+</Tabs>
 
 For more on codegen for `ts-rest`, read the [TS-Rest Guide](/guides/ts-rest).
 
