@@ -1,0 +1,84 @@
+name: Publish Packages
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'pnpm'
+
+      - name: Ensure repository is public
+        run: |
+          if [[ "${{ github.event.repository.private }}" == "true" ]]; then
+            echo "Publishing with provenance requires a public repository." >&2
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify tag matches package versions
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          expected_version="${RELEASE_TAG#v}"
+
+          EXPECTED_VERSION="$expected_version" node <<'EOF'
+          const fs = require('node:fs');
+
+          const expectedVersion = process.env.EXPECTED_VERSION;
+          const packageFiles = [
+            'packages/callsheet/package.json',
+            'packages/callsheet-react-query/package.json',
+            'packages/callsheet-ts-rest/package.json',
+            'packages/callsheet-codegen/package.json',
+          ];
+
+          const versions = packageFiles.map((file) => {
+            const pkg = JSON.parse(fs.readFileSync(file, 'utf8'));
+            return { file, name: pkg.name, version: pkg.version };
+          });
+
+          const mismatches = versions.filter(({ version }) => version !== expectedVersion);
+
+          if (mismatches.length > 0) {
+            console.error(`Release tag v${expectedVersion} does not match package versions.`);
+            for (const mismatch of mismatches) {
+              console.error(`- ${mismatch.name} (${mismatch.file}) is ${mismatch.version}`);
+            }
+            process.exit(1);
+          }
+          EOF
+
+      - name: Verify release
+        run: |
+          pnpm typecheck
+          pnpm lint
+          pnpm test
+
+      - name: Publish packages
+        run: pnpm release:publish

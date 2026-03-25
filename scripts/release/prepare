@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "$#" -ne 0 ]]; then
+  echo "scripts/release/prepare does not accept arguments." >&2
+  exit 1
+fi
+
+repo_root="$(cd "$(dirname "$0")/../.." && pwd)"
+cd "$repo_root"
+
+current_branch="$(git rev-parse --abbrev-ref HEAD)"
+
+if [[ "$current_branch" != "main" ]]; then
+  echo "Release preparation must run from main. Current branch: $current_branch" >&2
+  exit 1
+fi
+
+if [[ -n "$(git status --porcelain)" ]]; then
+  echo "Release preparation requires a clean worktree." >&2
+  exit 1
+fi
+
+shopt -s nullglob
+changeset_files=(.changeset/*.md)
+shopt -u nullglob
+
+unreleased_changesets=()
+for file in "${changeset_files[@]}"; do
+  if [[ "$(basename "$file")" != "README.md" ]]; then
+    unreleased_changesets+=("$file")
+  fi
+done
+
+if [[ "${#unreleased_changesets[@]}" -eq 0 ]]; then
+  echo "Release preparation requires at least one unreleased changeset in .changeset/." >&2
+  echo "Create or commit the release changeset first, then rerun this script." >&2
+  exit 1
+fi
+
+pnpm changeset:version
+pnpm typecheck
+pnpm lint
+pnpm test

@@ -8,6 +8,9 @@
     "directory": "packages/callsheet"
   },
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": [
     "callsheet",
     "typed-operations",

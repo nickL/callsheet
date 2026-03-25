@@ -8,6 +8,9 @@
     "directory": "packages/callsheet-react-query"
   },
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": [
     "callsheet",
     "react-query",

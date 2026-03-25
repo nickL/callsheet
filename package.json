@@ -8,12 +8,17 @@
   },
   "scripts": {
     "build": "pnpm -r --if-present build",
+    "changeset": "changeset",
+    "changeset:publish": "changeset publish",
+    "changeset:version": "changeset version && pnpm install --no-frozen-lockfile",
     "dev:docs": "pnpm --filter @callsheet/docs dev",
     "build:packages": "pnpm --filter @callsheet/core build && pnpm --filter @callsheet/react-query build && pnpm --filter @callsheet/ts-rest build && pnpm --filter @callsheet/codegen build",
     "dev:example": "pnpm --filter @callsheet/example-app dev",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings=0 && prettier --check .",
+    "release:prepare": "./scripts/release/prepare",
+    "release:publish": "./scripts/release/publish",
     "test": "pnpm run test:workspace && pnpm run check:example-generated && pnpm run build:packages && pnpm run test:types",
     "test:coverage": "pnpm --filter @callsheet/core test:coverage && pnpm --filter @callsheet/react-query test:coverage && pnpm --filter @callsheet/codegen test:coverage",
     "test:types": "pnpm --filter @callsheet/core test:types && pnpm --filter @callsheet/react-query test:types && pnpm --filter @callsheet/codegen test:types",
@@ -22,10 +27,11 @@
     "check:example-generated": "pnpm --filter @callsheet/example-app generate && git diff --exit-code -- apps/example-app/src/graphql/generated.ts apps/example-app/src/generated/calls.ts"
   },
   "devDependencies": {
-    "@vitest/eslint-plugin": "^1.6.12",
-    "@vitest/coverage-v8": "^4.0.7",
+    "@changesets/cli": "^2.30.0",
     "@eslint/js": "^9.39.4",
     "@types/node": "^25.5.0",
+    "@vitest/coverage-v8": "^4.0.7",
+    "@vitest/eslint-plugin": "^1.6.12",
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.4",
@@ -37,8 +43,8 @@
     "prettier": "^3.8.1",
     "tsd": "^0.33.0",
     "tsup": "^8.5.1",
-    "typescript-eslint": "^8.57.0",
     "typescript": "^5.9.3",
+    "typescript-eslint": "^8.57.0",
     "vitest": "^4.1.0"
   }
 }

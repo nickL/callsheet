@@ -8,6 +8,9 @@
     "directory": "packages/callsheet-ts-rest"
   },
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": [
     "callsheet",
     "ts-rest",
