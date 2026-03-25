@@ -44,7 +44,7 @@ Callsheet builds from typed operations. It can also generate calls from your exi
 
 Callsheet is easiest to see in code. Here is the same workflow in React Query with and without Callsheet:
 
-Without Callsheet:
+**Without Callsheet**:
 
 ```ts
 export const filmKeys = {
@@ -79,7 +79,7 @@ export function useUpdateFilm() {
 }
 ```
 
-With Callsheet:
+**With Callsheet**:
 
 `filmCalls.ts`
 
