@@ -10,35 +10,64 @@ With generated documents, the workflow is pretty simple:
 <Steps>
   <Step>Point Callsheet at your generated documents</Step>
   <Step>Generate your Callsheet</Step>
-  <Step>Use your calls in React Query.</Step>
+  <Step>Use your calls through your adapter.</Step>
 </Steps>
 
 ### Walkthrough[!toc]
 
-First, if you haven't already install **@callsheet/react-query** and **@callsheet/codegen**:
+First, if you haven't already, install your adapter package and **@callsheet/codegen**:
 
-<Tabs items={['pnpm', 'npm', 'yarn']} groupId="package-manager" persist>
-  <Tab value="pnpm">
-    ```sh
-    pnpm add @callsheet/react-query
-    pnpm add -D @callsheet/codegen
-    ```
+<Tabs items={['React Query', 'SWR']} groupId="adapter" persist>
+  <Tab value="React Query">
+    <Tabs items={['pnpm', 'npm', 'yarn']} groupId="package-manager" persist>
+      <Tab value="pnpm">
+        ```sh
+        pnpm add @callsheet/react-query
+        pnpm add -D @callsheet/codegen
+        ```
+      </Tab>
+
+      <Tab value="npm">
+        ```sh
+        npm install @callsheet/react-query
+        npm install -D @callsheet/codegen
+        ```
+      </Tab>
+
+      <Tab value="yarn">
+        ```sh
+        yarn add @callsheet/react-query
+        yarn add @callsheet/codegen -D
+        ```
+      </Tab>
+    </Tabs>
+
   </Tab>
 
-  <Tab value="npm">
+  <Tab value="SWR">
+    <Tabs items={['pnpm', 'npm', 'yarn']} groupId="package-manager" persist>
+      <Tab value="pnpm">
+        ```sh
+        pnpm add @callsheet/swr
+        pnpm add -D @callsheet/codegen
+        ```
+      </Tab>
 
-    ```sh
-    npm install @callsheet/react-query
-    npm install -D @callsheet/codegen
-    ```
+      <Tab value="npm">
+        ```sh
+        npm install @callsheet/swr
+        npm install -D @callsheet/codegen
+        ```
+      </Tab>
 
-  </Tab>
+      <Tab value="yarn">
+        ```sh
+        yarn add @callsheet/swr
+        yarn add @callsheet/codegen -D
+        ```
+      </Tab>
+    </Tabs>
 
-  <Tab value="yarn">
-    ```sh
-    yarn add @callsheet/react-query 
-    yarn add @callsheet/codegen -D
-    ```
   </Tab>
 </Tabs>
 
@@ -62,7 +91,20 @@ export default defineConfig({
     ],
   },
   output: {
+    adapter: 'react-query',
     file: './src/generated/calls.ts',
+  },
+});
+```
+
+If your app uses SWR, set the output adapter to `swr` instead:
+
+```ts title="callsheet.config.ts"
+export default defineConfig({
+  // ...
+  output: {
+    file: './src/generated/calls.ts',
+    adapter: 'swr',
   },
 });
 ```
@@ -81,39 +123,75 @@ If you need to, you can change the output location in `callsheet.config.ts`.
 
 ### Use generated calls
 
-Once generated, you can import the `calls` module and use it with the React Query APIs you already know.
+Once generated, import the `calls` module and use it through your adapter:
 
-```ts title="src/FilmPage.tsx"
-import { queryOptions } from '@callsheet/react-query';
-import { calls } from './generated/calls';
+<Tabs items={['React Query', 'SWR']} groupId="adapter" persist>
+  <Tab value="React Query">
+    ```ts title="src/FilmPage.tsx"
+    import { queryOptions, useQuery } from '@callsheet/react-query';
+    import { calls } from './generated/calls';
 
-const film = useQuery(
-  queryOptions(calls.filmById, {
-    input: { id: 'wall-e' },
-    select: (data) => data.film,
-  }),
-);
-```
+    const film = useQuery(
+      queryOptions(calls.filmById, {
+        input: { id: 'wall-e' },
+        select: (data) => data.film,
+      }),
+    );
+    ```
+
+  </Tab>
+
+  <Tab value="SWR">
+    ```ts title="src/FilmPage.tsx"
+    import { useQuery } from '@callsheet/swr';
+    import { calls } from './generated/calls';
+
+    const { data: film } = useQuery(calls.filmById, {
+      input: { id: 'wall-e' },
+    });
+    ```
+
+  </Tab>
+</Tabs>
 
 Read more about the shared call surface in [Calls](/core-concepts/calls).
 
-## Without GraphQL Code Generator
+### Without GraphQL Code Generator
 
 If you are not using GraphQL Code Generator, Callsheet still works with your typed GraphQL documents. Just define your Callsheet yourself instead of auto-generating it.
 
-```ts title="src/calls.ts"
-import { defineCalls, query } from '@callsheet/react-query';
-import { FilmByIdDocument } from './graphql/film-by-id';
+<Tabs items={['React Query', 'SWR']} groupId="adapter" persist>
+  <Tab value="React Query">
+    ```ts title="src/calls.ts"
+    import { defineCalls, query } from '@callsheet/react-query';
+    import { FilmByIdDocument } from './graphql/film-by-id';
 
-export const calls = defineCalls({
-  films: {
-    byId: query(FilmByIdDocument),
-  },
-});
-```
+    export const calls = defineCalls({
+      films: {
+        byId: query(FilmByIdDocument),
+      },
+    });
+    ```
 
-In either setup, generated or manual, Callsheet gives you one shared call surface to use across your React Query app. Learn more in [Calls](/core-concepts/calls), [Using Callsheet with React Query](/guides/react-query), and [Call Family and Identity](/core-concepts/call-family-and-identity).
+  </Tab>
 
-## Related Docs
+  <Tab value="SWR">
+    ```ts title="src/calls.ts"
+    import { defineCalls, query } from '@callsheet/swr';
+    import { FilmByIdDocument } from './graphql/film-by-id';
+
+    export const calls = defineCalls({
+      films: {
+        byId: query(FilmByIdDocument),
+      },
+    });
+    ```
+
+  </Tab>
+</Tabs>
+
+In either setup, generated or manual, Callsheet gives you one shared call surface. Learn more in [Calls](/core-concepts/calls), [Using Callsheet with React Query](/guides/react-query), [Using Callsheet with SWR](/guides/swr), and [Call Family and Identity](/core-concepts/call-family-and-identity).
+
+### Related Docs
 
 If you want a deeper breakdown of the available codegen settings, go to [Codegen Config](/reference/codegen-config).

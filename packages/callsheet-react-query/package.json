@@ -1,7 +1,7 @@
 {
   "name": "@callsheet/react-query",
   "version": "0.1.0",
-  "description": "A single definition for your API calls that your entire app can build on.",
+  "description": "One shared definition for your React Query calls.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nickL/callsheet.git",
@@ -13,6 +13,7 @@
   },
   "keywords": [
     "callsheet",
+    "adapter",
     "react-query",
     "tanstack-query",
     "cache",

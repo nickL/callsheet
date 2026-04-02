@@ -91,7 +91,7 @@ So given a call with an id of `"wall-e"`, the query key would be:
 
 Callsheet uses families to make it easier to organize how related data is refreshed.
 
-For example in React Query, after a mutation succeeds, the app often needs to refresh related reads. If a mutation updates a film, the app needs to refresh:
+For example, after a mutation succeeds, the app often needs to refresh related reads. If a mutation updates a film, the app needs to refresh:
 
 - **film lists**
 - **film detail queries**
@@ -138,7 +138,7 @@ That means any queries in those families are treated as stale. In this example, 
 
 **That does not mean every query automatically refetches immediately**. Active queries may refetch, and inactive ones are marked stale until they are used again.
 
-Callsheet lets you declare invalidation in terms of families. Adapters like React Query perform the actual query invalidation under the hood.
+Callsheet lets you declare invalidation in terms of families. Your adapter performs the actual query invalidation under the hood.
 
 ### Dynamic invalidation
 

@@ -9,62 +9,135 @@ Use this guide to learn how to combine requests from GraphQL documents, typed RE
 
 Here is a call tree that combines multiple source types.
 
-```ts title="src/calls.ts"
-import { defineCalls, query, mutation } from '@callsheet/react-query';
-import {
-  query as tsRestQuery,
-  mutation as tsRestMutation,
-} from '@callsheet/ts-rest';
+<Tabs items={['React Query', 'SWR']} groupId="adapter" persist>
+  <Tab value="React Query">
+    ```ts title="src/calls.ts"
+    import { defineCalls, query, mutation } from '@callsheet/react-query';
+    import {
+      query as tsRestQuery,
+      mutation as tsRestMutation,
+    } from '@callsheet/ts-rest';
 
-// Manually typed GraphQL documents
-import { FeaturedFilmsDocument } from './graphql/featured-films';
-import { FilmByIdDocument } from './graphql/film-by-id';
-import { UpdateFilmDocument } from './graphql/update-film';
+    // Manually typed GraphQL documents
+    import { FeaturedFilmsDocument } from './graphql/featured-films';
+    import { FilmByIdDocument } from './graphql/film-by-id';
+    import { UpdateFilmDocument } from './graphql/update-film';
 
-// ts-rest contract
-import { contract } from './rest/contract';
+    // ts-rest contract
+    import { contract } from './rest/contract';
 
-export const calls = defineCalls({
-  films: {
-    featured: query(FeaturedFilmsDocument),
-    byId: query(FilmByIdDocument, {
-      family: ['films', 'detail'],
-      key: ({ input }) => [input.id],
-    }),
-    update: mutation(UpdateFilmDocument, {
-      invalidates: [
-        ['films', 'list'],
-        ['films', 'detail'],
-      ],
-    }),
-  },
-  accounts: {
-    byId: tsRestQuery(contract.accounts.byId, {
-      family: ['accounts', 'detail'],
-      key: ({ input }) => [input.params.id],
-    }),
-    update: tsRestMutation(contract.accounts.update, {
-      invalidates: [['accounts', 'detail']],
-    }),
-  },
-  analytics: {
-    overview: query<void, { views: number; revenue: number }>({
-      family: ['analytics', 'overview'],
-      staleTime: 60_000,
-    }),
-  },
-});
-```
+    export const calls = defineCalls({
+      films: {
+        featured: query(FeaturedFilmsDocument),
+        byId: query(FilmByIdDocument, {
+          family: ['films', 'detail'],
+          key: ({ input }) => [input.id],
+        }),
+        update: mutation(UpdateFilmDocument, {
+          invalidates: [
+            ['films', 'list'],
+            ['films', 'detail'],
+          ],
+        }),
+      },
+      accounts: {
+        byId: tsRestQuery(contract.accounts.byId, {
+          family: ['accounts', 'detail'],
+          key: ({ input }) => [input.params.id],
+        }),
+        update: tsRestMutation(contract.accounts.update, {
+          invalidates: [['accounts', 'detail']],
+        }),
+      },
+      analytics: {
+        overview: query<void, { views: number; revenue: number }>({
+          family: ['analytics', 'overview'],
+        }),
+      },
+    });
+    ```
 
-Components can consume all of them through the same React Query APIs:
+  </Tab>
 
-```ts
-const film = useQuery(queryOptions(calls.films.byId, { input: { id } }));
-const account = useQuery(
-  queryOptions(calls.accounts.byId, { input: { params: { id } } }),
-);
-const analytics = useQuery(queryOptions(calls.analytics.overview));
-```
+  <Tab value="SWR">
+    ```ts title="src/calls.ts"
+    import { defineCalls, query, mutation } from '@callsheet/swr';
+    import {
+      query as tsRestQuery,
+      mutation as tsRestMutation,
+    } from '@callsheet/ts-rest';
+
+    // Manually typed GraphQL documents
+    import { FeaturedFilmsDocument } from './graphql/featured-films';
+    import { FilmByIdDocument } from './graphql/film-by-id';
+    import { UpdateFilmDocument } from './graphql/update-film';
+
+    // ts-rest contract
+    import { contract } from './rest/contract';
+
+    export const calls = defineCalls({
+      films: {
+        featured: query(FeaturedFilmsDocument),
+        byId: query(FilmByIdDocument, {
+          family: ['films', 'detail'],
+          key: ({ input }) => [input.id],
+        }),
+        update: mutation(UpdateFilmDocument, {
+          invalidates: [
+            ['films', 'list'],
+            ['films', 'detail'],
+          ],
+        }),
+      },
+      accounts: {
+        byId: tsRestQuery(contract.accounts.byId, {
+          family: ['accounts', 'detail'],
+          key: ({ input }) => [input.params.id],
+        }),
+        update: tsRestMutation(contract.accounts.update, {
+          invalidates: [['accounts', 'detail']],
+        }),
+      },
+      analytics: {
+        overview: query<void, { views: number; revenue: number }>({
+          family: ['analytics', 'overview'],
+        }),
+      },
+    });
+    ```
+
+  </Tab>
+</Tabs>
+
+Components can consume all of them through the same adapter APIs:
+
+<Tabs items={['React Query', 'SWR']} groupId="adapter" persist>
+  <Tab value="React Query">
+    ```ts
+    import { queryOptions, useQuery } from '@callsheet/react-query';
+
+    const film = useQuery(queryOptions(calls.films.byId, { input: { id } }));
+    const account = useQuery(
+      queryOptions(calls.accounts.byId, { input: { params: { id } } }),
+    );
+    const analytics = useQuery(queryOptions(calls.analytics.overview));
+    ```
+
+  </Tab>
+
+  <Tab value="SWR">
+    ```ts
+    import { useQuery } from '@callsheet/swr';
+
+    const { data: film } = useQuery(calls.films.byId, { input: { id } });
+    const { data: account } = useQuery(calls.accounts.byId, {
+      input: { params: { id } },
+    });
+    const { data: analytics } = useQuery(calls.analytics.overview);
+    ```
+
+  </Tab>
+</Tabs>
 
 ## Organizing by source vs by domain
 
@@ -75,6 +148,9 @@ There are two common ways to organize a mixed-source tree. The right choice depe
 Group calls by what they represent in the app, regardless of which typed source they come from:
 
 ```ts
+// import { defineCalls, query, mutation } from '@callsheet/react-query';
+// or from '@callsheet/swr'
+
 export const calls = defineCalls({
   films: {
     featured: query(FeaturedFilmsDocument),
@@ -184,13 +260,10 @@ export const calls = defineCalls({
 
 When `rest.films.update` completes, it invalidates the `['films', 'list']` family. That refreshes `films.featured` even though the mutation and the query come from different typed sources.
 
-Shared defaults like `staleTime`, and `retry` also work identically across source types. Read more in [Using Callsheet with React Query](/guides/react-query).
+Shared defaults and invalidation still work identically across source types. Read more in [Using Callsheet with React Query](/guides/react-query) or [Using Callsheet with SWR](/guides/swr).
 
 ## Related Docs
 
 - [Using Callsheet with GraphQL](/getting-started/using-callsheet-with-graphql) for GraphQL source setup
 - [Using Callsheet with ts-rest](/guides/ts-rest) for ts-rest source setup
-- [Manual Setup](/getting-started/manual-setup) for hand-authored calls
-- [Calls](/core-concepts/calls) for the shared call model
 - [Call Family and Identity](/core-concepts/call-family-and-identity) for families, keys, and invalidation
-- [Using Callsheet with React Query](/guides/react-query) for shared defaults and overrides

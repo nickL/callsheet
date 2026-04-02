@@ -1,0 +1,248 @@
+---
+title: Using Callsheet with SWR
+description: Using shared defaults, local overrides, and invalidations with the SWR adapter.
+---
+
+## Setting up Callsheet SWR
+
+Callsheet's SWR adapter gives your app one shared request layer. You define the function that runs requests once, attach it once at the root, and then Callsheet queries, mutations, and preloads all use that same setup.
+
+### 1. Define `execute`
+
+`execute` is the function that actually runs a Callsheet call. In SWR, this plays roughly the role your fetcher would play, but it receives your Callsheet context instead of just a key.
+
+```ts
+const execute = async ({ call, input }) => {
+  // run the request here
+};
+```
+
+### 2. Create the adapter
+
+```ts
+import { createSWRAdapter } from '@callsheet/swr';
+
+const adapter = createSWRAdapter({ execute });
+```
+
+### 3. Attach it through `SWRConfig`
+
+```tsx title="src/App.tsx"
+import { SWRConfig } from 'swr';
+import { createSWRAdapter, withSWRConfig } from '@callsheet/swr';
+
+const adapter = createSWRAdapter({
+  execute,
+});
+
+<SWRConfig value={withSWRConfig({}, adapter)}>
+  <App />
+</SWRConfig>;
+```
+
+If you also want to define SWR defaults at the root, pass them in the same config object:
+
+```tsx
+<SWRConfig
+  value={withSWRConfig(
+    {
+      dedupingInterval: 5000,
+      revalidateOnFocus: false,
+    },
+    adapter,
+  )}
+>
+  <App />
+</SWRConfig>
+```
+
+You only need to do this once at the root of your Callsheet SWR tree. After that setup is in place, components can use Callsheet's SWR hooks directly.
+
+## Applying shared behaviors via call definitions
+
+When using SWR, Callsheet lets you define shared behavior once on the call definition instead of repeating it in every component.
+
+Here's how you would do that for an SWR call:
+
+```ts title="src/calls.ts"
+import { defineCalls, query, mutation } from '@callsheet/swr';
+
+export const calls = defineCalls({
+  films: {
+    byId: query(FilmByIdDocument, {
+      family: ['films', 'detail'],
+      key: ({ input }) => [input.id],
+      revalidateOnFocus: false,
+    }),
+  },
+});
+```
+
+For this `films.byId` call, `revalidateOnFocus: false` applies anywhere `calls.films.byId` is used.
+
+Shared behaviors are a good fit for SWR options like:
+
+- `revalidateOnFocus`
+- `revalidateOnReconnect`
+- `dedupingInterval`
+- `errorRetryCount`
+
+They describe how the app should generally behave wherever the call is used.
+
+The `family` option identifies the related data a call belongs to. Callsheet uses it to group related calls, build cache identity, and drive invalidation. For more information on call families, read [Call Family and Identity](../core-concepts/call-family-and-identity).
+
+## Local / component-level overrides
+
+In your components, you can still pass local SWR options. These merge with the shared defaults, and local values take precedence:
+
+```ts title="src/FilmPage.tsx"
+import { useQuery } from '@callsheet/swr';
+
+const { data: film } = useQuery(calls.films.byId, {
+  input: { id: 'wall-e' },
+  revalidateOnFocus: true,
+  keepPreviousData: true,
+});
+```
+
+In this example:
+
+- `revalidateOnFocus: true` overrides the shared default
+- `keepPreviousData` stays local because it shapes how this component handles transitions
+
+This is the split Callsheet helps make clearer:
+
+- shared operation-level behavior lives on the call
+- usage-specific composition stays with the component
+
+For example, options like `fallbackData`, `revalidateOnMount`, and `keepPreviousData` remain component-level where they belong. They describe how one component needs to use a call, not how a call should behave everywhere.
+
+Local mutation callbacks like `onSuccess` usually belong here too. They often drive behavior that is specific to one usage after a call completes, like showing a toast, closing a dialog, or navigating.
+
+## Conditional queries with `enabled`
+
+When a query should not run until some condition is met, use the `enabled` option:
+
+```ts
+const { data: film } = useQuery(calls.films.byId, {
+  enabled: !!filmId,
+  input: { id: filmId },
+});
+```
+
+When `enabled` is `false`, the query key and fetcher are both set to `null`. This keeps the query fully inactive, even if SWR middleware in the tree would normally provide a key or fetcher.
+
+## Applying shared invalidation
+
+Mutations often need shared behavior too, especially around invalidation.
+
+For example, if a mutation should always refresh related data after success, that rule should be applied when the mutation is defined, instead of being repeated in every local `onSuccess` handler.
+
+When defining a mutation in Callsheet, the `invalidates` option lets you declare the families that should be invalidated after a mutation completes:
+
+```ts title="src/calls.ts"
+export const calls = defineCalls({
+  films: {
+    list: query(FilmsDocument, {
+      family: ['films', 'list'],
+    }),
+    byId: query(FilmByIdDocument, {
+      family: ['films', 'detail'],
+    }),
+    update: mutation(UpdateFilmDocument, {
+      invalidates: [
+        ['films', 'list'],
+        ['films', 'detail'],
+      ],
+    }),
+  },
+});
+```
+
+In this example, when `films.update` completes, it revalidates all cached entries in the `films.list` and `films.detail` families. This happens automatically through Callsheet's `useMutation`:
+
+```ts title="src/EditFilmPage.tsx"
+import { useMutation } from '@callsheet/swr';
+
+const { trigger } = useMutation(calls.films.update, {
+  onSuccess: () => {
+    // component-level callback, e.g. close a dialog
+  },
+});
+```
+
+The `invalidates` option targets families, not cache keys. That means invalidation is based on the families you define once, instead of a separate set of keys to keep in sync.
+
+You can do much more with invalidation for call families, including only invalidating specific families based on the mutation result. For more advanced usage, read the guide on [Call Family and Identity](../core-concepts/call-family-and-identity).
+
+## Nested `SWRConfig` boundaries
+
+Once your root setup is in place, you usually do not need `withSWRConfig(...)` again.
+
+Use it again only when you introduce another `SWRConfig` lower in the tree and want to preserve the Callsheet adapter while changing SWR settings for that subtree.
+
+```tsx
+<SWRConfig
+  value={withSWRConfig(() => ({
+    errorRetryCount: 0,
+  }))}
+>
+  <ErrorBoundary />
+</SWRConfig>
+```
+
+The functional form inherits the existing Callsheet adapter from the parent config and merges in only the SWR overrides you return.
+
+## SWR middleware
+
+Normal SWR middleware still works with Callsheet. Middleware that reads the key, adds logging, or extends behavior without changing the key or fetcher will work as expected.
+
+If middleware rewrites the SWR query key, Callsheet logs a warning in development. The request still runs, but Callsheet key matching for families, identity, and invalidation may not apply to the rewritten key.
+
+If middleware takes over both the key and the fetcher, it is effectively bypassing your shared call surface. Your requests still fire as normal, but Callsheet's shared identity and invalidation will no longer apply to that request.
+
+### Execute middleware
+
+When you need execution-level behavior that needs access to your Callsheet context, such as logging, auth headers, metrics, or retries, use Callsheet's execute middleware:
+
+```ts
+import { createSWRAdapter } from '@callsheet/swr';
+import type { ExecuteCallMiddleware } from '@callsheet/swr';
+
+const withLogging: ExecuteCallMiddleware = async (context, next) => {
+  console.log('executing', context.call.family);
+  const result = await next();
+  console.log('done', context.call.family);
+  return result;
+};
+
+const adapter = createSWRAdapter({
+  execute: myExecuteFn,
+  middleware: [withLogging],
+});
+```
+
+Execute middleware runs inside Callsheet's execution layer and receives the call, input, key, and SWR config. Use this when a behavior needs to know what Callsheet call is being made, rather than just intercepting an SWR request.
+
+## Preloading with `usePreload`
+
+`usePreload` returns a function you can call to preload a query's data into the SWR cache before a component mounts:
+
+```ts
+import { usePreload } from '@callsheet/swr';
+
+const preloadFilm = usePreload(calls.films.byId);
+
+// Later, e.g. on hover or route prefetch
+preloadFilm({ id: 'wall-e' });
+```
+
+Preloaded data is written to the global SWR cache by serialized key. This means the data is available to any component that later calls `useQuery` with the same call and input.
+
+Preload is client-side only. It is not a server-side pre-initialization mechanism.
+
+## Rule of thumb[!toc]
+
+If a behavior should apply anywhere a call is used, it probably belongs on the call definition.
+
+If a behavior is tied to one specific component or a callback that is meant to sequence UI, keep it local.

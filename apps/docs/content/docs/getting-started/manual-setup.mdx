@@ -1,24 +1,43 @@
 ---
 title: Manual Setup
-description: Define calls by hand, without code generation.
+description: Defining your shared calls by hand, without code generation.
 ---
 
-Callsheet works best with code generation, but you can still define calls manully. Use this guide to learn how to add GraphQL documents and typed REST sources to Callsheet.
+Use this guide to learn how to manually add GraphQL documents and typed REST sources to Callsheet.
 
 ## GraphQL
 
 If you have typed GraphQL documents, just wrap them with `defineCalls`:
 
-```ts title="src/calls.ts"
-import { defineCalls, query } from '@callsheet/react-query';
-import { FilmByIdDocument } from './graphql/film-by-id';
+<Tabs items={['React Query', 'SWR']} groupId="adapter" persist>
+  <Tab value="React Query">
+    ```ts title="src/calls.ts"
+    import { defineCalls, query } from '@callsheet/react-query';
+    import { FilmByIdDocument } from './graphql/film-by-id';
 
-export const calls = defineCalls({
-  films: {
-    byId: query(FilmByIdDocument),
-  },
-});
-```
+    export const calls = defineCalls({
+      films: {
+        byId: query(FilmByIdDocument),
+      },
+    });
+    ```
+
+  </Tab>
+
+  <Tab value="SWR">
+    ```ts title="src/calls.ts"
+    import { defineCalls, query } from '@callsheet/swr';
+    import { FilmByIdDocument } from './graphql/film-by-id';
+
+    export const calls = defineCalls({
+      films: {
+        byId: query(FilmByIdDocument),
+      },
+    });
+    ```
+
+  </Tab>
+</Tabs>
 
 That's really all you need. Your GraphQL documents are now part of your shared Callsheet module.
 
@@ -26,56 +45,103 @@ That's really all you need. Your GraphQL documents are now part of your shared C
 
 The same idea works for typed REST sources too:
 
-```ts title="src/calls.ts"
-import { defineCalls } from '@callsheet/react-query';
-import { query as tsRestQuery } from '@callsheet/ts-rest';
-import { contract } from './rest/contract';
+<Tabs items={['React Query', 'SWR']} groupId="adapter" persist>
+  <Tab value="React Query">
+    ```ts title="src/calls.ts"
+    import { defineCalls } from '@callsheet/react-query';
+    import { query as tsRestQuery } from '@callsheet/ts-rest';
+    import { contract } from './rest/contract';
 
-export const calls = defineCalls({
-  rest: {
-    films: {
-      byId: tsRestQuery(contract.films.byId),
-    },
-  },
-});
-```
+    export const calls = defineCalls({
+      rest: {
+        films: {
+          byId: tsRestQuery(contract.films.byId),
+        },
+      },
+    });
+    ```
+
+  </Tab>
+
+  <Tab value="SWR">
+    ```ts title="src/calls.ts"
+    import { defineCalls } from '@callsheet/swr';
+    import { query as tsRestQuery } from '@callsheet/ts-rest';
+    import { contract } from './rest/contract';
+
+    export const calls = defineCalls({
+      rest: {
+        films: {
+          byId: tsRestQuery(contract.films.byId),
+        },
+      },
+    });
+    ```
+
+  </Tab>
+</Tabs>
 
 Still the same shared call surface, the only difference is the typed source you are starting from.
 
-## Use calls in React Query
+## Use your calls
 
-Once defined, use those calls through the React Query APIs you already know:
+Once defined, use those calls through your adapter:
 
-```ts title="src/FilmPage.tsx"
-import { queryOptions } from '@callsheet/react-query';
+<Tabs items={['React Query', 'SWR']} groupId="adapter" persist>
+  <Tab value="React Query">
+    ```ts title="src/FilmPage.tsx"
+    import { queryOptions, useQuery } from '@callsheet/react-query';
 
-const film = useQuery(
-  queryOptions(calls.films.byId, {
-    input: { id: 'wall-e' },
-    select: (data) => data.film,
-  }),
-);
+    const film = useQuery(
+      queryOptions(calls.films.byId, {
+        input: { id: 'wall-e' },
+        select: (data) => data.film,
+      }),
+    );
 
-// Same idea for typed REST sources
-const filmFromRest = useQuery(
-  queryOptions(calls.rest.films.byId, {
-    input: {
-      params: {
-        id: 'soul',
+    // Same idea for typed REST sources
+    const filmFromRest = useQuery(
+      queryOptions(calls.rest.films.byId, {
+        input: {
+          params: {
+            id: 'soul',
+          },
+        },
+        select: (data) => data.film,
+      }),
+    );
+    ```
+
+  </Tab>
+
+  <Tab value="SWR">
+    ```ts title="src/FilmPage.tsx"
+    import { useQuery } from '@callsheet/swr';
+
+    const { data: film } = useQuery(calls.films.byId, {
+      input: { id: 'wall-e' },
+    });
+
+    // Same idea for typed REST sources
+    const { data: filmFromRest } = useQuery(calls.rest.films.byId, {
+      input: {
+        params: {
+          id: 'soul',
+        },
       },
-    },
-    select: (data) => data.film,
-  }),
-);
-```
+    });
+    ```
 
-This is the benefit of Callsheet: instead of consuming sources from across your app, you start to gather them into one shared call surface.
+  </Tab>
+</Tabs>
 
-To learn more about the shared call surface, read [Calls](/core-concepts/calls). If you want to add shared defaults and invalidation, read [Using Callsheet with React Query](/guides/react-query).
+That's the benefit of Callsheet: instead of consuming sources from across your app, you gather them into one shared call surface.
+
+To learn more about the shared call surface, read [Calls](/core-concepts/calls). For shared defaults and invalidation, see [Using Callsheet with React Query](/guides/react-query) or [Using Callsheet with SWR](/guides/swr).
 
 ## When Manual Setup is a good fit
 
-Start with manual setup when you want to try Callsheet without adding generation, or when you want to roll it out gradually. Generated calls are usually the better long term path, but manual setup is an easy way to evaluate Callsheet with your existing typed sources.
+Start with manual setup when you want to try Callsheet without adding generation, or when you want to roll it out gradually. Generated calls have the same shape, so you can move to code generation later without changing how your components use calls.
 
 ## Related Docs
 

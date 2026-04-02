@@ -20,6 +20,7 @@ export default defineConfig({
     ],
   },
   output: {
+    adapter: 'react-query',
     file: './src/generated/calls.ts',
   },
   overrides: [
@@ -87,17 +88,31 @@ Config for the generated calls module.
 
 ```ts
 output: {
+  adapter: 'react-query',
   file: './src/generated/calls.ts',
   exportName: 'calls',
-  importFrom: '@callsheet/react-query',
 },
 ```
 
-| Field        | Required | Description                                                                                        |
-| ------------ | -------- | -------------------------------------------------------------------------------------------------- |
-| `file`       | Yes      | Output file path for the generated module                                                          |
-| `exportName` | No       | Name of the exported calls object. Defaults to `calls`                                             |
-| `importFrom` | No       | Package the generated module imports Callsheet builders from. Defaults to `@callsheet/react-query` |
+| Field        | Required | Description                                                                            |
+| ------------ | -------- | -------------------------------------------------------------------------------------- |
+| `file`       | Yes      | Output file path for the generated module                                              |
+| `adapter`    | No       | Adapter target for generated imports. Use `'react-query'` or `'swr'`                   |
+| `exportName` | No       | Name of the exported calls object. Defaults to `calls`                                 |
+| `importFrom` | No       | Advanced override for the package the generated module imports Callsheet builders from |
+
+Set exactly one of `adapter` or `importFrom`.
+
+Use `adapter` for the normal generated workflow:
+
+```ts
+output: {
+  file: './src/generated/calls.ts',
+  adapter: 'swr',
+},
+```
+
+Use `importFrom` only when you need a custom or non-standard builder import target.
 
 ## overrides
 

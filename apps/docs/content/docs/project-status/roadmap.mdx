@@ -3,7 +3,7 @@ title: Roadmap
 description: Current support and what's coming next.
 ---
 
-## Supported
+## Supported Today
 
 **Core call model**
 
@@ -11,7 +11,11 @@ description: Current support and what's coming next.
 
 **React Query adapter**
 
-`queryOptions`, `useQuery`, `useMutation`, `createReactQueryAdapter`, and `CallsheetProvider`. Built against React Query v5.
+`queryOptions`, `useQuery`, `useMutation`, `createReactQueryAdapter`, and `CallsheetProvider`. Current support for React Query 5.x
+
+**SWR adapter**
+
+`useQuery`, `useMutation`, `usePreload`, `withSWRConfig`, and execute middleware. Current support for SWR 2.x
 
 **Generated workflows**
 
@@ -27,17 +31,16 @@ GraphQL, `ts-rest`, and manual calls can all live in one call tree.
 
 ## Not Supported Yet
 
-- **Infinite queries** are not part of the current React Query adapter
-- **GraphQL subscriptions** are not supported
+- **Infinite queries**
+- **GraphQL subscriptions**
 
-## In Progress
+## Current Focus
 
-- Infinite query support for the React Query adapter
-- Hardening generated workflows for GraphQL and `ts-rest`
-- Exploring additional adapter support, starting with `swr`, `urql`, and Apollo
-- Improving docs
+- Infinite Query support
+- Improving docs and adoption paths
 
 ## Later
 
+- Broader adapter support
 - Deeper codegen and CLI ergonomics
-- Additional Framework support (Vue, Svelte, Preact)
+- Additional framework support (Vue, Svelte, Preact, Solid)

@@ -1,11 +1,13 @@
 ---
 title: Installation
-description: Install the packages you need for your setup.
+description: Pick an adapter to get started, then add packages for code generation or ts-rest as needed.
 ---
 
-## Installation for React Query
+## Choose an adapter
 
-Callsheet currently supports React Query v5. To get started, install **@callsheet/react-query**:
+Install the adapter package for the data-fetching library you use.
+
+### React Query
 
 <Tabs items={['pnpm', 'npm', 'yarn']} groupId="package-manager" persist>
   <Tab value="pnpm">
@@ -14,13 +16,10 @@ Callsheet currently supports React Query v5. To get started, install **@callshee
     ```
   </Tab>
 
-  <Tab value="npm">
-
-    ```sh
-    npm install @callsheet/react-query @tanstack/react-query
-    ```
-
-  </Tab>
+{/* prettier-ignore */}
+<Tab value="npm">
+  ```sh npm install @callsheet/react-query @tanstack/react-query ```
+</Tab>
 
   <Tab value="yarn">
     ```sh
@@ -29,9 +28,30 @@ Callsheet currently supports React Query v5. To get started, install **@callshee
   </Tab>
 </Tabs>
 
-## Adding Code Generation
+### SWR
 
-If you use code generation, Callsheet can automatically build from your generated typed requests. Install `@callsheet/codegen` to do so:
+<Tabs items={['pnpm', 'npm', 'yarn']} groupId="package-manager" persist>
+  <Tab value="pnpm">
+    ```sh
+    pnpm add @callsheet/swr swr
+    ```
+  </Tab>
+
+{/* prettier-ignore */}
+<Tab value="npm">```sh npm install @callsheet/swr swr ```</Tab>
+
+  <Tab value="yarn">
+    ```sh
+    yarn add @callsheet/swr swr
+    ```
+  </Tab>
+</Tabs>
+
+The adapter package includes everything you need to define and use calls.
+
+## Add code generation (optional)
+
+If you want Callsheet to generate calls from your existing typed sources, add the codegen package:
 
 <Tabs items={['pnpm', 'npm', 'yarn']} groupId="package-manager" persist>
   <Tab value="pnpm">
@@ -40,13 +60,8 @@ If you use code generation, Callsheet can automatically build from your generate
     ```
   </Tab>
 
-  <Tab value="npm">
-
-    ```sh
-    npm install -D @callsheet/codegen
-    ```
-
-  </Tab>
+{/* prettier-ignore */}
+<Tab value="npm">```sh npm install -D @callsheet/codegen ```</Tab>
 
   <Tab value="yarn">
     ```sh
@@ -55,19 +70,15 @@ If you use code generation, Callsheet can automatically build from your generate
   </Tab>
 </Tabs>
 
-<u>**For GraphQL**</u>
+### GraphQL
 
-For GraphQL apps it's pretty simple:
+For GraphQL apps with code-generation, Callsheet can build from GraphQL Code Generator output.
 
-1. Generate typed documents with GraphQL Code Generator
-2. Point Callsheet codegen at that output
-3. Callsheet will auto-generate a call module with all of your existing requests
+For more on GraphQL setup, read [Using Callsheet with GraphQL](/getting-started/using-callsheet-with-graphql).
 
-For more details on GraphQL codegen, read [Using Callsheet with GraphQL](/getting-started/using-callsheet-with-graphql).
+### ts-rest
 
-<u>**For ts-rest**</u>
-
-If you want Callsheet to auto-generate calls from `ts-rest` contracts, add `@ts-rest/core` in addition to `@callsheet/codegen`:
+For ts-rest apps, add `@ts-rest/core` and Callsheet will build from your existing contracts.
 
 <Tabs items={['pnpm', 'npm', 'yarn']} groupId="package-manager" persist>
   <Tab value="pnpm">
@@ -76,13 +87,8 @@ If you want Callsheet to auto-generate calls from `ts-rest` contracts, add `@ts-
     ```
   </Tab>
 
-  <Tab value="npm">
-
-    ```sh
-    npm install @ts-rest/core
-    ```
-
-  </Tab>
+{/* prettier-ignore */}
+<Tab value="npm">```sh npm install @ts-rest/core ```</Tab>
 
   <Tab value="yarn">
     ```sh
@@ -91,19 +97,38 @@ If you want Callsheet to auto-generate calls from `ts-rest` contracts, add `@ts-
   </Tab>
 </Tabs>
 
-For more on codegen for `ts-rest`, read the [TS-Rest Guide](/guides/ts-rest).
+#### Manual ts-rest calls[!toc]
+
+If you are wrapping `ts-rest` routes by hand instead of using code generation, add the `ts-rest` source package:
+
+<Tabs items={['pnpm', 'npm', 'yarn']} groupId="package-manager" persist>
+  <Tab value="pnpm">
+    ```sh
+    pnpm add @callsheet/ts-rest @ts-rest/core
+    ```
+  </Tab>
+
+{/* prettier-ignore */}
+<Tab value="npm">```sh npm install @callsheet/ts-rest @ts-rest/core ```</Tab>
+
+  <Tab value="yarn">
+    ```sh
+    yarn add @callsheet/ts-rest @ts-rest/core
+    ```
+  </Tab>
+</Tabs>
+
+For more details on `ts-rest` setup, read the [`ts-rest` guide](/guides/ts-rest).
 
 ## Callsheet Packages
 
-- `@callsheet/react-query` <br/>
-  For defining and using calls in React Query
-- `@callsheet/codegen` <br/>
-  Generates Callsheets automatically from typed sources like GraphQL Code Generator output and `ts-rest` contracts.
-- `@callsheet/ts-rest` <br/>
-  Adds the typed REST source adapter for `ts-rest`.
+- `@callsheet/react-query`: adapter for React Query apps
+- `@callsheet/swr`: adapter for SWR apps
+- `@callsheet/codegen`: automatically generate Callsheet from sources
+- `@callsheet/ts-rest`: for manual `ts-rest` integration
 
 ## Next Steps
 
-If you want the fastest end-to-end path, go to [Quickstart](/getting-started/quickstart).
+If you're ready to get started with Callsheet, go to [Quickstart](/getting-started/quickstart).
 
 If you want a deeper package breakdown, go to [Packages and Imports](/reference/packages-and-imports).

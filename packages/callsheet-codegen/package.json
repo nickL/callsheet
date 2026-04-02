@@ -1,7 +1,7 @@
 {
   "name": "@callsheet/codegen",
   "version": "0.1.0",
-  "description": "Generate Callsheet modules from typed GraphQL and ts-rest sources.",
+  "description": "Generate Callsheet from typed GraphQL and ts-rest sources.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nickL/callsheet.git",

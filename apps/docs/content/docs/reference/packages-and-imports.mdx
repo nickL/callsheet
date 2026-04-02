@@ -3,25 +3,9 @@ title: Packages and Imports
 description: What each Callsheet package does and when to use it.
 ---
 
-Callsheet is composable so you can use just the parts you need, and none of what you don't.
+## @callsheet/react-query
 
-## Start here
-
-For most React Query apps:
-
-- install `@callsheet/react-query`
-- add `@callsheet/codegen` if you want to generate a `calls` module from typed sources
-- add `@callsheet/ts-rest` only if you are manually wrapping `ts-rest` routes
-
----
-
-## Package Reference
-
-### @callsheet/react-query
-
-This is the main package for React Query apps. It provides everything you need to define calls and use them in components.
-
-**Install as a runtime dependency.**
+The main package for React Query apps. It provides everything you need to define calls and use them in components.
 
 ```ts
 import {
@@ -33,13 +17,29 @@ import {
 } from '@callsheet/react-query';
 ```
 
-It's a thin wrapper around React Query that helps Callsheet organize calls. It includes call builders (`query`, `mutation`), React Query helpers (`queryOptions`, `useMutation`), and the adapter that connects Callsheet.
+Includes call builders (`query`, `mutation`), React Query helpers (`queryOptions`, `useMutation`), and the adapter that connects Callsheet to React Query.
 
-### @callsheet/codegen
+## @callsheet/swr
 
-Callsheet build-time package for generating a `calls` module from typed sources like GraphQL documents and ts-rest contracts.
+The main package for SWR apps. It provides everything you need to define calls and use them in SWR components.
 
-**Install as a dev dependency.** You don't need to import this package in your app components.
+```ts
+import {
+  defineCalls,
+  query,
+  mutation,
+  useQuery,
+  useMutation,
+} from '@callsheet/swr';
+```
+
+Includes call builders (`query`, `mutation`), SWR hooks (`useQuery`, `useMutation`, `usePreload`), and the adapter that connects Callsheet to SWR.
+
+## @callsheet/codegen
+
+Build-time package for generating a `calls` module from typed sources like GraphQL documents and `ts-rest` contracts.
+
+**Install as a dev dependency.** You do not import from this package in your app components.
 
 ```ts title="callsheet.config.ts"
 import { defineConfig } from '@callsheet/codegen';
@@ -48,25 +48,36 @@ export default defineConfig({
   sources: {
     /* ... */
   },
-  output: { file: './src/generated/calls.ts' },
+  output: {
+    adapter: 'react-query',
+    file: './src/generated/calls.ts',
+  },
 });
 ```
 
 For the full config reference, see [Codegen Config](/reference/codegen-config).
 
-### @callsheet/ts-rest
+## @callsheet/ts-rest
 
-You need this package when you are wrapping `ts-rest` routes by hand in a `defineCalls` block.
-
-```ts title="src/calls.ts"
-import { query, mutation } from '@callsheet/ts-rest';
-```
-
-If you are using code generation to automatically build calls from a `ts-rest` contract, `@callsheet/codegen` handles the wiring for you. In that setup you do not need `@callsheet/ts-rest` unless you are also wrapping routes manually.
+Provides `query` and `mutation` wrappers for manually defining calls from `ts-rest` contract routes.
 
 **Install as a runtime dependency, only if you use `ts-rest`.**
 
-For more on the ts-rest workflow, see [Using Callsheet with ts-rest](/guides/ts-rest).
+```ts
+import { query, mutation } from '@callsheet/ts-rest';
+```
+
+Skip this package if you're using code generation to build calls from a `ts-rest` contract, `@callsheet/codegen` handles the wiring for you.
+
+You only need this package when wrapping `ts-rest` routes by hand with a `defineCalls` block.
+
+For more on the `ts-rest` workflow, see [Using Callsheet with ts-rest](/guides/ts-rest).
+
+## @callsheet/core
+
+The shared lower-level package that powers both adapters. Most app code should import from `@callsheet/react-query` or `@callsheet/swr` instead.
+
+You typically do not need to install or import from `@callsheet/core` directly.
 
 ## Related Docs
 

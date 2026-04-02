@@ -7,7 +7,7 @@ Reference for the public Callsheet APIs.
 
 ## Defining Calls
 
-These APIs come from `@callsheet/react-query` and are used to build the shared call tree.
+These APIs are available from both `@callsheet/react-query` and `@callsheet/swr`. Import them from the adapter your app uses.
 
 ### `defineCalls`
 
@@ -15,6 +15,7 @@ Creates the shared call tree. Takes a nested object of calls and returns the sam
 
 ```ts
 import { defineCalls, query, mutation } from '@callsheet/react-query';
+// or from '@callsheet/swr'
 
 export const calls = defineCalls({
   films: {
@@ -140,6 +141,118 @@ import { CallsheetProvider } from '@callsheet/react-query';
 </CallsheetProvider>;
 ```
 
+## Using Calls in SWR
+
+These APIs come from `@callsheet/swr` and are used in components or wherever you interact with SWR.
+
+### `useQuery`
+
+Callsheet's `useQuery` hook for SWR. Takes a call and optional options. Returns the standard SWR response. Requires `withSWRConfig` in the component tree.
+
+```ts
+import { useQuery } from '@callsheet/swr';
+
+const { data: film } = useQuery(calls.films.byId, {
+  input: { id: 'wall-e' },
+  keepPreviousData: true,
+});
+```
+
+The `input` field is required when the call expects input, and optional when it doesn't. Local SWR options (`fallbackData`, `revalidateOnMount`, `keepPreviousData`, etc.) can be passed alongside `input`. Use `enabled` to conditionally disable the query.
+
+### `useMutation`
+
+Callsheet's `useMutation` hook for SWR. Takes a mutation call and optional options. Handles `invalidates` automatically on success. Returns `{ trigger, ... }` matching the SWR mutation response.
+
+```ts
+import { useMutation } from '@callsheet/swr';
+
+const { trigger } = useMutation(calls.films.update, {
+  onSuccess: () => {
+    /* component-level callback */
+  },
+});
+```
+
+### `usePreload`
+
+Returns a function that preloads a query's data into the SWR cache before a component mounts. Useful for hover or route prefetch scenarios.
+
+```ts
+import { usePreload } from '@callsheet/swr';
+
+const preloadFilm = usePreload(calls.films.byId);
+preloadFilm({ id: 'wall-e' });
+```
+
+Preloaded data is written to the global SWR cache by serialized key. Preload is client-side only.
+
+### `createSWRAdapter`
+
+Creates the adapter that connects Callsheet to SWR.
+
+Options:
+
+- `execute` (required): the function that actually runs a Callsheet call
+- `middleware` (optional): [Callsheet execute middleware](#executecallmiddleware) applied around `execute`
+
+```ts
+import { createSWRAdapter } from '@callsheet/swr';
+
+const adapter = createSWRAdapter({
+  execute: async ({ call, input }) => {
+    // Your request logic here
+  },
+});
+```
+
+### `withSWRConfig`
+
+Attaches the Callsheet adapter to `SWRConfig`. Use it once at the root of your Callsheet SWR tree, then use the functional form only when you add another nested `SWRConfig` boundary and want to preserve the existing adapter.
+
+```tsx
+import { SWRConfig } from 'swr';
+import { createSWRAdapter, withSWRConfig } from '@callsheet/swr';
+
+const adapter = createSWRAdapter({
+  execute,
+});
+
+<SWRConfig value={withSWRConfig({ dedupingInterval: 5000 }, adapter)}>
+  <App />
+</SWRConfig>;
+```
+
+Once that root setup is in place, the functional form inherits the adapter from the parent config:
+
+```tsx
+<SWRConfig
+  value={withSWRConfig(() => ({
+    errorRetryCount: 0,
+  }))}
+>
+  <Settings />
+</SWRConfig>
+```
+
+### `ExecuteCallMiddleware`
+
+Callsheet's execute middleware runs inside the execution layer and has access to the full call context. Use it for logging, auth headers, metrics, or other behavior that needs to know what call is being made.
+
+```ts
+import type { ExecuteCallMiddleware } from '@callsheet/swr';
+
+const withLogging: ExecuteCallMiddleware = async (context, next) => {
+  console.log('executing', context.call.family);
+  return next();
+};
+
+const adapter = createSWRAdapter({
+  execute: myExecuteFn,
+  middleware: [withLogging],
+});
+```
+
 ## Code Generation
 
 ### `defineConfig`
@@ -153,7 +266,10 @@ export default defineConfig({
   sources: {
     /* ... */
   },
-  output: { file: './src/generated/calls.ts' },
+  output: {
+    adapter: 'react-query',
+    file: './src/generated/calls.ts',
+  },
 });
 ```
 
@@ -167,7 +283,7 @@ These APIs come from `@callsheet/ts-rest` and are used when manually wrapping ts
 
 Wrap a `ts-rest` contract route as a Callsheet call when you want to use the dedicated manual `ts-rest` wrapper package.
 
-The main `query`, `mutation`, and `call` exports in `@callsheet/react-query` also support `ts-rest` routes directly.
+The main `query`, `mutation`, and `call` exports in `@callsheet/react-query` and `@callsheet/swr` also support `ts-rest` routes directly.
 
 ```ts
 import { query, mutation, call } from '@callsheet/ts-rest';
@@ -183,6 +299,7 @@ For more on when to use these, see [Using Callsheet with ts-rest](/guides/ts-res
 
 - [Calls](/core-concepts/calls) for how the call model works
 - [Using Callsheet with React Query](/guides/react-query) for shared defaults and overrides
+- [Using Callsheet with SWR](/guides/swr) for the SWR adapter guide
 - [Packages and Imports](/reference/packages-and-imports) for package roles
 - [Codegen Config](/reference/codegen-config) for the full config reference
 - [Using Callsheet with ts-rest](/guides/ts-rest) for the ts-rest workflow

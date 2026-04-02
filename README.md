@@ -5,9 +5,9 @@
   <h1>Callsheet</h1>
 
   <p align="left">
-    React Query gives you great building blocks but it's up to you to decide how operations should be organized.
+    Data-fetching libraries give you great building blocks but it's up to you to decide how operations should be organized.
     <br/>
-    <strong> Callsheet provides one shared place for your operations, defaults, and related behaviors, built on the APIs you already use.</strong>
+    <strong>Callsheet provides one shared place for your operations, defaults, and related behaviors, built on the APIs you already use.</strong>
   </p>
 <hr/>
 </div>
@@ -22,68 +22,28 @@
 
 ## Install
 
-### With pnpm
-
-```sh
-pnpm add @callsheet/react-query @tanstack/react-query
-```
-
-### With npm
+### React Query
 
 ```sh
 npm install @callsheet/react-query @tanstack/react-query
 ```
 
+### SWR
+
+```sh
+npm install @callsheet/swr swr
+```
+
 Callsheet builds from typed operations. It can also generate calls from your existing GraphQL and typed REST sources.
 
-- Use `@callsheet/react-query` to define calls.
-- Add `@callsheet/codegen` to auto-generate calls from [GraphQL Code Generator](https://github.com/dotansimha/graphql-code-generator) output.
-- Add `@callsheet/ts-rest` for [ts-rest](https://github.com/ts-rest/ts-rest) support.
+- Add `@callsheet/codegen` to auto-generate calls from [GraphQL Code Generator](https://github.com/dotansimha/graphql-code-generator) output or [ts-rest](https://github.com/ts-rest/ts-rest) contracts.
+- Add `@callsheet/ts-rest` for manual [ts-rest](https://github.com/ts-rest/ts-rest) wrappers.
 
 ## Example
 
-Callsheet is easiest to see in code. Here is the same workflow in React Query with and without Callsheet:
+Define your calls once with shared identity and invalidation rules:
 
-**Without Callsheet**:
-
-```ts
-export const filmKeys = {
-  list: () => ['films', 'list'],
-  detail: (id: string) => ['films', 'detail', id],
-};
-
-export const featuredFilmsOptions = queryOptions({
-  queryKey: filmKeys.list(),
-  queryFn: () => filmApi.featured(),
-});
-
-export const filmByIdOptions = (id: string) =>
-  queryOptions({
-    queryKey: filmKeys.detail(id),
-    queryFn: () => filmApi.byId({ id }),
-    staleTime: 30_000,
-  });
-
-export function useUpdateFilm() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (input: { id: string; title: string }) => filmApi.update(input),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: filmKeys.list() });
-      queryClient.invalidateQueries({
-        queryKey: filmKeys.detail(variables.id),
-      });
-    },
-  });
-}
-```
-
-**With Callsheet**:
-
-`filmCalls.ts`
-
-```ts
+```ts title="src/calls.ts"
 export const calls = defineCalls({
   films: {
     featured: query({
@@ -91,7 +51,7 @@ export const calls = defineCalls({
     }),
     byId: query<{ id: string }>({
       family: ['films', 'detail'],
-      staleTime: 30_000,
+      key: ({ input }) => [input.id],
     }),
     update: mutation<{ id: string; title: string }>({
       invalidates: [
@@ -103,31 +63,37 @@ export const calls = defineCalls({
 });
 ```
 
-`FilmPage.tsx`
+Then use them through your adapter:
+
+**React Query**
 
 ```ts
-const featuredFilms = useQuery(queryOptions(calls.films.featured));
-
 const film = useQuery(queryOptions(calls.films.byId, { input: { id } }));
-
 const updateFilm = useMutation(calls.films.update);
 ```
 
-Components still use normal React Query APIs, but they now build on a shared call definition with conventions organized in one place.
+**SWR**
+
+```ts
+const { data: film } = useQuery(calls.films.byId, { input: { id } });
+const { trigger: updateFilm } = useMutation(calls.films.update);
+```
+
+Components still use normal React Query or SWR APIs, but they build on a shared call definition with conventions organized in one place.
 
 Callsheet works with any typed source: GraphQL documents, REST contracts, or calls you define by hand. The result is the same shared structure.
 
 ## Current Support
 
-- React Query: [TanStack Query](https://github.com/TanStack/query)
+- Adapters: [React Query](https://github.com/TanStack/query), [SWR](https://github.com/vercel/swr)
 - GraphQL generation: [GraphQL Code Generator](https://github.com/dotansimha/graphql-code-generator)
 - Typed REST generation: [ts-rest](https://github.com/ts-rest/ts-rest)
 - Manual integration for custom typed operations
 
 ## Roadmap
 
-- Infinite query support for the React Query adapter
-- Additional adapters, starting with `swr`, `urql`, and Apollo
+- Infinite query support
+- Additional framework and adapter support
 
 See the full roadmap: [Roadmap](https://callsheet.nlewis.dev/project-status/roadmap)
 

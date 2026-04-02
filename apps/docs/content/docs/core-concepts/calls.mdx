@@ -82,24 +82,40 @@ Instead of spreading those decisions across helpers and hooks, you can keep them
 <Callout title="Note">
   Invalidation can be static or dynamic based on the mutation input and output.
   Read more in [Using Callsheet with React
-  Query](/guides/react-query#applying-shared-invalidation) and [Call Family and
+  Query](/guides/react-query#applying-shared-invalidation), [Using Callsheet
+  with SWR](/guides/swr#applying-shared-invalidation), and [Call Family and
   Identity](/core-concepts/call-family-and-identity#call-family-invalidation).
 </Callout>
 
-## Components still use React Query [!toc]
+## Components still use your adapter [!toc]
 
 Usage in components stays familiar:
 
-```ts title="src/FilmPage.tsx"
-const film = useQuery(
-  queryOptions(calls.films.byId, {
-    input: { id: 'wall-e' },
-    select: (data) => data.film,
-    ...reactQueryOptions,
-  }),
-);
+<Tabs items={['React Query', 'SWR']} groupId="adapter" persist>
+  <Tab value="React Query">
+    ```ts title="src/FilmPage.tsx"
+    const film = useQuery(
+      queryOptions(calls.films.byId, {
+        input: { id: 'wall-e' },
+        select: (data) => data.film,
+      }),
+    );
 
-const updateFilm = useMutation(calls.films.update);
-```
+    const updateFilm = useMutation(calls.films.update);
+    ```
 
-Calls do not replace how you compose with React Query. They give React Query a cleaner model to build from.
+  </Tab>
+
+  <Tab value="SWR">
+    ```ts title="src/FilmPage.tsx"
+    const { data: film } = useQuery(calls.films.byId, {
+      input: { id: 'wall-e' },
+    });
+
+    const { trigger: updateFilm } = useMutation(calls.films.update);
+    ```
+
+  </Tab>
+</Tabs>
+
+Calls do not replace how you compose with your data-fetching library. They give it a cleaner model to build from.

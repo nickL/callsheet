@@ -43,52 +43,109 @@ export const contract = c.router({
 
 If you haven't already, install the packages you need for the generated `ts-rest` workflow:
 
-<Tabs items={['pnpm', 'npm', 'yarn']} groupId="package-manager" persist>
-  
-  <Tab value="pnpm">
-    ```sh
-    pnpm add @callsheet/react-query @ts-rest/core
-    pnpm add -D @callsheet/codegen
-    ```
+<Tabs items={['React Query', 'SWR']} groupId="adapter" persist>
+  <Tab value="React Query">
+    <Tabs items={['pnpm', 'npm', 'yarn']} groupId="package-manager" persist>
+      <Tab value="pnpm">
+        ```sh
+        pnpm add @callsheet/react-query @ts-rest/core
+        pnpm add -D @callsheet/codegen
+        ```
+      </Tab>
+
+      <Tab value="npm">
+        ```sh
+        npm install @callsheet/react-query @ts-rest/core
+        npm install -D @callsheet/codegen
+        ```
+      </Tab>
+
+      <Tab value="yarn">
+        ```sh
+        yarn add @callsheet/react-query @ts-rest/core
+        yarn add @callsheet/codegen -D
+        ```
+      </Tab>
+    </Tabs>
+
   </Tab>
 
-  <Tab value="npm">
+  <Tab value="SWR">
+    <Tabs items={['pnpm', 'npm', 'yarn']} groupId="package-manager" persist>
+      <Tab value="pnpm">
+        ```sh
+        pnpm add @callsheet/swr @ts-rest/core
+        pnpm add -D @callsheet/codegen
+        ```
+      </Tab>
 
-    ```sh
-    npm install @callsheet/react-query @ts-rest/core
-    npm install -D @callsheet/codegen
-    ```
+      <Tab value="npm">
+        ```sh
+        npm install @callsheet/swr @ts-rest/core
+        npm install -D @callsheet/codegen
+        ```
+      </Tab>
 
-  </Tab>
+      <Tab value="yarn">
+        ```sh
+        yarn add @callsheet/swr @ts-rest/core
+        yarn add @callsheet/codegen -D
+        ```
+      </Tab>
+    </Tabs>
 
-  <Tab value="yarn">
-    ```sh
-    yarn add @callsheet/react-query @ts-rest/core
-    yarn add @callsheet/codegen -D
-    ```
   </Tab>
 </Tabs>
 
 Then create a `callsheet.config.ts` at your project root:
 
-```ts title="callsheet.config.ts"
-import { defineConfig } from '@callsheet/codegen';
+<Tabs items={['React Query', 'SWR']} groupId="adapter" persist>
+  <Tab value="React Query">
+    ```ts title="callsheet.config.ts"
+    import { defineConfig } from '@callsheet/codegen';
 
-export default defineConfig({
-  sources: {
-    tsRest: [
-      {
-        importFrom: './src/rest/contract',
-        exportName: 'contract',
-        pathPrefix: ['rest'],
+    export default defineConfig({
+      sources: {
+        tsRest: [
+          {
+            importFrom: './src/rest/contract',
+            exportName: 'contract',
+            pathPrefix: ['rest'],
+          },
+        ],
       },
-    ],
-  },
-  output: {
-    file: './src/generated/calls.ts',
-  },
-});
-```
+      output: {
+        adapter: 'react-query',
+        file: './src/generated/calls.ts',
+      },
+    });
+    ```
+
+  </Tab>
+
+  <Tab value="SWR">
+    ```ts title="callsheet.config.ts"
+    import { defineConfig } from '@callsheet/codegen';
+
+    export default defineConfig({
+      sources: {
+        tsRest: [
+          {
+            importFrom: './src/rest/contract',
+            exportName: 'contract',
+            pathPrefix: ['rest'],
+          },
+        ],
+      },
+      output: {
+        adapter: 'swr',
+        file: './src/generated/calls.ts',
+      },
+    });
+    ```
+
+  </Tab>
+</Tabs>
 
 The `tsRest` source block tells Callsheet where to find your contract and how to read it:
 
@@ -124,80 +181,172 @@ Run codegen to build the call module:
 
 Callsheet reads the contract, finds each route, and infers whether it should be a `query` or `mutation` based on the route definition in your contract. The generated module looks like this:
 
-```ts title="src/generated/calls.ts"
-import { defineCalls, mutation, query } from '@callsheet/react-query';
-import { contract } from '../rest/contract';
+<Tabs items={['React Query', 'SWR']} groupId="adapter" persist>
+  <Tab value="React Query">
+    ```ts title="src/generated/calls.ts"
+    import { defineCalls, mutation, query } from '@callsheet/react-query';
+    import { contract } from '../rest/contract';
 
-export const calls = defineCalls({
-  rest: {
-    films: {
-      byId: query(contract.films.byId),
-      update: mutation(contract.films.update),
-    },
-  },
-});
-```
-
-Each route in the contract becomes a call in the generated module. The contract is still the typed source, and the generated `calls` module is the shared surface your app imports from.
-
-## Use generated calls in React Query
-
-Once generated, use the calls through the React Query APIs you already know:
-
-```ts
-import { queryOptions } from '@callsheet/react-query';
-import { calls } from './generated/calls';
-
-const film = useQuery(
-  queryOptions(calls.rest.films.byId, {
-    input: { params: { id: 'wall-e' } },
-    select: (data) => data.film,
-  }),
-);
-
-const updateFilm = useMutation(calls.rest.films.update);
-```
-
-This is the same shared call surface used throughout the rest of the Callsheet docs. The only difference here is the typed source the calls were built from. To add shared defaults or invalidation rules, read [Using Callsheet with React Query](/guides/react-query).
-
-## Without code generation
-
-If you don't want to use codegen, you can define `ts-rest` calls manually using `@callsheet/ts-rest`. In that setup, add `@callsheet/ts-rest` and wrap the routes yourself:
-
-<Tabs items={['pnpm', 'npm', 'yarn']} groupId="package-manager" persist>
-  <Tab value="pnpm">
-    ```sh
-    pnpm add @callsheet/ts-rest
-    ```
-  </Tab>
-
-  <Tab value="npm">
-
-    ```sh
-    npm install @callsheet/ts-rest
+    export const calls = defineCalls({
+      rest: {
+        films: {
+          byId: query(contract.films.byId),
+          update: mutation(contract.films.update),
+        },
+      },
+    });
     ```
 
   </Tab>
 
-  <Tab value="yarn">
-    ```sh
-    yarn add @callsheet/ts-rest
+  <Tab value="SWR">
+    ```ts title="src/generated/calls.ts"
+    import { defineCalls, mutation, query } from '@callsheet/swr';
+    import { contract } from '../rest/contract';
+
+    export const calls = defineCalls({
+      rest: {
+        films: {
+          byId: query(contract.films.byId),
+          update: mutation(contract.films.update),
+        },
+      },
+    });
     ```
+
   </Tab>
 </Tabs>
 
-```ts title="src/calls.ts"
-import { defineCalls } from '@callsheet/react-query';
-import { query, mutation } from '@callsheet/ts-rest';
-import { contract } from './rest/contract';
+Each route in the contract becomes a call in the generated module. The contract is still the typed source, and the generated `calls` module is the shared surface your app imports from.
 
-export const calls = defineCalls({
-  films: {
-    byId: query(contract.films.byId),
-    update: mutation(contract.films.update),
-  },
-});
-```
+## Use generated calls
+
+Once generated, use the calls through your adapter:
+
+<Tabs items={['React Query', 'SWR']} groupId="adapter" persist>
+  <Tab value="React Query">
+    ```ts
+    import { queryOptions, useMutation, useQuery } from '@callsheet/react-query';
+    import { calls } from './generated/calls';
+
+    const film = useQuery(
+      queryOptions(calls.rest.films.byId, {
+        input: { params: { id: 'wall-e' } },
+        select: (data) => data.film,
+      }),
+    );
+
+    const updateFilm = useMutation(calls.rest.films.update);
+    ```
+
+    To add shared defaults or invalidation rules, read [Using Callsheet with React Query](/guides/react-query).
+
+  </Tab>
+
+  <Tab value="SWR">
+    ```ts
+    import { useQuery, useMutation } from '@callsheet/swr';
+    import { calls } from './generated/calls';
+
+    const { data: film } = useQuery(calls.rest.films.byId, {
+      input: { params: { id: 'wall-e' } },
+    });
+
+    const { trigger: updateFilm } = useMutation(calls.rest.films.update);
+    ```
+
+    To add shared defaults or invalidation rules, read [Using Callsheet with SWR](/guides/swr).
+
+  </Tab>
+</Tabs>
+
+This is the same shared call surface used throughout the rest of the Callsheet docs. The only difference here is the typed source the calls were built from.
+
+## Without code generation
+
+If you don't want to use codegen, you can define `ts-rest` calls manually using `@callsheet/ts-rest`. In that setup, add the adapter package your app uses, plus `@callsheet/ts-rest`, and wrap the routes yourself:
+
+<Tabs items={['React Query', 'SWR']} groupId="adapter" persist>
+  <Tab value="React Query">
+    <Tabs items={['pnpm', 'npm', 'yarn']} groupId="package-manager" persist>
+      <Tab value="pnpm">
+        ```sh
+        pnpm add @callsheet/react-query @callsheet/ts-rest
+        ```
+      </Tab>
+
+      <Tab value="npm">
+        ```sh
+        npm install @callsheet/react-query @callsheet/ts-rest
+        ```
+      </Tab>
+
+      <Tab value="yarn">
+        ```sh
+        yarn add @callsheet/react-query @callsheet/ts-rest
+        ```
+      </Tab>
+    </Tabs>
+
+  </Tab>
+
+  <Tab value="SWR">
+    <Tabs items={['pnpm', 'npm', 'yarn']} groupId="package-manager" persist>
+      <Tab value="pnpm">
+        ```sh
+        pnpm add @callsheet/swr @callsheet/ts-rest
+        ```
+      </Tab>
+
+      <Tab value="npm">
+        ```sh
+        npm install @callsheet/swr @callsheet/ts-rest
+        ```
+      </Tab>
+
+      <Tab value="yarn">
+        ```sh
+        yarn add @callsheet/swr @callsheet/ts-rest
+        ```
+      </Tab>
+    </Tabs>
+
+  </Tab>
+</Tabs>
+
+<Tabs items={['React Query', 'SWR']} groupId="adapter" persist>
+  <Tab value="React Query">
+    ```ts title="src/calls.ts"
+    import { defineCalls } from '@callsheet/react-query';
+    import { query, mutation } from '@callsheet/ts-rest';
+    import { contract } from './rest/contract';
+
+    export const calls = defineCalls({
+      films: {
+        byId: query(contract.films.byId),
+        update: mutation(contract.films.update),
+      },
+    });
+    ```
+
+  </Tab>
+
+  <Tab value="SWR">
+    ```ts title="src/calls.ts"
+    import { defineCalls } from '@callsheet/swr';
+    import { query, mutation } from '@callsheet/ts-rest';
+    import { contract } from './rest/contract';
+
+    export const calls = defineCalls({
+      films: {
+        byId: query(contract.films.byId),
+        update: mutation(contract.films.update),
+      },
+    });
+    ```
+
+  </Tab>
+</Tabs>
 
 The result is the same shared call surface.
 
@@ -206,3 +355,4 @@ The result is the same shared call surface.
 - [Codegen Config](/reference/codegen-config) for the full config reference
 - [Manual Setup](/getting-started/manual-setup) if you want to compare the broader manual path
 - [Using Callsheet with React Query](/guides/react-query) for shared defaults, overrides, and invalidation
+- [Using Callsheet with SWR](/guides/swr) for the SWR adapter guide
