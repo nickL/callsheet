@@ -1,5 +1,5 @@
 {
-  "name": "@callsheet/example-app",
+  "name": "@callsheet/example-react-query",
   "private": true,
   "version": "0.0.0",
   "type": "module",

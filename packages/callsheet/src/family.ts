@@ -1,3 +1,7 @@
+import type { CallInputContext } from './call-context';
+
+export type { CallInputContext } from './call-context';
+
 /**
  * Family identifies the related data a call belongs to.
  * It is used for query-key grouping and invalidation.
@@ -13,10 +17,6 @@ export type Family = readonly FamilyPart[];
  */
 export type KeyPart = unknown;
 export type Key = readonly KeyPart[];
-
-export interface CallInputContext<TCallInput> {
-  input: TCallInput;
-}
 
 export interface KeyContext<TCallInput> extends CallInputContext<TCallInput> {
   family: Family;

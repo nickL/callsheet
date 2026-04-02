@@ -31,5 +31,6 @@ publish_package() {
 
 publish_package "packages/callsheet" "@callsheet/core"
 publish_package "packages/callsheet-react-query" "@callsheet/react-query"
+publish_package "packages/callsheet-swr" "@callsheet/swr"
 publish_package "packages/callsheet-ts-rest" "@callsheet/ts-rest"
 publish_package "packages/callsheet-codegen" "@callsheet/codegen"

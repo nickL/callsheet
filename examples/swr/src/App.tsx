@@ -1,12 +1,10 @@
 import {
-  CallsheetProvider,
-  createReactQueryAdapter,
-  queryOptions,
   useMutation,
   useQuery,
+  withSWRConfig,
   type ExecuteCall,
-} from '@callsheet/react-query';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+} from '@callsheet/swr';
+import { SWRConfig } from 'swr';
 
 import { calls } from './calls';
 
@@ -18,14 +16,6 @@ import type {
   RefreshFilmsMutation,
 } from './graphql/generated';
 import type { UserByIdInput, UserByIdResult } from './rest/contract';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: false,
-    },
-  },
-});
 
 type ExampleRequest =
   | {
@@ -122,58 +112,47 @@ const execute = ((request: ExampleRequest) => {
 
   throw new Error('Unknown call');
 }) as ExecuteCall;
-
-const adapter = createReactQueryAdapter({
-  execute,
-});
+const swrCache = new Map();
 
 function FeaturedFilmsSection() {
-  const featuredFilms = useQuery(
-    queryOptions(calls.films.featured, {
-      select: (data: FeaturedFilmsQuery) => data.films,
-      staleTime: 30_000,
-    }),
-  );
-  const wallE = useQuery(
-    queryOptions(calls.films.byId, {
-      input: { id: 'wall-e' },
-      select: (data: FilmByIdQuery) => data.film,
-    }),
-  );
-  const featuredCount = useQuery(
-    queryOptions(calls.sdk.featuredCount, {
-      select: (data) => data.count,
-    }),
-  );
-  const user = useQuery(
-    queryOptions(calls.rest.users.byId, {
-      input: {
-        params: {
-          id: 'user_1',
-        },
+  const featuredFilms = useQuery(calls.films.featured);
+  const wallE = useQuery(calls.films.byId, {
+    input: { id: 'wall-e' },
+  });
+  const featuredCount = useQuery(calls.sdk.featuredCount);
+  const user = useQuery(calls.rest.users.byId, {
+    input: {
+      params: {
+        id: 'user_1',
       },
-      select: (data) => data.user,
-    }),
-  );
+    },
+  });
   const refresh = useMutation(calls.films.refresh);
 
-  if (
-    featuredFilms.isPending ||
-    wallE.isPending ||
-    featuredCount.isPending ||
-    user.isPending
-  ) {
+  const isLoadingExampleData =
+    featuredFilms.isLoading ||
+    wallE.isLoading ||
+    featuredCount.isLoading ||
+    user.isLoading;
+
+  if (isLoadingExampleData) {
     return <p>Loading example data...</p>;
   }
 
-  if (
-    featuredFilms.isError ||
-    wallE.isError ||
-    featuredCount.isError ||
-    user.isError
-  ) {
+  const hasExampleDataError =
+    featuredFilms.error !== undefined ||
+    wallE.error !== undefined ||
+    featuredCount.error !== undefined ||
+    user.error !== undefined;
+
+  if (hasExampleDataError) {
     return <p>Example data failed to load.</p>;
   }
+
+  const featuredFilmsData = featuredFilms.data!;
+  const wallEData = wallE.data!;
+  const featuredCountData = featuredCount.data!;
+  const userData = user.data!;
 
   return (
     <>
@@ -185,19 +164,19 @@ function FeaturedFilmsSection() {
       <p data-testid="rest-call-family">
         {calls.rest.users.byId.family.join('.')}
       </p>
-      <p data-testid="featured-count">{featuredCount.data}</p>
-      <p data-testid="user-name">{user.data.name}</p>
-      <p data-testid="selected-film">{wallE.data.title}</p>
+      <p data-testid="featured-count">{featuredCountData.count}</p>
+      <p data-testid="user-name">{userData.user.name}</p>
+      <p data-testid="selected-film">{wallEData.film.title}</p>
       <button
         onClick={() => {
-          refresh.mutate(undefined);
+          void refresh.trigger();
         }}
         type="button"
       >
         Refresh featured films
       </button>
       <ul>
-        {featuredFilms.data.map((filmTitle: string) => (
+        {featuredFilmsData.films.map((filmTitle: string) => (
           <li key={filmTitle}>{filmTitle}</li>
         ))}
       </ul>
@@ -207,13 +186,21 @@ function FeaturedFilmsSection() {
 
 export function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <CallsheetProvider adapter={adapter}>
-        <main>
-          <h1>Callsheet</h1>
-          <FeaturedFilmsSection />
-        </main>
-      </CallsheetProvider>
-    </QueryClientProvider>
+    <SWRConfig
+      value={withSWRConfig(
+        {
+          provider: () => swrCache,
+          revalidateOnFocus: false,
+        },
+        {
+          execute,
+        },
+      )}
+    >
+      <main>
+        <h1>Callsheet SWR</h1>
+        <FeaturedFilmsSection />
+      </main>
+    </SWRConfig>
   );
 }

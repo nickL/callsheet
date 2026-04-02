@@ -1,0 +1,55 @@
+{
+  "name": "@callsheet/swr",
+  "version": "0.0.0",
+  "description": "One shared definition for your SWR calls.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nickL/callsheet.git",
+    "directory": "packages/callsheet-swr"
+  },
+  "license": "MIT",
+  "keywords": [
+    "callsheet",
+    "swr",
+    "typescript"
+  ],
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:types": "tsd --typings dist/index.d.ts --files test-d/**/*.test-d.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@callsheet/core": "workspace:*"
+  },
+  "devDependencies": {
+    "react": "^19.2.4",
+    "swr": "^2.4.1"
+  },
+  "peerDependencies": {
+    "react": "^18 || ^19",
+    "swr": "^2.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

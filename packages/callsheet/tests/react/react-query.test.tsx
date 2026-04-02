@@ -148,7 +148,7 @@ const staticKeyCalls = defineCalls({
   },
 });
 
-const functionInvalidationCalls = defineCalls({
+const callbackInvalidationCalls = defineCalls({
   films: {
     rename: call(updateFilmSource, {
       invalidates: ({ input, output }) =>
@@ -182,7 +182,7 @@ const mutationDefaultCalls = defineCalls({
 });
 
 const unregisteredFeaturedCall = call(featuredFilmsSource);
-const updateWithoutInvalidationCall = call(updateFilmSource);
+const mutationWithoutInvalidationCall = call(updateFilmSource);
 
 function createExecuteSpy() {
   interface FilmByIdContext {
@@ -251,9 +251,14 @@ function createExecuteSpy() {
   };
 }
 
+interface ExecuteState {
+  execute: ExecuteCall;
+  executeSpy: ReturnType<typeof vi.fn>;
+}
+
 function createWrapper(
   queryClient = createTestQueryClient(),
-  executeState = createExecuteSpy(),
+  executeState: ExecuteState = createExecuteSpy(),
 ) {
   const adapter = createReactQueryAdapter({
     execute: executeState.execute,
@@ -385,23 +390,25 @@ describe('react-query adapter', () => {
   });
 
   it('treats GraphQL empty variables as no-input for mutation options', async () => {
-    const executeSpy = vi.fn();
-    const execute: ExecuteCall = (context) => {
-      executeSpy(context);
-
-      return Promise.resolve({
-        refreshed: true,
-      } as CallOutputOf<typeof context.call>);
-    };
-    const adapter = createReactQueryAdapter({
-      execute,
-    });
-    const queryClient = createTestQueryClient();
-    const Wrapper = ({ children }: PropsWithChildren) => (
-      <QueryClientProvider client={queryClient}>
-        <CallsheetProvider adapter={adapter}>{children}</CallsheetProvider>
-      </QueryClientProvider>
+    const executeSpy = vi.fn(
+      (
+        _context: ExecuteCallContext<
+          typeof generatedGraphqlCalls.films.refresh
+        >,
+      ) =>
+        Promise.resolve({
+          refreshed: true,
+        } as CallOutputOf<typeof generatedGraphqlCalls.films.refresh>),
     );
+    const { Wrapper } = createWrapper(undefined, {
+      execute: ((context) =>
+        executeSpy(
+          context as unknown as ExecuteCallContext<
+            typeof generatedGraphqlCalls.films.refresh
+          >,
+        )) as ExecuteCall,
+      executeSpy,
+    });
     const { result } = renderHook(
       () => useMutation(generatedGraphqlCalls.films.refresh),
       {
@@ -571,7 +578,7 @@ describe('react-query adapter', () => {
     const { result } = renderHook(
       () =>
         useTanstackMutation(
-          adapter.mutationOptions(functionInvalidationCalls.films.rename),
+          adapter.mutationOptions(callbackInvalidationCalls.films.rename),
         ),
       {
         wrapper: Wrapper,
@@ -598,7 +605,7 @@ describe('react-query adapter', () => {
     const { result } = renderHook(
       () =>
         useTanstackMutation(
-          adapter.mutationOptions(updateWithoutInvalidationCall),
+          adapter.mutationOptions(mutationWithoutInvalidationCall),
         ),
       {
         wrapper: Wrapper,

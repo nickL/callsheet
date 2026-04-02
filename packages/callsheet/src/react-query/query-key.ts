@@ -1,53 +1,22 @@
+import {
+  type CallLike,
+  callsheetKeyRoot,
+  callPathSegment,
+  familyEquals,
+  inputSegment,
+  keyOverrideSegment,
+  resolveCallFamily,
+  resolveKeyOverride,
+} from '../call-identity';
 import { getCallMetadata } from '../define-calls';
 
-import type { CallTypeTag } from '../call-type-tag';
 import type { CallInputOf } from '../call-types';
-import type { Family, Key, KeyConfig } from '../family';
+import type { Family, KeyConfig } from '../family';
 import type { QueryKey } from '@tanstack/react-query';
 
-const callSegmentKey = 'call';
-const inputSegmentKey = 'input';
-const keySegmentKey = 'key';
-type CallLike = CallTypeTag<unknown, unknown>;
-
-export const defaultQueryKeyPrefix = ['callsheet'] as const satisfies QueryKey;
-
-function compareFamily(a: Family, b: Family): boolean {
-  return (
-    a.length === b.length && a.every((segment, index) => segment === b[index])
-  );
-}
-
-export function resolveCallFamily<TCall extends CallLike>(
-  call: TCall & {
-    family?: Family;
-  },
-): Family {
-  if (call.family) {
-    return call.family;
-  }
-
-  throw new Error(
-    'Unable to resolve family for this call. Define `family` on the call or register the call with defineCalls(...).',
-  );
-}
-
-function resolveKeyOverride<TCall extends CallLike>(
-  call: TCall & {
-    key?: KeyConfig<CallInputOf<TCall>>;
-    family?: Family;
-  },
-  input: CallInputOf<TCall>,
-): Key | undefined {
-  if (typeof call.key === 'function') {
-    return call.key({
-      family: resolveCallFamily(call),
-      input,
-    });
-  }
-
-  return call.key;
-}
+export const defaultQueryKeyPrefix = [
+  callsheetKeyRoot,
+] as const satisfies QueryKey;
 
 export function buildQueryKey<TCall extends CallLike>(
   prefix: QueryKey,
@@ -64,18 +33,18 @@ export function buildQueryKey<TCall extends CallLike>(
   const queryKeySegments: unknown[] = [...prefix, ...family];
 
   if (keyOverride) {
-    return [...queryKeySegments, { [keySegmentKey]: keyOverride }];
+    return [...queryKeySegments, { [keyOverrideSegment]: keyOverride }];
   }
 
-  if (metadata && !compareFamily(metadata.path, family)) {
-    queryKeySegments.push({ [callSegmentKey]: metadata.path });
+  if (metadata && !familyEquals(metadata.path, family)) {
+    queryKeySegments.push({ [callPathSegment]: metadata.path });
   }
 
   if (!includeInputSegment) {
     return queryKeySegments;
   }
 
-  return [...queryKeySegments, { [inputSegmentKey]: input }];
+  return [...queryKeySegments, { [inputSegment]: input }];
 }
 
 export function buildInvalidationKey(

@@ -12,8 +12,8 @@ import tseslint from 'typescript-eslint';
 const rootDir = fileURLToPath(new URL('.', import.meta.url));
 const tsSourceFiles = ['**/*.{ts,tsx,mts,cts}'];
 const jsSourceFiles = ['**/*.{js,mjs,cjs}'];
-const appFiles = ['apps/example-app/**/*.{ts,tsx}'];
-const reactTestFiles = ['apps/example-app/**/*.test.{ts,tsx}'];
+const appFiles = ['examples/*/**/*.{ts,tsx}'];
+const reactTestFiles = ['examples/*/**/*.test.{ts,tsx}'];
 const testFiles = [
   '**/*.test.{ts,tsx}',
   '**/tests/**/*.{ts,tsx}',
@@ -22,6 +22,7 @@ const testFiles = [
 const nodeFiles = [
   '**/*.config.{ts,mts,cts,mjs,cjs,js}',
   'apps/*/scripts/**/*.{ts,mts,cts,mjs,cjs,js}',
+  'examples/*/scripts/**/*.{ts,mts,cts,mjs,cjs,js}',
   'packages/*/scripts/**/*.{ts,mts,cts,mjs,cjs,js}',
 ];
 
@@ -36,8 +37,8 @@ export default tseslint.config(
       '**/out/**',
       'apps/docs/.source/**',
       'apps/docs/next-env.d.ts',
-      'apps/example-app/src/generated/**',
-      'apps/example-app/src/graphql/generated.ts',
+      'examples/*/src/generated/**',
+      'examples/*/src/graphql/generated.ts',
       '**/tests/fixtures/**',
       '**/tests/.tmp/**',
       '**/.vite/**',

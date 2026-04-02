@@ -10,8 +10,10 @@
       "@callsheet/core/react-query": [
         "packages/callsheet/src/react-query/index.ts"
       ],
+      "@callsheet/core/swr": ["packages/callsheet/src/swr/index.ts"],
       "@callsheet/core/ts-rest": ["packages/callsheet/src/ts-rest/index.ts"],
       "@callsheet/react-query": ["packages/callsheet-react-query/src/index.ts"],
+      "@callsheet/swr": ["packages/callsheet-swr/src/index.ts"],
       "@callsheet/ts-rest": ["packages/callsheet-ts-rest/src/index.ts"],
       "@callsheet/codegen": ["packages/callsheet-codegen/src/index.ts"]
     },

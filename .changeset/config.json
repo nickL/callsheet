@@ -7,7 +7,8 @@
       "@callsheet/core",
       "@callsheet/react-query",
       "@callsheet/ts-rest",
-      "@callsheet/codegen"
+      "@callsheet/codegen",
+      "@callsheet/swr"
     ]
   ],
   "linked": [],

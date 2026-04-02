@@ -3,12 +3,8 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   clean: true,
   dts: true,
-  entry: [
-    'src/index.ts',
-    'src/react-query/index.ts',
-    'src/swr/index.ts',
-    'src/ts-rest/index.ts',
-  ],
+  entry: ['src/index.ts'],
+  external: ['@callsheet/core', '@callsheet/core/swr'],
   format: ['esm', 'cjs'],
   sourcemap: true,
   target: 'es2023',

@@ -7,7 +7,7 @@ describe('App', () => {
   it('renders discovered calls', async () => {
     render(<App />);
 
-    expect(screen.getByRole('heading', { name: 'Callsheet' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Callsheet SWR' })).toBeTruthy();
     expect((await screen.findByTestId('selected-film')).textContent).toBe(
       'Wall-E',
     );

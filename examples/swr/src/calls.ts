@@ -3,9 +3,11 @@ import {
   call,
   defineCalls,
   type CallsheetCustomSource,
-} from '@callsheet/react-query';
+} from '@callsheet/swr';
+import { query as tsRestQuery } from '@callsheet/ts-rest';
 
 import { calls as generatedCalls } from './generated/calls';
+import { contract } from './rest/contract';
 
 export interface FeaturedCountResult {
   count: number;
@@ -24,6 +26,13 @@ const featuredCountSource: CallsheetCustomSource<
 
 export const calls = defineCalls({
   ...generatedCalls,
+  rest: {
+    users: {
+      byId: tsRestQuery(contract.users.byId, {
+        family: ['rest', 'users', 'detail'] as const,
+      }),
+    },
+  },
   sdk: {
     featuredCount: call(featuredCountSource, {
       family: ['sdk', 'featuredCount'] as const,

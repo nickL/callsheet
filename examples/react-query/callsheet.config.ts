@@ -19,6 +19,7 @@ export default defineConfig({
   },
   output: {
     file: './src/generated/calls.ts',
+    importFrom: '@callsheet/react-query',
   },
   overrides: [
     {

@@ -6,6 +6,23 @@ export {
 } from '@callsheet/core';
 export { call, mutation, query } from './builders';
 
+export {
+  buildSWRKey,
+  extractFamilyFromSWRKey,
+  extractIdentityFromSWRKey,
+  getSWRAdapterConfig,
+  isSWRCallKey,
+  useMutation,
+  usePreload,
+  useQuery,
+  useSWRAdapterConfig,
+  useSWRMutation,
+  useSWRPreload,
+  useSWRQuery,
+  withSWRConfig,
+  matchesFamilyInSWRKey,
+} from '@callsheet/core/swr';
+
 export type {
   CallConfigContext,
   CallContext,
@@ -14,13 +31,15 @@ export type {
   Call,
   CallInputContext,
   CallInputOf,
-  CallKindOf,
   CallKind,
+  CallKindOf,
   CallMetadata,
   CallOptions,
   CallOutputOf,
   CallSourceOf,
   CallsheetCustomSource,
+  Family,
+  FamilyPart,
   GraphQLOperationKind,
   HttpMethod,
   InvalidationConfig,
@@ -36,8 +55,6 @@ export type {
   QueryCall,
   QueryKind,
   RestSourceLike,
-  Family,
-  FamilyPart,
   SubscriptionOperationKind,
   TypedDocumentLike,
 } from '@callsheet/core';
@@ -46,29 +63,18 @@ export type {
   QueryDefinitionOptions,
 } from './definition-options';
 
-export {
-  createReactQueryAdapter,
-  CallsheetProvider,
-  queryOptions,
-  useMutation,
-  useQuery,
-  useReactQueryAdapter,
-} from '@callsheet/core/react-query';
-
 export type {
-  CallsheetProviderProps,
   ExecuteCall,
   ExecuteCallContext,
+  ExecuteCallMetadata,
+  ExecuteCallMiddleware,
+  ExecuteCallNext,
+  ExecuteCallOverrides,
   MutationCallOptions,
-  ReactQueryAdapter,
-  ReactQueryAdapterConfig,
-  ResolvedMutationOptions,
-  ResolvedQueryOptions,
-} from '@callsheet/core/react-query';
-
-export type {
-  QueryConfig as ReactQueryQueryConfig,
-  QueryConfigWithInitialData as ReactQueryQueryConfigWithInitialData,
-  QueryOptions as ReactQueryQueryOptions,
-  QueryOptionsWithInitialData as ReactQueryQueryOptionsWithInitialData,
-} from '@callsheet/core/react-query';
+  QueryCallOptions,
+  SWRAdapterConfig,
+  SWRCallKey,
+  SWRKeyIdentity,
+  SWRKeyIdentitySegment,
+  SWRMutationKey,
+} from '@callsheet/core/swr';

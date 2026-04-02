@@ -15,9 +15,12 @@ export default defineConfig({
         '**/tests/**',
         '**/src/call-type-tag.ts',
         '**/src/call-types.ts',
+        '**/src/call-context.ts',
         '**/src/family.ts',
         '**/src/index.ts',
         '**/src/react-query/index.ts',
+        '**/src/swr/index.ts',
+        '**/src/swr/types.ts',
       ],
       thresholds: {
         statements: 85,

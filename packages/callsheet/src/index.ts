@@ -2,6 +2,13 @@ export { call, mutation, query } from './calls';
 export { defineCalls, getCallMetadata } from './define-calls';
 
 export type {
+  CallConfigContext,
+  CallContext,
+  CallKeyContext,
+  CallMutateContext,
+} from './call-context';
+
+export type {
   CallOptions,
   CallInputContext,
   Family,

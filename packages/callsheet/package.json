@@ -28,6 +28,11 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
+    "./swr": {
+      "types": "./dist/swr/index.d.ts",
+      "import": "./dist/swr/index.js",
+      "require": "./dist/swr/index.cjs"
+    },
     "./react-query": {
       "types": "./dist/react-query/index.d.ts",
       "import": "./dist/react-query/index.js",
@@ -57,12 +62,14 @@
     "@types/react-dom": "^19.2.3",
     "jsdom": "^29.0.0",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react-dom": "^19.2.4",
+    "swr": "^2.4.1"
   },
   "peerDependencies": {
     "@tanstack/react-query": "^5.0.0",
     "@ts-rest/core": "^3.52.1",
-    "react": "^18 || ^19"
+    "react": "^18 || ^19",
+    "swr": "^2.0.0"
   },
   "peerDependenciesMeta": {
     "@tanstack/react-query": {
@@ -72,6 +79,9 @@
       "optional": true
     },
     "react": {
+      "optional": true
+    },
+    "swr": {
       "optional": true
     }
   }

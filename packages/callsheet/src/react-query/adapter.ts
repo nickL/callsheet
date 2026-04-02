@@ -7,6 +7,7 @@ import {
 } from './query-key';
 import { hasExplicitInput } from './query-options';
 
+import type { CallContext, CallInputContext } from '../call-context';
 import type { MutationKind } from '../call-kind';
 import type { CallTypeTag } from '../call-type-tag';
 import type { CallInputOf, CallOutputOf } from '../call-types';
@@ -103,11 +104,10 @@ export type ResolvedQueryOptions<
   | ResolvedQueryOptionsWithoutInitialData<TCall, TSelected>
   | ResolvedQueryOptionsWithInitialData<TCall, TSelected>;
 
-export interface ExecuteCallContext<TCall extends CallLike> {
-  call: TCall;
-  input: CallInputOf<TCall>;
-  reactQuery?: QueryFunctionContext<QueryKey> | MutationFunctionContext;
-}
+export type ExecuteCallContext<TCall extends CallLike> = CallContext<TCall> &
+  CallInputContext<CallInputOf<TCall>> & {
+    reactQuery?: QueryFunctionContext<QueryKey> | MutationFunctionContext;
+  };
 
 export type ExecuteCall = <TCall extends CallLike>(
   context: ExecuteCallContext<TCall>,
