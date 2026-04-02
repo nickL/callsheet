@@ -55,11 +55,18 @@
   },
   "peerDependencies": {
     "@callsheet/react-query": "^0.1.0",
+    "@callsheet/swr": "^0.1.0",
     "@callsheet/ts-rest": "^0.1.0",
     "@ts-rest/core": "^3.52.1",
     "typescript": ">=5"
   },
   "peerDependenciesMeta": {
+    "@callsheet/react-query": {
+      "optional": true
+    },
+    "@callsheet/swr": {
+      "optional": true
+    },
     "@callsheet/ts-rest": {
       "optional": true
     },

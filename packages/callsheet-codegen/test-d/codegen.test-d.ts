@@ -1,4 +1,4 @@
-import { expectType } from 'tsd';
+import { expectAssignable, expectType } from 'tsd';
 
 import {
   defineConfig,
@@ -11,6 +11,7 @@ import type {
   CallBuilderKind,
   CallsheetCodegenConfig,
   CallsheetCodegenSourcesConfig,
+  CallsheetOutputAdapter,
   GenerateCallsheetModuleConfig,
   GenerateCallsheetModuleResult,
   GeneratedCallOverride,
@@ -51,27 +52,41 @@ const tsRestSource: TsRestContractDiscoveryInput = {
 };
 
 const config: GenerateCallsheetModuleConfig = {
+  adapter: 'react-query',
   sources,
   outputFile: 'src/generated/calls.ts',
   overrides: [override],
 };
 
+const swrConfig: GenerateCallsheetModuleConfig = {
+  importFrom: '@callsheet/swr',
+  outputFile: 'src/generated/calls.ts',
+  sources,
+};
+
 const callsheetConfig: CallsheetCodegenConfig = defineConfig({
   sources,
   output: {
+    adapter: 'react-query',
     file: config.outputFile,
   },
   overrides: [override],
 });
+
+const outputAdapter: CallsheetOutputAdapter = 'swr';
 
 expectType<Promise<Awaited<ReturnType<typeof discoverGraphQLDocuments>>>>(
   discoverGraphQLDocuments(sources.graphql!),
 );
 expectType<CallBuilderKind>(override.kind!);
 expectType<CallsheetCodegenConfig>(callsheetConfig);
+expectAssignable<CallsheetOutputAdapter>(outputAdapter);
 expectType<TsRestContractDiscoveryInput>(tsRestSource);
 expectType<Promise<GenerateCallsheetModuleResult>>(
   generateCallsheetModule(config),
+);
+expectType<Promise<GenerateCallsheetModuleResult>>(
+  generateCallsheetModule(swrConfig),
 );
 expectType<Promise<GenerateCallsheetModuleResult>>(
   writeCallsheetModule(config),

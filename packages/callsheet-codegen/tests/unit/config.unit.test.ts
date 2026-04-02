@@ -27,6 +27,7 @@ describe('callsheet config', () => {
         ],
       },
       output: {
+        adapter: 'react-query',
         file: './src/generated/calls.ts',
       },
     } as const;
@@ -64,6 +65,7 @@ describe('callsheet config', () => {
     expect(generateConfig.outputFile).toBe(
       path.join(tempRoot, 'src/generated/calls.ts'),
     );
+    expect(generateConfig.adapter).toBe('react-query');
     expect(generateConfig.overrides).toEqual([
       {
         path: ['featuredFilms'],
@@ -78,7 +80,7 @@ describe('callsheet config', () => {
 
     await fs.writeFile(
       configFile,
-      "module.exports = { sources: { graphql: [{ rootDir: './src/graphql', tsconfigFile: './tsconfig.json', entries: ['generated.ts'] }] }, output: { file: './src/generated/calls.ts' } };",
+      "module.exports = { sources: { graphql: [{ rootDir: './src/graphql', tsconfigFile: './tsconfig.json', entries: ['generated.ts'] }] }, output: { adapter: 'react-query', file: './src/generated/calls.ts' } };",
     );
 
     const loadedConfig = await loadCallsheetCodegenConfig(configFile);
@@ -99,6 +101,45 @@ describe('callsheet config', () => {
     });
     expect(generateConfig.outputFile).toBe(
       path.join(tempRoot, 'src/generated/calls.ts'),
+    );
+    expect(generateConfig.adapter).toBe('react-query');
+  });
+
+  it('throws when config output sets both adapter and importFrom', () => {
+    expect(() =>
+      toGenerateCallsheetModuleConfig(
+        {
+          sources: {
+            graphql: [],
+          },
+          output: {
+            adapter: 'react-query',
+            file: './src/generated/calls.ts',
+            importFrom: '@callsheet/swr',
+          },
+        } as unknown as Parameters<typeof toGenerateCallsheetModuleConfig>[0],
+        '/tmp/callsheet.config.ts',
+      ),
+    ).toThrow(
+      'Callsheet codegen output target is ambiguous. Set either adapter or importFrom, not both.',
+    );
+  });
+
+  it('throws when config output sets neither adapter nor importFrom', () => {
+    expect(() =>
+      toGenerateCallsheetModuleConfig(
+        {
+          sources: {
+            graphql: [],
+          },
+          output: {
+            file: './src/generated/calls.ts',
+          },
+        } as unknown as Parameters<typeof toGenerateCallsheetModuleConfig>[0],
+        '/tmp/callsheet.config.ts',
+      ),
+    ).toThrow(
+      'Callsheet codegen output target is required. Set either adapter or importFrom.',
     );
   });
 });

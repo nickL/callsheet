@@ -19,6 +19,7 @@ import type {
 
 function createConfig(overrides: readonly GeneratedCallOverride[] = []) {
   return prepareGenerationConfig({
+    adapter: 'react-query',
     outputFile: fixturePath('generate-basic', 'src/generated/calls.ts'),
     overrides,
     sources: {
@@ -131,6 +132,46 @@ function createTsRestGeneratedEntry(memberPath: readonly string[]) {
 }
 
 describe('generate unit', () => {
+  it('uses the configured adapter to resolve generated imports', () => {
+    const preparedConfig = prepareGenerationConfig({
+      adapter: 'swr',
+      outputFile: fixturePath('generate-basic', 'src/generated/calls.ts'),
+      sources: {
+        graphql: [],
+      },
+    });
+
+    expect(preparedConfig.importFrom).toBe('@callsheet/swr');
+  });
+
+  it('throws when both adapter and importFrom are set', () => {
+    expect(() =>
+      prepareGenerationConfig({
+        adapter: 'react-query',
+        importFrom: '@callsheet/swr',
+        outputFile: fixturePath('generate-basic', 'src/generated/calls.ts'),
+        sources: {
+          graphql: [],
+        },
+      } as unknown as Parameters<typeof prepareGenerationConfig>[0]),
+    ).toThrow(
+      'Callsheet codegen output target is ambiguous. Set either adapter or importFrom, not both.',
+    );
+  });
+
+  it('throws when neither adapter nor importFrom is set', () => {
+    expect(() =>
+      prepareGenerationConfig({
+        outputFile: fixturePath('generate-basic', 'src/generated/calls.ts'),
+        sources: {
+          graphql: [],
+        },
+      } as unknown as Parameters<typeof prepareGenerationConfig>[0]),
+    ).toThrow(
+      'Callsheet codegen output target is required. Set either adapter or importFrom.',
+    );
+  });
+
   it('matches overrides by generated path', () => {
     const preparedConfig = createConfig([
       {
@@ -500,6 +541,7 @@ describe('generate unit', () => {
 
   it('adds ./ when generated imports stay under the output directory', () => {
     const preparedConfig = prepareGenerationConfig({
+      adapter: 'react-query',
       outputFile: fixturePath('generate-basic', 'src/generated/calls.ts'),
       sources: {
         graphql: [],

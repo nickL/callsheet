@@ -6,6 +6,7 @@ export type {
   CallBuilderKind,
   CallsheetCodegenConfig,
   CallsheetCodegenOutputConfig,
+  CallsheetOutputAdapter,
   CallsheetCodegenSourcesConfig,
   DiscoveredSourceEntry,
   DiscoveredGraphQLDocument,

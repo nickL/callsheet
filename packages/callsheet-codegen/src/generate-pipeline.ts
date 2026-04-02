@@ -6,6 +6,7 @@ import { discoverTsRestRoutes } from './ts-rest-discovery';
 
 import type {
   CallBuilderKind,
+  CallsheetOutputAdapter,
   CallsheetCodegenSourcesConfig,
   DiscoveredSourceEntry,
   GenerateCallsheetModuleConfig,
@@ -70,6 +71,11 @@ interface MutableGeneratedModuleNode {
   children: Map<string, MutableGeneratedModuleNode>;
   entry?: GeneratedModuleEntry;
 }
+
+const ADAPTER_IMPORTS = {
+  'react-query': '@callsheet/react-query',
+  swr: '@callsheet/swr',
+} as const satisfies Record<CallsheetOutputAdapter, string>;
 
 function createOverridePathKey(pathSegments: readonly string[]): string {
   return formatPathSegments(pathSegments);
@@ -181,9 +187,30 @@ export function prepareGenerationConfig(
   return {
     outputFile: path.resolve(process.cwd(), config.outputFile),
     exportName: config.exportName ?? 'calls',
-    importFrom: config.importFrom ?? '@callsheet/react-query',
+    importFrom: resolveOutputImportFrom(config),
     overridesByPath: buildOverrideMap(config.overrides ?? []),
   };
+}
+
+function resolveOutputImportFrom(
+  config: GenerateCallsheetModuleConfig,
+): string {
+  const hasAdapter = config.adapter !== undefined;
+  const hasImportFrom = config.importFrom !== undefined;
+
+  if (hasAdapter === hasImportFrom) {
+    throw new Error(
+      hasAdapter
+        ? 'Callsheet codegen output target is ambiguous. Set either adapter or importFrom, not both.'
+        : 'Callsheet codegen output target is required. Set either adapter or importFrom.',
+    );
+  }
+
+  if (hasImportFrom) {
+    return config.importFrom;
+  }
+
+  return ADAPTER_IMPORTS[config.adapter];
 }
 
 function buildOverrideMap(

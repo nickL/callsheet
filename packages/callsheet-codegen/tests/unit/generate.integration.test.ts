@@ -17,6 +17,7 @@ describe('generate integration', { timeout: 15_000 }, () => {
 
   it('generates a Callsheet module from GraphQL and ts-rest sources', async () => {
     const result = await generateCallsheetModule({
+      adapter: 'react-query',
       sources: {
         graphql: [
           {
@@ -77,6 +78,7 @@ describe('generate integration', { timeout: 15_000 }, () => {
 
   it('generates mutation builders when document is inferred as mutation', async () => {
     const result = await generateCallsheetModule({
+      adapter: 'react-query',
       sources: {
         graphql: [
           {
@@ -97,10 +99,31 @@ describe('generate integration', { timeout: 15_000 }, () => {
     );
   });
 
+  it('generates SWR imports when the SWR adapter is selected', async () => {
+    const result = await generateCallsheetModule({
+      adapter: 'swr',
+      sources: {
+        graphql: [
+          {
+            entries: ['films.ts'],
+            rootDir: fixturePath(fixture, 'src/graphql'),
+            tsconfigFile: fixturePath(fixture, 'tsconfig.json'),
+          },
+        ],
+      },
+      outputFile: fixturePath(fixture, 'src/generated/calls.ts'),
+    });
+
+    expect(result.code).toContain(
+      `import { defineCalls, query } from '@callsheet/swr';`,
+    );
+  });
+
   it('writes the generated Callsheet module to disk', async () => {
     const tempRoot = await copyFixtureToTemp(fixture);
 
     const result = await writeCallsheetModule({
+      adapter: 'react-query',
       sources: {
         graphql: [
           {
@@ -121,6 +144,7 @@ describe('generate integration', { timeout: 15_000 }, () => {
   it('throws when discovery finds no GraphQL document exports', async () => {
     await expect(
       generateCallsheetModule({
+        adapter: 'react-query',
         sources: {
           graphql: [
             {

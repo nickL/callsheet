@@ -18,6 +18,7 @@ export default {
     ],
   },
   output: {
+    adapter: 'react-query',
     file: './src/generated/calls.ts',
   },
   overrides,

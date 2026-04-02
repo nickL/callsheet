@@ -1,4 +1,5 @@
 export type CallBuilderKind = 'query' | 'mutation';
+export type CallsheetOutputAdapter = 'react-query' | 'swr';
 
 export interface GraphQLDocumentDiscoveryInput {
   /**
@@ -121,7 +122,7 @@ export interface GeneratedCallOverride {
   options?: ImportedCallOptionsReference;
 }
 
-export interface CallsheetCodegenOutputConfig {
+interface CallsheetCodegenOutputConfigBase {
   /**
    * Generated Callsheet module file path.
    */
@@ -130,19 +131,25 @@ export interface CallsheetCodegenOutputConfig {
    * Defaults to `calls`.
    */
   exportName?: string;
-  /**
-   * Defaults to `@callsheet/react-query`.
-   */
-  importFrom?: string;
 }
 
-export interface CallsheetCodegenConfig {
-  sources: CallsheetCodegenSourcesConfig;
-  output: CallsheetCodegenOutputConfig;
-  overrides?: readonly GeneratedCallOverride[];
-}
+export type CallsheetCodegenOutputConfig =
+  | (CallsheetCodegenOutputConfigBase & {
+      /**
+       * First-class adapter target for generated Callsheet imports.
+       */
+      adapter: CallsheetOutputAdapter;
+      importFrom?: never;
+    })
+  | (CallsheetCodegenOutputConfigBase & {
+      adapter?: never;
+      /**
+       * Advanced override for the generated Callsheet import source.
+       */
+      importFrom: string;
+    });
 
-export interface GenerateCallsheetModuleConfig {
+interface GenerateCallsheetModuleConfigBase {
   sources: CallsheetCodegenSourcesConfig;
   /**
    * Output file path used for relative import generation.
@@ -152,12 +159,31 @@ export interface GenerateCallsheetModuleConfig {
    * Defaults to `calls`.
    */
   exportName?: string;
-  /**
-   * Defaults to `@callsheet/react-query`.
-   */
-  importFrom?: string;
+}
+
+export interface CallsheetCodegenConfig {
+  sources: CallsheetCodegenSourcesConfig;
+  output: CallsheetCodegenOutputConfig;
   overrides?: readonly GeneratedCallOverride[];
 }
+
+export type GenerateCallsheetModuleConfig =
+  | (GenerateCallsheetModuleConfigBase & {
+      /**
+       * First-class adapter target for generated Callsheet imports.
+       */
+      adapter: CallsheetOutputAdapter;
+      importFrom?: never;
+      overrides?: readonly GeneratedCallOverride[];
+    })
+  | (GenerateCallsheetModuleConfigBase & {
+      adapter?: never;
+      /**
+       * Advanced override for the generated Callsheet import source.
+       */
+      importFrom: string;
+      overrides?: readonly GeneratedCallOverride[];
+    });
 
 export interface DiscoveredGraphQLDocument {
   exportName: string;

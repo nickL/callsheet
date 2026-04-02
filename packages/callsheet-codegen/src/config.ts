@@ -75,17 +75,51 @@ export function toGenerateCallsheetModuleConfig(
   configFilePath: string,
 ): GenerateCallsheetModuleConfig {
   const configDirectory = path.dirname(configFilePath);
-
-  return {
+  const baseConfig = {
     sources: resolveSourcesConfig(config.sources, configDirectory),
     outputFile: path.resolve(configDirectory, config.output.file),
     ...(config.output.exportName === undefined
       ? {}
       : { exportName: config.output.exportName }),
-    ...(config.output.importFrom === undefined
-      ? {}
-      : { importFrom: config.output.importFrom }),
     ...(config.overrides === undefined ? {} : { overrides: config.overrides }),
+  };
+  const hasAdapter = 'adapter' in config.output;
+  const hasImportFrom = 'importFrom' in config.output;
+
+  if (hasAdapter === hasImportFrom) {
+    throw new Error(
+      hasAdapter
+        ? 'Callsheet codegen output target is ambiguous. Set either adapter or importFrom, not both.'
+        : 'Callsheet codegen output target is required. Set either adapter or importFrom.',
+    );
+  }
+
+  if (hasAdapter) {
+    const { adapter } = config.output;
+
+    if (adapter === undefined) {
+      throw new Error(
+        'Callsheet codegen output target is required. Set either adapter or importFrom.',
+      );
+    }
+
+    return {
+      ...baseConfig,
+      adapter,
+    };
+  }
+
+  const { importFrom } = config.output;
+
+  if (importFrom === undefined) {
+    throw new Error(
+      'Callsheet codegen output target is required. Set either adapter or importFrom.',
+    );
+  }
+
+  return {
+    ...baseConfig,
+    importFrom,
   };
 }
 

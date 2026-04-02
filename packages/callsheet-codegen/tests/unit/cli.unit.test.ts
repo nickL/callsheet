@@ -46,12 +46,13 @@ describe('callsheet codegen cli', () => {
 
     loadCallsheetCodegenConfig.mockResolvedValue({
       config: {
-        output: { file: './src/generated/calls.ts' },
+        output: { adapter: 'react-query', file: './src/generated/calls.ts' },
         sources: { graphql: [] },
       },
       configFilePath: '/tmp/callsheet.config.ts',
     });
     toGenerateCallsheetModuleConfig.mockReturnValue({
+      adapter: 'react-query',
       outputFile: '/tmp/src/generated/calls.ts',
       sources: { graphql: [] },
     });
@@ -68,12 +69,13 @@ describe('callsheet codegen cli', () => {
     );
     expect(toGenerateCallsheetModuleConfig).toHaveBeenCalledWith(
       {
-        output: { file: './src/generated/calls.ts' },
+        output: { adapter: 'react-query', file: './src/generated/calls.ts' },
         sources: { graphql: [] },
       },
       '/tmp/callsheet.config.ts',
     );
     expect(writeCallsheetModule).toHaveBeenCalledWith({
+      adapter: 'react-query',
       outputFile: '/tmp/src/generated/calls.ts',
       sources: { graphql: [] },
     });
