@@ -267,6 +267,9 @@ importers:
       '@callsheet/react-query':
         specifier: workspace:*
         version: link:../callsheet-react-query
+      '@callsheet/swr':
+        specifier: workspace:*
+        version: link:../callsheet-swr
       '@callsheet/ts-rest':
         specifier: workspace:*
         version: link:../callsheet-ts-rest

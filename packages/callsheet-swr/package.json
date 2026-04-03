@@ -1,6 +1,6 @@
 {
   "name": "@callsheet/swr",
-  "version": "0.0.0",
+  "version": "0.2.0",
   "description": "One shared definition for your SWR calls.",
   "repository": {
     "type": "git",

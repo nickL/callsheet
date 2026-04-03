@@ -1,6 +1,6 @@
 {
   "name": "@callsheet/codegen",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Generate Callsheet from typed GraphQL and ts-rest sources.",
   "repository": {
     "type": "git",
@@ -50,13 +50,14 @@
   "devDependencies": {
     "@ts-rest/core": "^3.52.1",
     "@callsheet/react-query": "workspace:*",
+    "@callsheet/swr": "workspace:*",
     "@callsheet/ts-rest": "workspace:*",
     "typescript": "^5.9.3"
   },
   "peerDependencies": {
-    "@callsheet/react-query": "^0.1.0",
-    "@callsheet/swr": "^0.1.0",
-    "@callsheet/ts-rest": "^0.1.0",
+    "@callsheet/react-query": "^0.2.0",
+    "@callsheet/swr": "^0.2.0",
+    "@callsheet/ts-rest": "^0.2.0",
     "@ts-rest/core": "^3.52.1",
     "typescript": ">=5"
   },

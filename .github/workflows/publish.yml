@@ -54,6 +54,7 @@ jobs:
           const packageFiles = [
             'packages/callsheet/package.json',
             'packages/callsheet-react-query/package.json',
+            'packages/callsheet-swr/package.json',
             'packages/callsheet-ts-rest/package.json',
             'packages/callsheet-codegen/package.json',
           ];
