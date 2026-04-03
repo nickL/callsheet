@@ -1,3 +1,5 @@
+import { buildQueryKey, type QueryCallKey } from './query-key';
+
 import type { QueryKind } from '../call-kind';
 import type { CallTypeTag } from '../call-type-tag';
 import type { CallInputOf, CallOutputOf } from '../call-types';
@@ -24,11 +26,18 @@ type HasNoInput<TInput> = [TInput] extends [NoInputLike]
 type QueryInputField<TCall extends QueryCallLike> =
   HasNoInput<CallInputOf<TCall>> extends true
     ? {
+        enabled?: boolean;
         input?: CallInputOf<TCall>;
       }
-    : {
-        input: CallInputOf<TCall>;
-      };
+    :
+        | {
+            enabled?: boolean;
+            input: CallInputOf<TCall>;
+          }
+        | {
+            enabled: false;
+            input?: CallInputOf<TCall>;
+          };
 
 type RequiredOptionsArg<TOptions> = [options: TOptions];
 type OptionalOptionsArg<TOptions> = [options?: TOptions];
@@ -55,7 +64,7 @@ type QueryOptionsWithoutInitialData<
       TSelected,
       QueryKey
     >,
-    'queryFn' | 'queryKey'
+    'enabled' | 'queryFn' | 'queryKey'
   >;
 
 export type QueryOptionsWithInitialData<
@@ -69,7 +78,7 @@ export type QueryOptionsWithInitialData<
       TSelected,
       QueryKey
     >,
-    'queryFn' | 'queryKey'
+    'enabled' | 'queryFn' | 'queryKey'
   >;
 
 export type QueryOptions<
@@ -84,6 +93,7 @@ export type QueryConfigWithoutInitialData<
   TSelected = CallOutputOf<TCall>,
 > = {
   call: TCall;
+  queryKey: QueryCallKey<TCall>;
 } & QueryOptionsWithoutInitialData<TCall, TSelected>;
 
 export type QueryConfigWithInitialData<
@@ -91,6 +101,7 @@ export type QueryConfigWithInitialData<
   TSelected = CallOutputOf<TCall>,
 > = {
   call: TCall;
+  queryKey: QueryCallKey<TCall>;
 } & QueryOptionsWithInitialData<TCall, TSelected>;
 
 export type QueryConfig<
@@ -139,12 +150,17 @@ export function queryOptions<
   ...args: QueryOptionsArgs<TCall, QueryOptions<TCall, TSelected>>
 ): QueryConfig<TCall, TSelected> {
   const [options] = args;
+  const explicitInput = !!options && Object.hasOwn(options, 'input');
+  const input = explicitInput
+    ? (options.input as CallInputOf<TCall>)
+    : undefined;
   const config = {
     call,
     ...(options ?? {}),
+    queryKey: buildQueryKey(call, input, explicitInput),
   } as QueryConfig<TCall, TSelected>;
 
-  if (options && Object.hasOwn(options, 'input')) {
+  if (explicitInput) {
     Object.defineProperty(config, explicitInputKey, {
       value: true,
       enumerable: false,

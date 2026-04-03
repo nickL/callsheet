@@ -76,7 +76,7 @@ These APIs come from `@callsheet/react-query` and are used wherever you interact
 
 ### `queryOptions`
 
-Builds a query config from a call definition. The result is passed to `useQuery`.
+Builds a query config from a call definition. The result can be passed to `useQuery` and also includes the canonical Callsheet `queryKey` for imperative `QueryClient` workflows.
 
 ```ts
 import { queryOptions } from '@callsheet/react-query';
@@ -88,6 +88,19 @@ const options = queryOptions(calls.films.byId, {
 ```
 
 The `input` field is required when the call expects input, else optional when it doesn't. All standard React Query options (`enabled`, `staleTime`, `select`, `initialData`, etc.) can be passed as well.
+
+For strict-input calls, `enabled: false` can be used without `input` until the query is ready to execute.
+
+The returned config can also be reused with `QueryClient`:
+
+```ts
+const filmQuery = queryOptions(calls.films.byId, {
+  input: { id: 'wall-e' },
+});
+
+queryClient.getQueryData(filmQuery.queryKey);
+queryClient.invalidateQueries({ queryKey: filmQuery.queryKey });
+```
 
 ### `useQuery`
 

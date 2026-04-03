@@ -1,10 +1,9 @@
-import { mutationOptions as tanstackMutationOptions } from '@tanstack/react-query';
-
 import {
-  buildInvalidationKey,
-  buildQueryKey,
-  defaultQueryKeyPrefix,
-} from './query-key';
+  mutationOptions as tanstackMutationOptions,
+  skipToken,
+} from '@tanstack/react-query';
+
+import { buildInvalidationKey, type QueryCallKey } from './query-key';
 import { hasExplicitInput } from './query-options';
 
 import type { CallContext, CallInputContext } from '../call-context';
@@ -19,7 +18,6 @@ import type {
   QueryConfigWithoutInitialData,
 } from './query-options';
 import type {
-  DataTag,
   DefaultError,
   DefinedInitialDataOptions as TanStackDefinedInitialDataOptions,
   MutationFunction,
@@ -28,6 +26,7 @@ import type {
   QueryFunction,
   QueryFunctionContext,
   QueryKey,
+  SkipToken,
   UndefinedInitialDataOptions as TanStackUndefinedInitialDataOptions,
   UseMutationOptions,
 } from '@tanstack/react-query';
@@ -38,12 +37,6 @@ type CallLike = CallTypeTag<unknown, unknown> & {
 type MutationCallLike = CallTypeTag<unknown, unknown> & {
   kind: MutationKind;
 };
-
-type QueryCallKey<TCall extends QueryCallLike> = DataTag<
-  QueryKey,
-  CallOutputOf<TCall>,
-  DefaultError
->;
 
 export type MutationCallOptions<
   TCall extends MutationCallLike,
@@ -77,7 +70,7 @@ type ResolvedQueryOptionsWithoutInitialData<
   >,
   'queryFn' | 'queryKey'
 > & {
-  queryFn: QueryFunction<CallOutputOf<TCall>, QueryCallKey<TCall>>;
+  queryFn: QueryFunction<CallOutputOf<TCall>, QueryCallKey<TCall>> | SkipToken;
   queryKey: QueryCallKey<TCall>;
 };
 
@@ -93,7 +86,7 @@ type ResolvedQueryOptionsWithInitialData<
   >,
   'queryFn' | 'queryKey'
 > & {
-  queryFn: QueryFunction<CallOutputOf<TCall>, QueryCallKey<TCall>>;
+  queryFn: QueryFunction<CallOutputOf<TCall>, QueryCallKey<TCall>> | SkipToken;
   queryKey: QueryCallKey<TCall>;
 };
 
@@ -115,7 +108,14 @@ export type ExecuteCall = <TCall extends CallLike>(
 
 export interface ReactQueryAdapterConfig {
   execute: ExecuteCall;
-  queryKeyPrefix?: QueryKey;
+}
+
+function toError(error: unknown): Error {
+  if (error instanceof Error) {
+    return error;
+  }
+
+  return new Error('A non-Error value was thrown.');
 }
 
 function resolveCallQueryDefaults<TCall extends QueryCallLike>(
@@ -215,8 +215,6 @@ export interface ReactQueryAdapter {
 export function createReactQueryAdapter(
   config: ReactQueryAdapterConfig,
 ): ReactQueryAdapter {
-  const queryKeyPrefix = config.queryKeyPrefix ?? defaultQueryKeyPrefix;
-
   function resolveQueryOptions<
     TCall extends QueryCallLike,
     TSelected = CallOutputOf<TCall>,
@@ -238,24 +236,27 @@ export function createReactQueryAdapter(
     const call = queryConfig.call;
     const callDefinedDefaults = resolveCallQueryDefaults(call);
     const input = queryConfig.input as CallInputOf<TCall> | undefined;
-    const queryKey = buildQueryKey(
-      queryKeyPrefix,
-      call,
-      input,
-      hasExplicitInput(queryConfig),
-    ) as QueryCallKey<TCall>;
-    const { call: _call, input: _input, ...reactQueryOptions } = queryConfig;
+    const shouldSkipExecution =
+      queryConfig.enabled === false && !hasExplicitInput(queryConfig);
+    const {
+      call: _call,
+      input: _input,
+      queryKey,
+      ...reactQueryOptions
+    } = queryConfig;
 
     return {
       ...callDefinedDefaults,
       ...reactQueryOptions,
       queryKey,
-      queryFn: (reactQuery) =>
-        config.execute({
-          call,
-          input: input!,
-          reactQuery,
-        }),
+      queryFn: shouldSkipExecution
+        ? skipToken
+        : (reactQuery) =>
+            config.execute({
+              call,
+              input: input!,
+              reactQuery,
+            }),
     } as ResolvedQueryOptions<TCall, TSelected>;
   }
 
@@ -303,8 +304,23 @@ export function createReactQueryAdapter(
           reactQuery,
         }),
       onSuccess: async (output, input, onMutateResult, context) => {
-        await options?.onSuccess?.(output, input, onMutateResult, context);
-        await invalidateCallData(context.client, call, input, output);
+        let userOnSuccessError: unknown;
+
+        try {
+          await options?.onSuccess?.(output, input, onMutateResult, context);
+        } catch (error) {
+          userOnSuccessError = error;
+        }
+
+        try {
+          await invalidateCallData(context.client, call, input, output);
+        } catch (invalidationError) {
+          throw toError(userOnSuccessError ?? invalidationError);
+        }
+
+        if (userOnSuccessError) {
+          throw toError(userOnSuccessError);
+        }
       },
     }) as ResolvedMutationOptions<TCall, TOnMutateResult>;
   }
@@ -324,7 +340,7 @@ export function createReactQueryAdapter(
     await Promise.all(
       invalidationTargets.map((family) =>
         queryClient.invalidateQueries({
-          queryKey: buildInvalidationKey(queryKeyPrefix, family),
+          queryKey: buildInvalidationKey(family),
         }),
       ),
     );

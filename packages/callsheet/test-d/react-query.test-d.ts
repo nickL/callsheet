@@ -157,12 +157,14 @@ expectType<Promise<{ id: string; title: string }>>(
 
 const resolvedByIdOptions = adapter.resolveQueryOptions(byIdConfig);
 
+void byIdConfig.queryKey;
 void resolvedByIdOptions.queryKey;
 void resolvedByIdOptions.queryFn;
-// @ts-expect-error query config should not expose queryKey
-void byIdConfig.queryKey;
 // @ts-expect-error query config should not expose input after materialization
 void resolvedByIdOptions.input;
+expectType<{ film: { id: string; title: string } } | undefined>(
+  new QueryClient().getQueryData(byIdConfig.queryKey),
+);
 expectType<{ film: { id: string; title: string } } | undefined>(
   new QueryClient().getQueryData(resolvedByIdOptions.queryKey),
 );
@@ -181,8 +183,22 @@ const invalidByIdOptions = {
 // @ts-expect-error input-bearing query calls require an `input` field
 queryOptions(byIdCall, invalidByIdOptions);
 
+queryOptions(byIdCall, {
+  enabled: false,
+});
+
 // @ts-expect-error union-with-undefined inputs still require an `input` field
 queryOptions(maybeByIdCall, {
+  staleTime: 1_000,
+});
+
+// @ts-expect-error strict-input query calls still require `input` when enabled can execute
+queryOptions(byIdCall, {
+  enabled: true,
+});
+
+// @ts-expect-error strict-input query calls still require `input` for normal local options
+queryOptions(byIdCall, {
   staleTime: 1_000,
 });
 

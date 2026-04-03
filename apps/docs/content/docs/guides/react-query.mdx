@@ -59,6 +59,35 @@ For example, query options like `enabled`, `initialData`, `placeholderData`, rem
 
 Local mutation callbacks like `onSuccess`, `onError`, and `onSettled` usually belong here too. They often drive behavior that is specific to one usage after a call completes, like showing a toast, closing a dialog, or navigating.
 
+For strict-input queries, you can also keep the query disabled until input exists:
+
+```ts title="src/FilmPage.tsx"
+const film = useQuery(
+  queryOptions(calls.films.byId, {
+    enabled: false,
+  }),
+);
+```
+
+This is useful when route params or selected values may not exist on the first render. Once the input is available, pass it normally and the query can run.
+
+## Reusing query keys with QueryClient
+
+React Query's `queryOptions(...)` pattern is also useful outside components. In Callsheet, the config returned by `queryOptions(...)` includes the canonical `queryKey`, so the same definition can be reused with `QueryClient`.
+
+```ts title="src/FilmPage.tsx"
+const filmQuery = queryOptions(calls.films.byId, {
+  input: { id: 'wall-e' },
+});
+
+const film = useQuery(filmQuery);
+
+queryClient.getQueryData(filmQuery.queryKey);
+queryClient.invalidateQueries({ queryKey: filmQuery.queryKey });
+```
+
+This keeps imperative cache work tied to the same Callsheet-owned identity used by your hooks, instead of making you hand-write query keys separately.
+
 ## Applying Shared Invalidation
 
 Mutations often need shared follow-up behavior too, especially around invalidation.

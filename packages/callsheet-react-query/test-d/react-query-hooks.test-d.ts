@@ -1,3 +1,4 @@
+import { QueryClient } from '@tanstack/react-query';
 import { expectType } from 'tsd';
 
 import {
@@ -91,6 +92,10 @@ const byIdConfig: ReactQueryQueryConfig<typeof filmByIdCall, string> =
     input: { id: 'film_123' },
     select: (data) => data.film.title,
   });
+const byIdDisabledConfig: ReactQueryQueryConfig<typeof filmByIdCall> =
+  queryOptions(filmByIdCall, {
+    enabled: false,
+  });
 const byIdConfigWithInitialData: ReactQueryQueryConfigWithInitialData<
   typeof filmByIdCall,
   string
@@ -114,8 +119,14 @@ expectType<MutationCallOptions<typeof updateFilmCall>['retry']>(
 expectType<{ films: readonly string[] } | undefined>(
   useQuery(queryOptions(featuredFilmsCall)).data,
 );
+expectType<{ film: { id: string; title: string } } | undefined>(
+  useQuery(byIdDisabledConfig).data,
+);
 expectType<string | undefined>(useQuery(byIdConfig).data);
 expectType<string>(useQuery(byIdConfigWithInitialData).data);
+expectType<{ film: { id: string; title: string } } | undefined>(
+  new QueryClient().getQueryData(byIdConfig.queryKey),
+);
 expectType<Promise<{ updateFilm: { id: string; title: string } }>>(
   useMutation(updateFilmCall).mutateAsync({
     id: 'film_123',

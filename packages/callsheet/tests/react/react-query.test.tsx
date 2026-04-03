@@ -4,6 +4,7 @@ import {
   HydrationBoundary,
   QueryClientProvider,
   dehydrate,
+  skipToken,
   useMutation as useTanstackMutation,
 } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
@@ -293,8 +294,21 @@ describe('react-query adapter', () => {
       input: { id: 'film_123' },
     });
 
-    expect('queryKey' in featuredConfig).toBe(false);
+    expect('queryKey' in featuredConfig).toBe(true);
     expect('queryFn' in byIdConfig).toBe(false);
+    expect(featuredConfig.queryKey).toEqual([
+      'callsheet',
+      'films',
+      'list',
+      { call: ['films', 'featured'] },
+    ]);
+    expect(byIdConfig.queryKey).toEqual([
+      'callsheet',
+      'films',
+      'detail',
+      { call: ['films', 'byId'] },
+      { input: { id: 'film_123' } },
+    ]);
 
     const featuredOptions = adapter.resolveQueryOptions(featuredConfig);
     const byIdOptions = adapter.resolveQueryOptions(byIdConfig);
@@ -319,6 +333,12 @@ describe('react-query adapter', () => {
       films: ['Wall-E', 'Inside Out'],
     });
     await expect(adapter.fetchQuery(queryClient, byIdConfig)).resolves.toEqual({
+      film: {
+        id: 'film_123',
+        title: 'Wall-E',
+      },
+    });
+    expect(queryClient.getQueryData(byIdConfig.queryKey)).toEqual({
       film: {
         id: 'film_123',
         title: 'Wall-E',
@@ -427,10 +447,7 @@ describe('react-query adapter', () => {
   });
 
   it('throws when a query is missing family and defineCalls metadata', () => {
-    const { adapter } = createWrapper();
-    const unregisteredConfig = queryOptions(unregisteredFeaturedCall);
-
-    expect(() => adapter.resolveQueryOptions(unregisteredConfig)).toThrow(
+    expect(() => queryOptions(unregisteredFeaturedCall)).toThrow(
       'Unable to resolve family for this call. Define `family` on the call or register the call with defineCalls(...).',
     );
   });
@@ -453,8 +470,18 @@ describe('react-query adapter', () => {
     const reactQuery = executeContext.reactQuery;
 
     expect(reactQuery).toBeDefined();
-    expect(reactQuery && 'queryKey' in reactQuery).toBe(true);
-    if (!reactQuery || !('queryKey' in reactQuery)) {
+    expect(
+      reactQuery &&
+        'queryKey' in reactQuery &&
+        'signal' in reactQuery &&
+        'meta' in reactQuery,
+    ).toBe(true);
+    if (
+      !reactQuery ||
+      !('queryKey' in reactQuery) ||
+      !('signal' in reactQuery) ||
+      !('meta' in reactQuery)
+    ) {
       throw new Error('Expected query context');
     }
     expect(reactQuery.meta).toEqual({ source: 'test' });
@@ -462,6 +489,53 @@ describe('react-query adapter', () => {
       adapter.resolveQueryOptions(config).queryKey,
     );
     expect(reactQuery.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it('cancels in-flight queries when execute uses request cancellation', async () => {
+    let capturedSignal: AbortSignal | undefined;
+    const queryClient = createTestQueryClient();
+    const adapter = createReactQueryAdapter({
+      execute: ((context) => {
+        if (context.reactQuery && 'signal' in context.reactQuery) {
+          capturedSignal = context.reactQuery.signal;
+        }
+
+        return new Promise((_, reject) => {
+          capturedSignal?.addEventListener(
+            'abort',
+            () => {
+              reject(new Error('request aborted'));
+            },
+            { once: true },
+          );
+        });
+      }) as ExecuteCall,
+    });
+    const config = queryOptions(calls.films.byId, {
+      input: { id: 'film_123' },
+    });
+    const Wrapper = ({ children }: PropsWithChildren) => (
+      <QueryClientProvider client={queryClient}>
+        <CallsheetProvider adapter={adapter}>{children}</CallsheetProvider>
+      </QueryClientProvider>
+    );
+    const { unmount } = renderHook(() => useQuery(config), {
+      wrapper: Wrapper,
+    });
+
+    await waitFor(() => {
+      expect(capturedSignal).toBeDefined();
+      expect(queryClient.getQueryState(config.queryKey)?.fetchStatus).toBe(
+        'fetching',
+      );
+    });
+
+    unmount();
+
+    await waitFor(() => {
+      expect(capturedSignal?.aborted).toBe(true);
+      expect(queryClient.getQueryData(config.queryKey)).toBeUndefined();
+    });
   });
 
   it('preserves React Query enabled=false behavior', () => {
@@ -482,6 +556,99 @@ describe('react-query adapter', () => {
     expect(result.current.fetchStatus).toBe('idle');
     expect(result.current.data).toBeUndefined();
     expect(executeSpy).not.toHaveBeenCalled();
+  });
+
+  it('allows strict-input queries to stay disabled before input exists', () => {
+    const { Wrapper, adapter, executeSpy } = createWrapper();
+    const config = queryOptions(calls.films.byId, {
+      enabled: false,
+    });
+    const { result } = renderHook(() => useQuery(config), {
+      wrapper: Wrapper,
+    });
+
+    expect(adapter.resolveQueryOptions(config).queryFn).toBe(skipToken);
+    expect(result.current.fetchStatus).toBe('idle');
+    expect(result.current.data).toBeUndefined();
+    expect(executeSpy).not.toHaveBeenCalled();
+  });
+
+  it('keeps disabled strict-input queries executable once input exists', async () => {
+    const { Wrapper, adapter, executeSpy } = createWrapper();
+    const config = queryOptions(calls.films.byId, {
+      enabled: false,
+      input: { id: 'film_123' },
+    });
+    const { result } = renderHook(() => useQuery(config), {
+      wrapper: Wrapper,
+    });
+
+    expect(adapter.resolveQueryOptions(config).queryFn).not.toBe(skipToken);
+    expect(result.current.fetchStatus).toBe('idle');
+    expect(executeSpy).not.toHaveBeenCalled();
+
+    await result.current.refetch();
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual({
+        film: {
+          id: 'film_123',
+          title: 'Wall-E',
+        },
+      });
+    });
+
+    expect(executeSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('supports imperative QueryClient usage through queryOptions queryKey', () => {
+    const queryClient = createTestQueryClient();
+    const config = queryOptions(calls.films.byId, {
+      input: { id: 'film_123' },
+    });
+
+    queryClient.setQueryData(config.queryKey, {
+      film: {
+        id: 'film_123',
+        title: 'Wall-E',
+      },
+    });
+
+    expect(queryClient.getQueryData(config.queryKey)).toEqual({
+      film: {
+        id: 'film_123',
+        title: 'Wall-E',
+      },
+    });
+  });
+
+  it('uses the provided QueryClient for useQuery', async () => {
+    const providerQueryClient = createTestQueryClient();
+    const explicitQueryClient = createTestQueryClient();
+    const { Wrapper } = createWrapper(providerQueryClient);
+    const config = queryOptions(calls.films.byId, {
+      input: { id: 'film_123' },
+    });
+    const { result } = renderHook(() => useQuery(config, explicitQueryClient), {
+      wrapper: Wrapper,
+    });
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual({
+        film: {
+          id: 'film_123',
+          title: 'Wall-E',
+        },
+      });
+    });
+
+    expect(providerQueryClient.getQueryData(config.queryKey)).toBeUndefined();
+    expect(explicitQueryClient.getQueryData(config.queryKey)).toEqual({
+      film: {
+        id: 'film_123',
+        title: 'Wall-E',
+      },
+    });
   });
 
   it('ensures select behavior is preserved with useQuery', async () => {
@@ -759,6 +926,37 @@ describe('react-query adapter', () => {
     );
   });
 
+  it('invalidates using the provided QueryClient', async () => {
+    const providerQueryClient = createTestQueryClient();
+    const explicitQueryClient = createTestQueryClient();
+    const { Wrapper } = createWrapper(providerQueryClient);
+    const providerInvalidateQueriesSpy = vi.spyOn(
+      providerQueryClient,
+      'invalidateQueries',
+    );
+    const explicitInvalidateQueriesSpy = vi.spyOn(
+      explicitQueryClient,
+      'invalidateQueries',
+    );
+
+    const { result } = renderHook(
+      () => useMutation(calls.films.update, undefined, explicitQueryClient),
+      {
+        wrapper: Wrapper,
+      },
+    );
+
+    await result.current.mutateAsync({
+      id: 'film_123',
+      title: 'Inside Out',
+    });
+
+    expect(providerInvalidateQueriesSpy).not.toHaveBeenCalled();
+    expect(explicitInvalidateQueriesSpy).toHaveBeenCalledWith({
+      queryKey: ['callsheet', 'films', 'detail'],
+    });
+  });
+
   it('ensures mutation onSuccess runs when invalidation fails', async () => {
     const { Wrapper, queryClient } = createWrapper();
     const onSuccess = vi.fn();
@@ -785,6 +983,169 @@ describe('react-query adapter', () => {
     ).rejects.toThrow('invalidate failed');
 
     expect(onSuccess).toHaveBeenCalledTimes(1);
+  });
+
+  it('still invalidates when local mutation onSuccess throws', async () => {
+    const { Wrapper, queryClient } = createWrapper();
+    const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries');
+    const onSuccessError = new Error('local onSuccess failed');
+
+    const { result } = renderHook(
+      () =>
+        useMutation(calls.films.update, {
+          onSuccess: () => {
+            throw onSuccessError;
+          },
+        }),
+      {
+        wrapper: Wrapper,
+      },
+    );
+
+    await expect(
+      result.current.mutateAsync({
+        id: 'film_123',
+        title: 'Inside Out',
+      }),
+    ).rejects.toThrow(onSuccessError);
+
+    expect(invalidateQueriesSpy).toHaveBeenCalledWith({
+      queryKey: ['callsheet', 'films', 'detail'],
+    });
+  });
+
+  it('passes local onSuccess errors through onError and onSettled', async () => {
+    const { Wrapper, queryClient } = createWrapper();
+    const onSuccessError = new Error('local onSuccess failed');
+    const onError = vi.fn();
+    const onSettled = vi.fn();
+
+    vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue(
+      undefined as never,
+    );
+
+    const { result } = renderHook(
+      () =>
+        useMutation(calls.films.update, {
+          onError,
+          onSettled,
+          onSuccess: () => {
+            throw onSuccessError;
+          },
+        }),
+      {
+        wrapper: Wrapper,
+      },
+    );
+
+    await expect(
+      result.current.mutateAsync({
+        id: 'film_123',
+        title: 'Inside Out',
+      }),
+    ).rejects.toThrow(onSuccessError);
+
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(onError).toHaveBeenCalledWith(
+      onSuccessError,
+      {
+        id: 'film_123',
+        title: 'Inside Out',
+      },
+      undefined,
+      expect.any(Object),
+    );
+    expect(onSettled).toHaveBeenCalledTimes(1);
+    expect(onSettled).toHaveBeenCalledWith(
+      undefined,
+      onSuccessError,
+      {
+        id: 'film_123',
+        title: 'Inside Out',
+      },
+      undefined,
+      expect.any(Object),
+    );
+  });
+
+  it('surfaces invalidation errors when present even if local onSuccess succeeds', async () => {
+    const { Wrapper, queryClient } = createWrapper();
+    const onSuccess = vi.fn();
+
+    vi.spyOn(queryClient, 'invalidateQueries').mockRejectedValue(
+      new Error('invalidate failed'),
+    );
+
+    const { result } = renderHook(
+      () =>
+        useMutation(calls.films.update, {
+          onSuccess,
+        }),
+      {
+        wrapper: Wrapper,
+      },
+    );
+
+    await expect(
+      result.current.mutateAsync({
+        id: 'film_123',
+        title: 'Inside Out',
+      }),
+    ).rejects.toThrow('invalidate failed');
+
+    expect(onSuccess).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps local onSuccess errors primary when invalidation also fails', async () => {
+    const { Wrapper, queryClient } = createWrapper();
+    const onSuccessError = new Error('local onSuccess failed');
+    const onError = vi.fn();
+    const onSettled = vi.fn();
+
+    vi.spyOn(queryClient, 'invalidateQueries').mockRejectedValue(
+      new Error('invalidate failed'),
+    );
+
+    const { result } = renderHook(
+      () =>
+        useMutation(calls.films.update, {
+          onError,
+          onSettled,
+          onSuccess: () => {
+            throw onSuccessError;
+          },
+        }),
+      {
+        wrapper: Wrapper,
+      },
+    );
+
+    await expect(
+      result.current.mutateAsync({
+        id: 'film_123',
+        title: 'Inside Out',
+      }),
+    ).rejects.toThrow(onSuccessError);
+
+    expect(onError).toHaveBeenCalledWith(
+      onSuccessError,
+      {
+        id: 'film_123',
+        title: 'Inside Out',
+      },
+      undefined,
+      expect.any(Object),
+    );
+    expect(onSettled).toHaveBeenCalledWith(
+      undefined,
+      onSuccessError,
+      {
+        id: 'film_123',
+        title: 'Inside Out',
+      },
+      undefined,
+      expect.any(Object),
+    );
   });
 
   it('supports prefetching and hydration through queryOptions', async () => {
