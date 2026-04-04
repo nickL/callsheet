@@ -36,6 +36,9 @@ Callsheet does not replace your API tools or your data-fetching library. It give
 Here's what a call definition looks like:
 
 ```ts title="src/calls.ts"
+import { defineCalls, mutation, query } from '@callsheet/react-query';
+// or from '@callsheet/swr'
+
 export const calls = defineCalls({
   films: {
     featured: query({
