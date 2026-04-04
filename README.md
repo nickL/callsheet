@@ -4,8 +4,8 @@
 
   <h1>Callsheet</h1>
 
-  <p align="center">
-    Data-fetching libraries give you great building blocks but it's up to you to decide how operations should be organized.<br/>
+  <p align="left">
+    Data-fetching libraries give you great building blocks but it's up to you to decide how operations should be organized.
     <strong>Callsheet provides one shared place for your operations, defaults, and related behaviors, built on the APIs you already use.</strong>
   </p>
 <hr/>
