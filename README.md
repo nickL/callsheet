@@ -1,6 +1,6 @@
 <div align="center">
 
-<img width="1280" height="240" alt="Image" src="https://github.com/user-attachments/assets/b7c53296-c7ee-4134-9492-53616f2ad59c" />
+<img width="1280" height="240" alt="One shared definition for your API calls" src="https://github.com/user-attachments/assets/f56a949c-a9f7-42e7-a246-6b3e5d6414a9" />
 
   <h1>Callsheet</h1>
 
